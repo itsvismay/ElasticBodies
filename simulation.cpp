@@ -233,7 +233,6 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 
 	//damping
 	// forces+= rayleighCoeff*forceGradient*v_k;
-	cout<<forces.squaredNorm()<<endl;
 	return forces;
 }
 
@@ -528,8 +527,8 @@ int main(int argc, char *argv[])
 {
 	dataFile.open("../PythonScripts/data.txt");
 	cout<<"###########################My Code ###################"<<endl;
-	useMyObject();
-	// useFullObject();
+	// useMyObject();
+	useFullObject();
 	cout<<"###########################My Code ###################"<<endl;
 	dataFile.close();
 	return 0;
