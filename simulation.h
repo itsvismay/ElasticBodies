@@ -27,6 +27,7 @@ public:
 
 
 	Simulation(void);
+	void render();
 	void renderExplicit();
 	void renderImplicit();
 	void createInvMassMatrix();

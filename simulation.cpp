@@ -2,6 +2,7 @@
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+#include <igl/writeOBJ.h>
 #include <igl/barycenter.h>
 #include <iostream>
 #include <vector>
@@ -22,7 +23,8 @@ typedef Matrix<double, 12, 1> Vector12d;
 Eigen::MatrixXd V;
 Eigen::MatrixXi F;
 Eigen::MatrixXd B;
-ofstream dataFile;
+ofstream momentumFile;
+ofstream energyFile;
 // Tetrahedralized interior
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
@@ -84,9 +86,6 @@ void Simulation::createInvMassMatrix(){
 	for(int i=0; i<vertices*3; i++){
 		InvMass.coeffRef(i, i) = 1/vertex_masses(i);
 	}
-
-	// cout<<vertex_masses<<endl;
-
 }
 
 void Simulation::fixVertices(int fixed){
@@ -176,6 +175,7 @@ void Simulation::calculateElasticForce(){
 		f(3*indices(3)) += F_tet.col(3)[0];
 		f(3*indices(3)+1) += F_tet.col(3)[1];
 		f(3*indices(3)+2) += F_tet.col(3)[2];
+
 	}
 }
 
@@ -312,6 +312,7 @@ void Simulation::renderExplicit(){
 	setXIntoTV(x_old);
 	createForceVector();
 	v_old = v_old + timestep*InvMass*f;
+
 }
 void Simulation::renderImplicit(){
 	t+=1;
@@ -370,8 +371,36 @@ void Simulation::renderImplicit(){
 	x_old = x_k;
 	v_old = v_k;
 	
+}
+
+void Simulation::render(){
+	renderImplicit();
+
+	////////////////////////////////////
+	// double TotalEnergy;
+	// for(int i=0; i<M.tets.size(); i++){
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	// 	double gravityE =0;
+	// 	double kineticE =0;
+	// 	gravityE += vertex_masses(indices(0))*-9.81*(x_old(indices(0))+100);
+	// 	gravityE += vertex_masses(indices(1))*-9.81*(x_old(indices(1))+100);
+	// 	gravityE += vertex_masses(indices(2))*-9.81*(x_old(indices(2))+100);
+	// 	gravityE += vertex_masses(indices(3))*-9.81*(x_old(indices(3))+100);
+
+	// 	kineticE += 0.5*vertex_masses(indices(0))*v_old(indices(0))*v_old(indices(0));
+	// 	kineticE += 0.5*vertex_masses(indices(1))*v_old(indices(1))*v_old(indices(1));
+	// 	kineticE += 0.5*vertex_masses(indices(2))*v_old(indices(2))*v_old(indices(2));
+	// 	kineticE += 0.5*vertex_masses(indices(3))*v_old(indices(3))*v_old(indices(3));
+
+	// 	TotalEnergy += strainE + gravityE + kineticE;
+	// }
+	// cout<<TotalEnergy<<endl;
+	// energyFile<<t<<", "<<TotalEnergy<<"\n";
+	////////////////////////////////////
+	
 	////////////////////
-	// if(dataFile.is_open()){
+	// if(momentumFile.is_open()){
 	// 	double xp=0;
 	// 	double yp=0;
 	// 	double zp=0;
@@ -383,7 +412,7 @@ void Simulation::renderImplicit(){
 	// 		zp += v_old(i)*vertex_masses(i);
 	// 		i++;
 	// 	}
-	// 	dataFile<<t<<","<<xp<<","<<yp<<","<<zp<<"\n";
+	// 	momentumFile<<t<<","<<xp<<","<<yp<<","<<zp<<"\n";
 	// }else{
 	// 	cout<<"no open file"<<endl;
 	// }
@@ -399,7 +428,7 @@ Simulation Sim;
 bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
 	cout<<Sim.t<<endl;
-	Sim.renderImplicit();
+	Sim.render();
 	
 
 	viewer.data.add_points(Sim.TV, RowVector3d(1,0,0));
@@ -432,12 +461,8 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 
 bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
-	cout<<Sim.t<<endl;
-	Sim.renderImplicit();
-	Sim.renderImplicit();
-	Sim.renderImplicit();
-	Sim.renderImplicit();
-	Sim.renderImplicit();
+	Sim.render();
+
 	for(int i=0; i<Sim.mapV2TV.size(); i++){
 		V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 	}
@@ -451,7 +476,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	return false;
 }
 
-void useFullObject(){
+void useFullObject(bool headless){
+	cout<<"here"<<endl;
 	vector<int> mapV2TV;
 	// Load a surface mesh
 
@@ -472,12 +498,25 @@ void useFullObject(){
 	}
 	Sim.initializeSimulation(0.001, TT, TV, mapV2TV);
 	Sim.fixVertices(1);
-	igl::viewer::Viewer viewer;
-	viewer.callback_pre_draw = &drawLoop;
-	viewer.launch();
+	if(!headless){
+		igl::viewer::Viewer viewer;
+		viewer.callback_pre_draw = &drawLoop;
+		viewer.launch();
+	}else{
+		while(1){
+			cout<<Sim.t<<endl;
+			Sim.render();
+			for(int i=0; i<Sim.mapV2TV.size(); i++){
+				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
+			}
+			if(Sim.t%1000 == 0){
+				igl::writeOBJ("object"+to_string(Sim.t)+".obj", V, F);
+			}
+		}
+	}
 }
 
-void useMyObject(){
+void useMyObject(bool headless){
 	vector<int> mapV2TV;
 
 	TT_One_G.resize(4, 4);
@@ -495,7 +534,7 @@ void useMyObject(){
 				-10, 10, 0,
 				-10, 0, 0;
 				
-	Sim.initializeSimulation(0.001, TT_One_G, TV_One_G, mapV2TV);
+	Sim.initializeSimulation(0.01, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
 	// int i=0;
 	// while(i<2){
@@ -508,28 +547,47 @@ void useMyObject(){
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
 	double timeVariable = 0.001;
-	viewer.callback_init = [&](igl::viewer::Viewer& viewer)
-	{
-		viewer.ngui-> addGroup("My settings");
+	if(!headless){
+		viewer.callback_init = [&](igl::viewer::Viewer& viewer)
+		{
+			viewer.ngui-> addGroup("My settings");
 
-		viewer.ngui-> addVariable("bool", boolVariable);
-		viewer.ngui-> addVariable("double", timeVariable);
+			viewer.ngui-> addVariable("bool", boolVariable);
+			viewer.ngui-> addVariable("double", timeVariable);
 
-		// viewer.ngui-> addButton("Print Hello", [](){cout<<"Hello"<<endl;});
+			// viewer.ngui-> addButton("Print Hello", [](){cout<<"Hello"<<endl;});
 
-		viewer.screen-> performLayout();
-		return false;
-	};
-	viewer.callback_pre_draw = &drawLoopTest;
-	viewer.launch();
+			viewer.screen-> performLayout();
+			return false;
+		};
+		viewer.callback_pre_draw = &drawLoopTest;
+		viewer.launch();
+	}else{
+		while(1){
+			cout<<Sim.t<<endl;
+			Sim.render();
+		}
+	}
 }
 int main(int argc, char *argv[])
 {
-	dataFile.open("../PythonScripts/data.txt");
+	momentumFile.open("../PythonScripts/momentum.txt");
+	energyFile.open("../PythonScripts/energy.txt");
+	bool headless = false;
+	bool implicit = false;
+    ///////////////////
 	cout<<"###########################My Code ###################"<<endl;
-	// useMyObject();
-	useFullObject();
+	//run headless
+	if(*argv[1] == 'h'){
+		headless = true;
+	}
+	// useMyObject(headless);
+	useFullObject(headless);
 	cout<<"###########################My Code ###################"<<endl;
-	dataFile.close();
+	momentumFile.close();
+	energyFile.close();
 	return 0;
 }
+//using explicit SVK
+//Turned on SVK in tetrahedron.cpp
+//saving nabla - Energy density fxn in tet in tet.cpp, tet.h
