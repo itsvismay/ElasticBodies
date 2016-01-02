@@ -510,7 +510,7 @@ void useFullObject(bool headless){
 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 			}
 			if(Sim.t%1000 == 0){
-				igl::writeOBJ("object"+to_string(Sim.t)+".obj", V, F);
+				igl::writeOBJ("../output/object"+to_string(Sim.t)+".obj", V, F);
 			}
 		}
 	}
