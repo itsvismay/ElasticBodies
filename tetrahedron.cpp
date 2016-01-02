@@ -12,8 +12,8 @@ using namespace Eigen;
 using namespace std;
 // double mu = 675450000.0;
 // double lambda = 3449700000.0;
-double mu = 1000;
-double lambda = 1000;
+double mu = 10000;
+double lambda = 10000;
 double rayleighCoeff = 1000;
 
 Tetrahedron::Tetrahedron(VectorXi k){
@@ -194,12 +194,12 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
 
     //SVK
-    // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
-	// this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+    Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
+	this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
 
     //Neo
-	Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
+	// Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+ //    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
     
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
     Matrix<double, 3, 4> Forces;

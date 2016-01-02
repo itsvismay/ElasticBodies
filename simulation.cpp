@@ -41,6 +41,9 @@ void Simulation::initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd&
 	vertices = TV_One.rows();
 	ZeroMatrix.resize(3*vertices, 3*vertices);
 	ZeroMatrix.setZero();
+	global_gradForces.resize(3*vertices, 3*vertices);
+	Ident = MatrixXd::Identity(3*vertices, 3*vertices).sparseView();
+	grad_g.resize(3*vertices, 3*vertices);
 
 	x_old.resize(3*vertices);
 	x_old.setZero();
@@ -237,7 +240,6 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 }
 
 SparseMatrix<double> Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk){
-	SparseMatrix<double> global_gradForces(3*vertices, 3*vertices);
 	global_gradForces.setZero();
 
 	for(int i=0; i<M.tets.size(); i++){
@@ -322,15 +324,16 @@ void Simulation::renderImplicit(){
 	MatrixXd TVk_prev = TVk;
 	VectorXd v_k = v_old;
 	VectorXd x_k = x_old+timestep*v_k;
-	SparseMatrix<double> Ident = MatrixXd::Identity(3*vertices, 3*vertices).sparseView();
-	SparseMatrix<double> grad_g(3*vertices, 3*vertices);
+	grad_g.setZero();
+	
 
 	
 	for(int i=0; i<20; i++){
 		TVk = ImplicitXtoTV(x_k);//TVk value changed in function
 		grad_g.setZero();
+		forceGradient.setZero();
 		
-		SparseMatrix<double> forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
+		forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
 		
 		VectorXd g = v_k - (v_old + timestep*InvMass*ImplicitCalculateForces(TVk, forceGradient, v_k));
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - ZeroMatrix -timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
@@ -374,29 +377,31 @@ void Simulation::renderImplicit(){
 }
 
 void Simulation::render(){
-	renderImplicit();
+	renderExplicit();
 
 	////////////////////////////////////
-	// double TotalEnergy;
-	// for(int i=0; i<M.tets.size(); i++){
-	// 	Vector4i indices = M.tets[i].verticesIndex;
-	// 	double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
-	// 	double gravityE =0;
-	// 	double kineticE =0;
-	// 	gravityE += vertex_masses(indices(0))*-9.81*(x_old(indices(0))+100);
-	// 	gravityE += vertex_masses(indices(1))*-9.81*(x_old(indices(1))+100);
-	// 	gravityE += vertex_masses(indices(2))*-9.81*(x_old(indices(2))+100);
-	// 	gravityE += vertex_masses(indices(3))*-9.81*(x_old(indices(3))+100);
+	double TotalEnergy = 0;
+	double totalG = 0;
+	for(int i=0; i<M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+		double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		double gravityE =0;
+		double kineticE =0;
+		gravityE += vertex_masses(indices(0))*-9.81*(x_old(indices(0))+100);
+		gravityE += vertex_masses(indices(1))*-9.81*(x_old(indices(1))+100);
+		gravityE += vertex_masses(indices(2))*-9.81*(x_old(indices(2))+100);
+		gravityE += vertex_masses(indices(3))*-9.81*(x_old(indices(3))+100);
 
-	// 	kineticE += 0.5*vertex_masses(indices(0))*v_old(indices(0))*v_old(indices(0));
-	// 	kineticE += 0.5*vertex_masses(indices(1))*v_old(indices(1))*v_old(indices(1));
-	// 	kineticE += 0.5*vertex_masses(indices(2))*v_old(indices(2))*v_old(indices(2));
-	// 	kineticE += 0.5*vertex_masses(indices(3))*v_old(indices(3))*v_old(indices(3));
+		kineticE += 0.5*vertex_masses(indices(0))*v_old(indices(0))*v_old(indices(0));
+		kineticE += 0.5*vertex_masses(indices(1))*v_old(indices(1))*v_old(indices(1));
+		kineticE += 0.5*vertex_masses(indices(2))*v_old(indices(2))*v_old(indices(2));
+		kineticE += 0.5*vertex_masses(indices(3))*v_old(indices(3))*v_old(indices(3));
 
-	// 	TotalEnergy += strainE + gravityE + kineticE;
-	// }
-	// cout<<TotalEnergy<<endl;
-	// energyFile<<t<<", "<<TotalEnergy<<"\n";
+		totalG += strainE + kineticE;
+		TotalEnergy += strainE + gravityE + kineticE;
+	}
+	cout<<totalG<<"\n"<<TotalEnergy<<endl;
+	energyFile<<t<<", "<<TotalEnergy<<"\n";
 	////////////////////////////////////
 	
 	////////////////////
@@ -496,21 +501,21 @@ void useFullObject(bool headless){
 			}
 		}
 	}
-	Sim.initializeSimulation(0.001, TT, TV, mapV2TV);
+	Sim.initializeSimulation(0.0001, TT, TV, mapV2TV);
 	Sim.fixVertices(1);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
 	}else{
-		while(1){
+		while(Sim.t<1){
 			cout<<Sim.t<<endl;
 			Sim.render();
 			for(int i=0; i<Sim.mapV2TV.size(); i++){
 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 			}
 			if(Sim.t%1000 == 0){
-				igl::writeOBJ("../output/object"+to_string(Sim.t)+".obj", V, F);
+				igl::writeOBJ("../output2/object"+to_string(Sim.t)+".obj", V, F);
 			}
 		}
 	}
@@ -534,7 +539,7 @@ void useMyObject(bool headless){
 				-10, 10, 0,
 				-10, 0, 0;
 				
-	Sim.initializeSimulation(0.01, TT_One_G, TV_One_G, mapV2TV);
+	Sim.initializeSimulation(0.001, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
 	// int i=0;
 	// while(i<2){
@@ -578,6 +583,9 @@ int main(int argc, char *argv[])
     ///////////////////
 	cout<<"###########################My Code ###################"<<endl;
 	//run headless
+	if(!argv[1]){
+		cout<<"No argv"<<endl;
+	}
 	if(*argv[1] == 'h'){
 		headless = true;
 	}

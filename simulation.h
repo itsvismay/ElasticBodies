@@ -25,6 +25,12 @@ public:
 	MatrixXd TV;
 	SparseMatrix<double> ZeroMatrix;
 
+	//used in render implicit
+	SparseMatrix<double> global_gradForces;
+	SparseMatrix<double> grad_g;
+	SparseMatrix<double> Ident;
+	SparseMatrix<double> forceGradient;
+
 
 	Simulation(void);
 	void render();
