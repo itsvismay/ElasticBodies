@@ -92,6 +92,8 @@ void Simulation::createInvMassMatrix(){
 }
 
 void Simulation::fixVertices(int fixed){
+
+	fixedVertices.push_back(fixed);
 	
 	vertex_masses(3*fixed) = 1000000000000;
 	vertex_masses(3*fixed+1) = 1000000000000;
@@ -376,32 +378,53 @@ void Simulation::renderImplicit(){
 	
 }
 
+//TODO: Optimize this using hashing
+bool Simulation::isFixed(int vert){
+	for(int j=0; j<fixedVertices.size(); j++){
+		if(vert == fixedVertices[j]){
+			return true;
+		}
+	}
+	return false;
+}
+
 void Simulation::render(){
-	renderExplicit();
+	renderImplicit();
 
 	////////////////////////////////////
-	double TotalEnergy = 0;
-	double totalG = 0;
-	for(int i=0; i<M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
-		double gravityE =0;
-		double kineticE =0;
-		gravityE += vertex_masses(indices(0))*-9.81*(x_old(indices(0))+100);
-		gravityE += vertex_masses(indices(1))*-9.81*(x_old(indices(1))+100);
-		gravityE += vertex_masses(indices(2))*-9.81*(x_old(indices(2))+100);
-		gravityE += vertex_masses(indices(3))*-9.81*(x_old(indices(3))+100);
+	// double TotalEnergy = 0;
+	// double gravityE =0;
+	// double kineticE =0;
+	// for(int i=0; i<vertices; i++){
+	// 	if(!isFixed(i)){
+	// 		int k=3*i;
+	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+	// 		k++;
+	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+	// 		k++;
+	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+	// 	}		
+	// }
+	// cout<<"Vertex Masses"<<endl;
+	// cout<<vertex_masses<<endl;
+	// cout<<"x Old"<<endl;
+	// cout<<x_old<<endl<<endl;
 
-		kineticE += 0.5*vertex_masses(indices(0))*v_old(indices(0))*v_old(indices(0));
-		kineticE += 0.5*vertex_masses(indices(1))*v_old(indices(1))*v_old(indices(1));
-		kineticE += 0.5*vertex_masses(indices(2))*v_old(indices(2))*v_old(indices(2));
-		kineticE += 0.5*vertex_masses(indices(3))*v_old(indices(3))*v_old(indices(3));
-
-		totalG += strainE + kineticE;
-		TotalEnergy += strainE + gravityE + kineticE;
-	}
-	cout<<totalG<<"\n"<<TotalEnergy<<endl;
-	energyFile<<t<<", "<<TotalEnergy<<"\n";
+	// TotalEnergy+= gravityE + kineticE;
+	// for(int i=0; i<M.tets.size(); i++){
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		
+	// 	TotalEnergy += strainE;
+	// }
+	// cout<<"Gravity E"<<endl;
+	// cout<<gravityE<<"\n"<<TotalEnergy<<endl;
+	// energyFile<<t<<", "<<TotalEnergy<<"\n";
+	// cout<<"Dot Grav"<<endl;
+	// cout<<vertex_masses.dot(x_old)*9.81<<endl;
 	////////////////////////////////////
 	
 	////////////////////
@@ -485,9 +508,9 @@ void useFullObject(bool headless){
 	cout<<"here"<<endl;
 	vector<int> mapV2TV;
 	// Load a surface mesh
-
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
+	V = V;
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	// // Compute barycenters
@@ -501,14 +524,14 @@ void useFullObject(bool headless){
 			}
 		}
 	}
-	Sim.initializeSimulation(0.0001, TT, TV, mapV2TV);
+	Sim.initializeSimulation(0.000001, TT, TV, mapV2TV);
 	Sim.fixVertices(1);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
 	}else{
-		while(Sim.t<1){
+		while(1){
 			cout<<Sim.t<<endl;
 			Sim.render();
 			for(int i=0; i<Sim.mapV2TV.size(); i++){
@@ -589,8 +612,8 @@ int main(int argc, char *argv[])
 	if(*argv[1] == 'h'){
 		headless = true;
 	}
-	// useMyObject(headless);
-	useFullObject(headless);
+	useMyObject(headless);
+	// useFullObject(headless);
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();

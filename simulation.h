@@ -17,6 +17,7 @@ public:
 	int t=0;
 	double timestep;
 	SparseMatrix<double> InvMass;
+	vector<int> fixedVertices;
 	SolidMesh M;
 	int vertices;
 	VectorXd x_old, v_old, vertex_masses;
@@ -48,6 +49,7 @@ public:
 	void calculateElasticForce();
 
 	void fixVertices(int fixed);
+	bool isFixed(int vert);
 
 	SparseMatrix<double> ImplicitCalculateElasticForceGradient(MatrixXd& TVk);
 	VectorXd ImplicitCalculateForces(MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k);
