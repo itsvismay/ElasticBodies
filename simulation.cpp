@@ -392,39 +392,32 @@ void Simulation::render(){
 	renderImplicit();
 
 	////////////////////////////////////
-	// double TotalEnergy = 0;
-	// double gravityE =0;
-	// double kineticE =0;
-	// for(int i=0; i<vertices; i++){
-	// 	if(!isFixed(i)){
-	// 		int k=3*i;
-	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
-	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
-	// 		k++;
-	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
-	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
-	// 		k++;
-	// 		gravityE +=  vertex_masses(k)*9.81*(x_old(k));
-	// 		kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
-	// 	}		
-	// }
-	// cout<<"Vertex Masses"<<endl;
-	// cout<<vertex_masses<<endl;
-	// cout<<"x Old"<<endl;
-	// cout<<x_old<<endl<<endl;
+	double TotalEnergy = 0;
+	double gravityE =0;
+	double kineticE =0;
+	for(int i=0; i<vertices; i++){
+		if(!isFixed(i)){
+			int k=3*i;
+			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+			k++;
+			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+			k++;
+			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
+		}		
+	}
 
-	// TotalEnergy+= gravityE + kineticE;
-	// for(int i=0; i<M.tets.size(); i++){
-	// 	Vector4i indices = M.tets[i].verticesIndex;
-	// 	double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	TotalEnergy+= gravityE + kineticE;
+	for(int i=0; i<M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+		double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
 		
-	// 	TotalEnergy += strainE;
-	// }
-	// cout<<"Gravity E"<<endl;
-	// cout<<gravityE<<"\n"<<TotalEnergy<<endl;
-	// energyFile<<t<<", "<<TotalEnergy<<"\n";
-	// cout<<"Dot Grav"<<endl;
-	// cout<<vertex_masses.dot(x_old)*9.81<<endl;
+		TotalEnergy += strainE;
+	}
+	energyFile<<t<<", "<<TotalEnergy<<"\n";
+
 	////////////////////////////////////
 	
 	////////////////////
@@ -467,17 +460,17 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(Sim.TV.row(1), Sim.TV.row(3), RowVector3d(1,0,0));
 	viewer.data.add_edges(Sim.TV.row(2), Sim.TV.row(3), RowVector3d(1,0,0));
 
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(3), RowVector3d(0,1,0));
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(0), RowVector3d(0,0,1));
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(2), RowVector3d(0,0,0));
+	// viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(3), RowVector3d(0,1,0));
+	// viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(0), RowVector3d(0,0,1));
+	// viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(2), RowVector3d(0,0,0));
 
-	viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(3), RowVector3d(0,1,0));
-	viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(0), RowVector3d(0,0,1));
-	viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(1), RowVector3d(0,0,0));
+	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(3), RowVector3d(0,1,0));
+	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(0), RowVector3d(0,0,1));
+	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(1), RowVector3d(0,0,0));
 
-	viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(3), RowVector3d(0,1,0));
-	viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(0), RowVector3d(0,0,1));
-	viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(5), RowVector3d(0,0,0));
+	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(3), RowVector3d(0,1,0));
+	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(0), RowVector3d(0,0,1));
+	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(5), RowVector3d(0,0,0));
 
 
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
@@ -547,22 +540,33 @@ void useFullObject(bool headless){
 void useMyObject(bool headless){
 	vector<int> mapV2TV;
 
-	TT_One_G.resize(4, 4);
-	TT_One_G<< 0, 2, 1, 3,
-				4, 2, 0, 3,
-				5, 3, 0, 1,
-				6, 3, 0, 5;
 
-	TV_One_G.resize(7, 3);
+	TT_One_G.resize(1, 4);
+	TT_One_G<< 0, 2, 1, 3;
+
+	TV_One_G.resize(4, 3);
 	TV_One_G << 0, 0, 10, //affect
 				0, 10, 0,
 				10, 0, 0,
-				0, 0, 0,
-				10, -10, 0,
-				-10, 10, 0,
-				-10, 0, 0;
+				0, 0, 0;
+
+
+	// TT_One_G.resize(4, 4);
+	// TT_One_G<< 0, 2, 1, 3,
+	// 			4, 2, 0, 3,
+	// 			5, 3, 0, 1,
+	// 			6, 3, 0, 5;
+
+	// TV_One_G.resize(7, 3);
+	// TV_One_G << 0, 0, 10, //affect
+	// 			0, 10, 0,
+	// 			10, 0, 0,
+	// 			0, 0, 0,
+	// 			10, -10, 0,
+	// 			-10, 10, 0,
+	// 			-10, 0, 0;
 				
-	Sim.initializeSimulation(0.001, TT_One_G, TV_One_G, mapV2TV);
+	Sim.initializeSimulation(0.0001, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
 	// int i=0;
 	// while(i<2){

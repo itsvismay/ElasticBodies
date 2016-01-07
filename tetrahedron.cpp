@@ -12,8 +12,8 @@ using namespace Eigen;
 using namespace std;
 // double mu = 675450000.0;
 // double lambda = 3449700000.0;
-double mu = 10000;
-double lambda = 10000;
+double mu = 1000;
+double lambda = 1000;
 double rayleighCoeff = 1000;
 
 Tetrahedron::Tetrahedron(VectorXi k){
@@ -144,7 +144,7 @@ VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	// //////////////////////////////////////////////////////
     
     //Neohookean
-    Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+    //Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
     Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
     
     ////////////////////TEST dP correctness///////////
