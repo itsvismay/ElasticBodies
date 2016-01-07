@@ -48,7 +48,7 @@ void Simulation::initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd&
 	x_old.resize(3*vertices);
 	x_old.setZero();
 	v_old.resize(3*vertices);
-	v_old.setZero();
+	v_old = VectorXd::Random(3*vertices);
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -139,7 +139,7 @@ void Simulation::setXIntoTV(VectorXd& x_new){
 
 void Simulation::createForceVector(){
 	f.setZero();
-	calculateGravity();
+	//calculateGravity();
 	calculateElasticForce();
 	// cout<<endl<<"Force sq norm"<<endl;
 	//cout<<f.squaredNorm()<<endl;
@@ -202,18 +202,18 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	VectorXd forces(3*vertices);
 	forces.setZero();
 
-	for(int i=0; i<M.tets.size(); i++){
-		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-		Vector4i indices = M.tets[i].verticesIndex;
-
-		forces(3*indices(0)+1) += vertex_mass*-9.81;
-
-		forces(3*indices(1)+1) += vertex_mass*-9.81; 
-
-		forces(3*indices(2)+1) += vertex_mass*-9.81;
-
-		forces(3*indices(3)+1) += vertex_mass*-9.81;
-	}
+//	for(int i=0; i<M.tets.size(); i++){
+//		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
+//		Vector4i indices = M.tets[i].verticesIndex;
+//
+//		forces(3*indices(0)+1) += vertex_mass*-9.81;
+//
+//		forces(3*indices(1)+1) += vertex_mass*-9.81; 
+//
+//		forces(3*indices(2)+1) += vertex_mass*-9.81;
+//
+//		forces(3*indices(3)+1) += vertex_mass*-9.81;
+//	}
 
 	//elastic
 	for(int i=0; i<M.tets.size(); i++){
@@ -389,7 +389,7 @@ bool Simulation::isFixed(int vert){
 }
 
 void Simulation::render(){
-	renderImplicit();
+	renderExplicit();
 
 	////////////////////////////////////
 	double TotalEnergy = 0;
@@ -408,14 +408,18 @@ void Simulation::render(){
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 		}		
 	}
-
-	TotalEnergy+= gravityE + kineticE;
+	gravityE =0;
+	double strainE = 0;
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		double strainE = M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
 		
-		TotalEnergy += strainE;
 	}
+	TotalEnergy+= gravityE + kineticE + strainE;
+	// cout<<endl<<"Grav E"<<endl;
+	// cout<<strainE<<endl;
+	cout<<"Tot E"<<endl;
+	cout<<TotalEnergy<<endl;
 	energyFile<<t<<", "<<TotalEnergy<<"\n";
 
 	////////////////////////////////////
@@ -517,8 +521,8 @@ void useFullObject(bool headless){
 			}
 		}
 	}
-	Sim.initializeSimulation(0.000001, TT, TV, mapV2TV);
-	Sim.fixVertices(1);
+	Sim.initializeSimulation(0.001, TT, TV, mapV2TV);
+	//Sim.fixVertices(1);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
@@ -531,7 +535,7 @@ void useFullObject(bool headless){
 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 			}
 			if(Sim.t%1000 == 0){
-				igl::writeOBJ("../output2/object"+to_string(Sim.t)+".obj", V, F);
+				//igl::writeOBJ("../output2/object"+to_string(Sim.t)+".obj", V, F);
 			}
 		}
 	}
@@ -566,7 +570,7 @@ void useMyObject(bool headless){
 	// 			-10, 10, 0,
 	// 			-10, 0, 0;
 				
-	Sim.initializeSimulation(0.0001, TT_One_G, TV_One_G, mapV2TV);
+	Sim.initializeSimulation(0.01, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
 	// int i=0;
 	// while(i<2){
@@ -595,7 +599,8 @@ void useMyObject(bool headless){
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
 	}else{
-		while(1){
+		while(Sim.t){
+			cout<<endl;
 			cout<<Sim.t<<endl;
 			Sim.render();
 		}
@@ -616,8 +621,8 @@ int main(int argc, char *argv[])
 	if(*argv[1] == 'h'){
 		headless = true;
 	}
-	useMyObject(headless);
-	// useFullObject(headless);
+	//useMyObject(headless);
+	useFullObject(headless);
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();

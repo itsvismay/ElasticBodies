@@ -8,6 +8,8 @@ for line in f:
 	t.append(step[0])
 	x.append(step[1])
 	i+=1
+	if(i>100000):
+		break
 f.close()
 plt.plot(t,x, "ro")
 plt.show()
