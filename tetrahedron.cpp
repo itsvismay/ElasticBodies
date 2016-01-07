@@ -81,6 +81,7 @@ Matrix3d Tetrahedron::computeDeltaDs(const Vector12d& dx){
 }
 
 Matrix3d Tetrahedron::computeDs(const Vector12d& x){
+
 	double xi, yi, zi, xj, yj, zj, xk, yk, zk, xl, yl, zl;
     //Vector3d ro1 = TV.row(this->verticesIndex(0));
 	xi = x(0);
@@ -196,6 +197,7 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     //SVK
     Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
 	this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+
 
     //Neo
 	// Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());

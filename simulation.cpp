@@ -25,6 +25,8 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 ofstream momentumFile;
 ofstream energyFile;
+ofstream strainEnergyFile;
+ofstream kineticEnergyFile;
 // Tetrahedralized interior
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
@@ -48,7 +50,8 @@ void Simulation::initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd&
 	x_old.resize(3*vertices);
 	x_old.setZero();
 	v_old.resize(3*vertices);
-	v_old = VectorXd::Random(3*vertices);
+	v_old.setZero();
+	v_old = VectorXd::Random(3*vertices)*2;
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -68,7 +71,7 @@ void Simulation::createInvMassMatrix(){
 	for(int i=0; i<M.tets.size(); i++){
 		double vol = (M.tets[i].undeformedVol/4);// TODO: add density 1/Mass for inv matrix,  assume density is 1, so volume=mass
 		Vector4i indices = M.tets[i].verticesIndex;
-
+		//TODO use segment here
 		vertex_masses(3*indices(0)) += vol;
 		vertex_masses(3*indices(0)+1) += vol;
 		vertex_masses(3*indices(0)+2) += vol;
@@ -94,7 +97,7 @@ void Simulation::createInvMassMatrix(){
 void Simulation::fixVertices(int fixed){
 
 	fixedVertices.push_back(fixed);
-	
+	//TODO use segments here too
 	vertex_masses(3*fixed) = 1000000000000;
 	vertex_masses(3*fixed+1) = 1000000000000;
 	vertex_masses(3*fixed+2) = 1000000000000;
@@ -102,6 +105,7 @@ void Simulation::fixVertices(int fixed){
 	InvMass.coeffRef(3*fixed, 3*fixed) = 0;
 	InvMass.coeffRef(3*fixed+1, 3*fixed+1) = 0;
 	InvMass.coeffRef(3*fixed+2, 3*fixed+2) = 0;
+	v_old.segment<3>(3*fixed)*=0;
 }
 
 void Simulation::createXFromTet(){
@@ -202,18 +206,18 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	VectorXd forces(3*vertices);
 	forces.setZero();
 
-//	for(int i=0; i<M.tets.size(); i++){
-//		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-//		Vector4i indices = M.tets[i].verticesIndex;
-//
-//		forces(3*indices(0)+1) += vertex_mass*-9.81;
-//
-//		forces(3*indices(1)+1) += vertex_mass*-9.81; 
-//
-//		forces(3*indices(2)+1) += vertex_mass*-9.81;
-//
-//		forces(3*indices(3)+1) += vertex_mass*-9.81;
-//	}
+	// for(int i=0; i<M.tets.size(); i++){
+	// 	double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+
+	// 	forces(3*indices(0)+1) += vertex_mass*-9.81;
+
+	// 	forces(3*indices(1)+1) += vertex_mass*-9.81; 
+
+	// 	forces(3*indices(2)+1) += vertex_mass*-9.81;
+
+	// 	forces(3*indices(3)+1) += vertex_mass*-9.81;
+	// }
 
 	//elastic
 	for(int i=0; i<M.tets.size(); i++){
@@ -408,12 +412,12 @@ void Simulation::render(){
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 		}		
 	}
+	//v_old.segment<3>(k).dot(v_old.segment<3>(k));
 	gravityE =0;
 	double strainE = 0;
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
-		
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 	}
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
@@ -421,6 +425,8 @@ void Simulation::render(){
 	cout<<"Tot E"<<endl;
 	cout<<TotalEnergy<<endl;
 	energyFile<<t<<", "<<TotalEnergy<<"\n";
+	strainEnergyFile<<t<<", "<<strainE<<"\n";
+	kineticEnergyFile<<t<<", "<<kineticE<<"\n";
 
 	////////////////////////////////////
 	
@@ -502,7 +508,6 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 }
 
 void useFullObject(bool headless){
-	cout<<"here"<<endl;
 	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
@@ -521,8 +526,8 @@ void useFullObject(bool headless){
 			}
 		}
 	}
-	Sim.initializeSimulation(0.001, TT, TV, mapV2TV);
-	//Sim.fixVertices(1);
+	Sim.initializeSimulation(0.01, TT, TV, mapV2TV);
+	Sim.fixVertices(1);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
@@ -546,12 +551,12 @@ void useMyObject(bool headless){
 
 
 	TT_One_G.resize(1, 4);
-	TT_One_G<< 0, 2, 1, 3;
+	TT_One_G<< 0, 1, 2, 3;
 
 	TV_One_G.resize(4, 3);
 	TV_One_G << 0, 0, 10, //affect
-				0, 10, 0,
 				10, 0, 0,
+				0, 10, 0,
 				0, 0, 0;
 
 
@@ -610,6 +615,8 @@ int main(int argc, char *argv[])
 {
 	momentumFile.open("../PythonScripts/momentum.txt");
 	energyFile.open("../PythonScripts/energy.txt");
+	strainEnergyFile.open("../PythonScripts/senergy.txt");
+	kineticEnergyFile.open("../PythonScripts/kenergy.txt");
 	bool headless = false;
 	bool implicit = false;
     ///////////////////
@@ -621,13 +628,19 @@ int main(int argc, char *argv[])
 	if(*argv[1] == 'h'){
 		headless = true;
 	}
-	//useMyObject(headless);
+	// useMyObject(headless);
 	useFullObject(headless);
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();
+	strainEnergyFile.close();
+	kineticEnergyFile.close();
 	return 0;
 }
-//using explicit SVK
-//Turned on SVK in tetrahedron.cpp
-//saving nabla - Energy density fxn in tet in tet.cpp, tet.h
+//Get the E density fxn for neohookean.
+//Plot the wheel with implicit E, and with Explicit Neohookean (several different time steps)
+//Redo optimization
+//Get Full SVK and Full Neohookean working
+////Redo consistency tests, pass obj into houdini/blender
+
+//read stuff on quasi newton methods
