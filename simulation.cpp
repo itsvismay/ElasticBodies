@@ -19,6 +19,7 @@ using namespace Eigen;
 using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
+double rayleighCoeff = 1000;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -54,7 +55,7 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	x_old.setZero();
 	v_old.resize(3*vertices);
 	v_old.setZero();
-	v_old = VectorXd::Random(3*vertices)*2;
+	v_old = VectorXd::Random(3*vertices)*10;
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -149,7 +150,7 @@ void Simulation::createForceVector(){
 	//calculateGravity();
 	calculateElasticForce();
 	// cout<<endl<<"Force sq norm"<<endl;
-	//cout<<f.squaredNorm()<<endl;
+	cout<<f.squaredNorm()<<endl;
 }
 
 void Simulation::calculateGravity(){
@@ -233,7 +234,7 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	}
 
 	//damping
-	// forces+= rayleighCoeff*forceGradient*v_k;
+	forces+= rayleighCoeff*forceGradient*v_k;
 	return forces;
 }
 
@@ -315,48 +316,23 @@ void Simulation::renderExplicit(){
 	//Explicit Code
 	x_old = x_old + timestep*v_old;
 	setXIntoTV(x_old);
-	//createForceVector();
-	f.setZero();
-	f.segment<3>(0) = -20*(x_old.segment<3>(0) - x_old.segment<3>(3));//Temp
-		f.segment<3>(3) = 20*(x_old.segment<3>(0) - x_old.segment<3>(3));//Temp
+	createForceVector();
 	v_old = v_old + timestep*InvMass*f;
 
 }
 void Simulation::renderImplicit(){
 	t+=1;
 	//Implicit Code
-	MatrixXd TVk(vertices, 3);
-	TVk.setZero();
-	MatrixXd TVk_prev = TVk;
 	VectorXd v_k = v_old;
 	VectorXd x_k = x_old+timestep*v_k;	
+	MatrixXd TVk = ImplicitXtoTV(x_k);//TVk value changed in function
+	forceGradient.setZero();
+	forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
 	int i=0;
-	for(i=0; i<100; i++){
-		// TVk = ImplicitXtoTV(x_k);//TVk value changed in function
-		
+	for(i=0; i<1; i++){
 		grad_g.setZero();
-		forceGradient.setZero();
-		f.setZero();
-		f.segment<3>(0) = -20*(x_k.segment<3>(0) - x_k.segment<3>(3));//Temp
-		f.segment<3>(3) = 20*(x_k.segment<3>(0) - x_k.segment<3>(3));//Temp
-		forceGradient.coeffRef(0,0) = -20;
-		forceGradient.coeffRef(1,1) = -20;
-		forceGradient.coeffRef(2,3) = -20;
-
-		forceGradient.coeffRef(3,0) = 20;
-		forceGradient.coeffRef(4,1) = 20;
-		forceGradient.coeffRef(5,2) = 20;
-
-		forceGradient.coeffRef(0,3) = 20;
-		forceGradient.coeffRef(1,4) = 20;
-		forceGradient.coeffRef(2,5) = 20;
-
-		forceGradient.coeffRef(3,3) = -20;
-		forceGradient.coeffRef(4,4) = -20;
-		forceGradient.coeffRef(5,5) = -20;
-		//forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
-		//f=ImplicitCalculateForces(TVk, forceGradient, v_k);
-
+		f=ImplicitCalculateForces(TVk, forceGradient, v_k);
+		cout<<f<<endl;
 		VectorXd g = v_k - (v_old + timestep*InvMass*f);
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - ZeroMatrix -timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 
@@ -426,8 +402,7 @@ void Simulation::render(){
 	double strainE = 0;
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		// strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
-		strainE += 10*(x_old.segment<3>(0) - x_old.segment<3>(3)).squaredNorm();
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 	}
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
@@ -588,6 +563,8 @@ void useMyObject(bool headless, float timestep, int iterations, char method){
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
+	Sim.fixVertices(2);
+	Sim.fixVertices(3);
 	// int i=0;
 	// while(i<2){
 	// 	i++;
@@ -659,7 +636,7 @@ int main(int argc, char *argv[])
 		runHeadless = true;
 	}
 	useMyObject(runHeadless, timestep, iterations, method);
-	// useFullObject(runHeadless, timestep, iterations, method[0]);
+	// useFullObject(runHeadless, timestep, iterations, method);
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();

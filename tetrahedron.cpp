@@ -14,7 +14,6 @@ using namespace std;
 // double lambda = 3449700000.0;
 double mu = 1000;
 double lambda = 1000;
-double rayleighCoeff = 1000;
 
 Tetrahedron::Tetrahedron(VectorXi k){
     verticesIndex = k ;

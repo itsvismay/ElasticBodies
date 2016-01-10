@@ -7,7 +7,7 @@ f= open('energy.txt', 'r')
 strain= open('senergy.txt', 'r')
 kinetic= open('kenergy.txt', 'r')
 i=0
-maxInt = 500000
+maxInt = 70000
 for line in f:
 	step = line.strip("\n").split(",")
 	t.append(step[0])
