@@ -1,0 +1,10 @@
+0.01
+f
+i
+500
+
+#timestep
+#headless t/f
+#explicit/implicit
+#number of steps if headless
+#add fixed vertices

@@ -8,6 +8,7 @@
 #include <vector>
 #include <pthread.h>
 #include <fstream>
+#include <string>
 #include <math.h>
 #include "simulation.h"
 #ifndef TUTORIAL_SHARED_PATH
@@ -36,7 +37,8 @@ Eigen::MatrixXi TF;
 Simulation::Simulation(void){}
 
 
-void Simulation::initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map){
+void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map){
+	integrator = method;
 	timestep = deltaT;
 	mapV2TV = map;
 	TV = TV_One;
@@ -44,6 +46,7 @@ void Simulation::initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd&
 	ZeroMatrix.resize(3*vertices, 3*vertices);
 	ZeroMatrix.setZero();
 	global_gradForces.resize(3*vertices, 3*vertices);
+	forceGradient.resize(3*vertices, 3*vertices);
 	Ident = MatrixXd::Identity(3*vertices, 3*vertices).sparseView();
 	grad_g.resize(3*vertices, 3*vertices);
 
@@ -223,21 +226,10 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 		MatrixXd F_tet = M.tets[i].computeElasticForces(TVk, t%2);
-		forces(3*indices(0)) += F_tet.col(0)[0];
-		forces(3*indices(0)+1) += F_tet.col(0)[1];
-		forces(3*indices(0)+2) += F_tet.col(0)[2];
-
-		forces(3*indices(1)) += F_tet.col(1)[0];
-		forces(3*indices(1)+1) += F_tet.col(1)[1]; 
-		forces(3*indices(1)+2) += F_tet.col(1)[2];
-
-		forces(3*indices(2)) += F_tet.col(2)[0];
-		forces(3*indices(2)+1) += F_tet.col(2)[1];
-		forces(3*indices(2)+2) += F_tet.col(2)[2];
-
-		forces(3*indices(3)) += F_tet.col(3)[0];
-		forces(3*indices(3)+1) += F_tet.col(3)[1];
-		forces(3*indices(3)+2) += F_tet.col(3)[2];
+		forces.segment<3>(3*indices(0)) += F_tet.col(0);
+		forces.segment<3>(3*indices(1)) += F_tet.col(1);
+		forces.segment<3>(3*indices(2)) += F_tet.col(2);
+		forces.segment<3>(3*indices(3)) += F_tet.col(3);
 	}
 
 	//damping
@@ -296,21 +288,26 @@ void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
 	for(int i = 0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 
-		x_n1(3*indices(0)) = TVk.row(indices(0))[0];
-		x_n1(3*indices(0)+1) = TVk.row(indices(0))[1];
-		x_n1(3*indices(0)+2) = TVk.row(indices(0))[2];
+		x_n1.segment<3>(indices(0)) = TVk.row(indices(0));
+		x_n1.segment<3>(indices(1)) = TVk.row(indices(1));
+		x_n1.segment<3>(indices(2)) = TVk.row(indices(2));
+		x_n1.segment<3>(indices(3)) = TVk.row(indices(3));
 
-		x_n1(3*indices(1)) = TVk.row(indices(1))[0];
-		x_n1(3*indices(1)+1) = TVk.row(indices(1))[1];
-		x_n1(3*indices(1)+2) = TVk.row(indices(1))[2];
+		// x_n1(3*indices(0)) = TVk.row(indices(0))[0];
+		// x_n1(3*indices(0)+1) = TVk.row(indices(0))[1];
+		// x_n1(3*indices(0)+2) = TVk.row(indices(0))[2];
 
-		x_n1(3*indices(2)) = TVk.row(indices(2))[0];
-		x_n1(3*indices(2)+1) = TVk.row(indices(2))[1];
-		x_n1(3*indices(2)+2) = TVk.row(indices(2))[2];
+		// x_n1(3*indices(1)) = TVk.row(indices(1))[0];
+		// x_n1(3*indices(1)+1) = TVk.row(indices(1))[1];
+		// x_n1(3*indices(1)+2) = TVk.row(indices(1))[2];
 
-		x_n1(3*indices(3)) = TVk.row(indices(3))[0];
-		x_n1(3*indices(3)+1) = TVk.row(indices(3))[1];
-		x_n1(3*indices(3)+2) = TVk.row(indices(3))[2];
+		// x_n1(3*indices(2)) = TVk.row(indices(2))[0];
+		// x_n1(3*indices(2)+1) = TVk.row(indices(2))[1];
+		// x_n1(3*indices(2)+2) = TVk.row(indices(2))[2];
+
+		// x_n1(3*indices(3)) = TVk.row(indices(3))[0];
+		// x_n1(3*indices(3)+1) = TVk.row(indices(3))[1];
+		// x_n1(3*indices(3)+2) = TVk.row(indices(3))[2];
 	}
 }
 void Simulation::renderExplicit(){
@@ -318,7 +315,10 @@ void Simulation::renderExplicit(){
 	//Explicit Code
 	x_old = x_old + timestep*v_old;
 	setXIntoTV(x_old);
-	createForceVector();
+	//createForceVector();
+	f.setZero();
+	f.segment<3>(0) = -20*(x_old.segment<3>(0) - x_old.segment<3>(3));//Temp
+		f.segment<3>(3) = 20*(x_old.segment<3>(0) - x_old.segment<3>(3));//Temp
 	v_old = v_old + timestep*InvMass*f;
 
 }
@@ -329,45 +329,43 @@ void Simulation::renderImplicit(){
 	TVk.setZero();
 	MatrixXd TVk_prev = TVk;
 	VectorXd v_k = v_old;
-	VectorXd x_k = x_old+timestep*v_k;
-	grad_g.setZero();
-	
-
-	
-	for(int i=0; i<20; i++){
-		TVk = ImplicitXtoTV(x_k);//TVk value changed in function
+	VectorXd x_k = x_old+timestep*v_k;	
+	int i=0;
+	for(i=0; i<100; i++){
+		// TVk = ImplicitXtoTV(x_k);//TVk value changed in function
+		
 		grad_g.setZero();
 		forceGradient.setZero();
-		
-		forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
-		
-		VectorXd g = v_k - (v_old + timestep*InvMass*ImplicitCalculateForces(TVk, forceGradient, v_k));
+		f.setZero();
+		f.segment<3>(0) = -20*(x_k.segment<3>(0) - x_k.segment<3>(3));//Temp
+		f.segment<3>(3) = 20*(x_k.segment<3>(0) - x_k.segment<3>(3));//Temp
+		forceGradient.coeffRef(0,0) = -20;
+		forceGradient.coeffRef(1,1) = -20;
+		forceGradient.coeffRef(2,3) = -20;
+
+		forceGradient.coeffRef(3,0) = 20;
+		forceGradient.coeffRef(4,1) = 20;
+		forceGradient.coeffRef(5,2) = 20;
+
+		forceGradient.coeffRef(0,3) = 20;
+		forceGradient.coeffRef(1,4) = 20;
+		forceGradient.coeffRef(2,5) = 20;
+
+		forceGradient.coeffRef(3,3) = -20;
+		forceGradient.coeffRef(4,4) = -20;
+		forceGradient.coeffRef(5,5) = -20;
+		//forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
+		//f=ImplicitCalculateForces(TVk, forceGradient, v_k);
+
+		VectorXd g = v_k - (v_old + timestep*InvMass*f);
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - ZeroMatrix -timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 
-		////////////////////TEST GRAD_F correctness///////////
-		//f(v+[e,0,0,0...]) - f(v) / e = df/dx
-		// VectorXd x_k_test = x_k;
-		// x_k_test(0)+=0.000001;
-		// TVk_prev = ImplicitXtoTV(x_k_test);
-		// SparseMatrix<double> left = ImplicitCalculateElasticForceGradient(TVk_prev);
-		// VectorXd right = (ImplicitCalculateForces(TVk_prev) - ImplicitCalculateForces(TVk))/0.000001;
-		
-		// cout<<"test Grad F"<<endl;
-		// cout<<right.transpose()<<endl;
-		// cout<<left.col(0).transpose()<<endl<<endl;
-		//////////////////////////////////////////////////////
-
-		////////////////////TEST GRAD_G correctness///////////
-		//f(v+[e,0,0,0...]) - f(v) / e = df/dx
-		//////////////////////////////////////////////////////
-		
 		//solve for 
 		ConjugateGradient<SparseMatrix<double>> cg;
 		cg.compute(grad_g);
 		VectorXd deltaV = -1*cg.solve(g);
 		
 		v_k = v_k + deltaV;
-		x_k = x_k + timestep*v_k;
 
 		//cout<<g.squaredNorm()<<endl;
 		if(g.squaredNorm()<0.000001){
@@ -375,6 +373,11 @@ void Simulation::renderImplicit(){
 			break;
 		}
 	}
+	if(i>1){
+		cout<<"value of conv"<<endl;
+		cout<<i<<endl;	
+	}
+
 	//cout<<endl;
 	setXIntoTV(x_k);
 	x_old = x_k;
@@ -393,7 +396,13 @@ bool Simulation::isFixed(int vert){
 }
 
 void Simulation::render(){
-	renderExplicit();
+	if(integrator == 'e'){
+		cout<<'e'<<t<<endl;
+		renderExplicit();
+	}else{
+		cout<<'i'<<t<<endl;
+		renderImplicit();
+	}
 
 	////////////////////////////////////
 	double TotalEnergy = 0;
@@ -417,13 +426,16 @@ void Simulation::render(){
 	double strainE = 0;
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
+		// strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
+		strainE += 10*(x_old.segment<3>(0) - x_old.segment<3>(3)).squaredNorm();
 	}
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
 	// cout<<strainE<<endl;
 	cout<<"Tot E"<<endl;
 	cout<<TotalEnergy<<endl;
+	cout<<"Strain E"<<endl;
+	cout<<strainE<<endl;
 	energyFile<<t<<", "<<TotalEnergy<<"\n";
 	strainEnergyFile<<t<<", "<<strainE<<"\n";
 	kineticEnergyFile<<t<<", "<<kineticE<<"\n";
@@ -458,7 +470,6 @@ Simulation Sim;
 
 bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
-	cout<<Sim.t<<endl;
 	Sim.render();
 	
 
@@ -492,6 +503,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 
 bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
+	cout<<Sim.t<<endl;
 	Sim.render();
 
 	for(int i=0; i<Sim.mapV2TV.size(); i++){
@@ -507,7 +519,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	return false;
 }
 
-void useFullObject(bool headless){
+void useFullObject(bool headless, float timestep, int iterations, char method){
 	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
@@ -520,21 +532,20 @@ void useFullObject(bool headless){
 	// //constructs the map from V to TV
 	for(int i=0; i< V.rows(); i++){
 		for(int j=0; j<TV.rows(); j++){
-			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.001){
+			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
 				mapV2TV.push_back(j);
 				break;
 			}
 		}
 	}
-	Sim.initializeSimulation(0.01, TT, TV, mapV2TV);
-	Sim.fixVertices(1);
+	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
+	// Sim.fixVertices(1);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
 	}else{
-		while(1){
-			cout<<Sim.t<<endl;
+		while(Sim.t<iterations){
 			Sim.render();
 			for(int i=0; i<Sim.mapV2TV.size(); i++){
 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
@@ -546,7 +557,7 @@ void useFullObject(bool headless){
 	}
 }
 
-void useMyObject(bool headless){
+void useMyObject(bool headless, float timestep, int iterations, char method){
 	vector<int> mapV2TV;
 
 
@@ -575,7 +586,7 @@ void useMyObject(bool headless){
 	// 			-10, 10, 0,
 	// 			-10, 0, 0;
 				
-	Sim.initializeSimulation(0.01, TT_One_G, TV_One_G, mapV2TV);
+	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
 	Sim.fixVertices(1);
 	// int i=0;
 	// while(i<2){
@@ -604,32 +615,51 @@ void useMyObject(bool headless){
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
 	}else{
-		while(Sim.t){
-			cout<<endl;
-			cout<<Sim.t<<endl;
+		while(Sim.t<iterations){
 			Sim.render();
 		}
 	}
 }
+
 int main(int argc, char *argv[])
 {
+	float timestep = 0;
+	char headless;
+	char method;
+	int iterations = 0;
+	string line;
+	ifstream configFile ("../config.txt");
+	if(configFile.is_open()){
+		getline(configFile, line);
+		timestep = atof(line.c_str());
+		cout<<timestep<<endl;
+		
+		getline(configFile, line);
+		headless = line.c_str()[0];
+		cout<<line<<endl;
+		
+		getline(configFile, line);
+		method = line.c_str()[0];
+		cout<<method<<endl;
+
+		getline(configFile, line);
+		iterations = atoi(line.c_str());
+		cout<<iterations<<endl;
+	}else{
+		cout<<"Config file not found"<<endl;
+	}
 	momentumFile.open("../PythonScripts/momentum.txt");
 	energyFile.open("../PythonScripts/energy.txt");
 	strainEnergyFile.open("../PythonScripts/senergy.txt");
 	kineticEnergyFile.open("../PythonScripts/kenergy.txt");
-	bool headless = false;
-	bool implicit = false;
     ///////////////////
 	cout<<"###########################My Code ###################"<<endl;
-	//run headless
-	if(!argv[1]){
-		cout<<"No argv"<<endl;
+	bool runHeadless = false;
+	if(headless=='t'){
+		runHeadless = true;
 	}
-	if(*argv[1] == 'h'){
-		headless = true;
-	}
-	// useMyObject(headless);
-	useFullObject(headless);
+	useMyObject(runHeadless, timestep, iterations, method);
+	// useFullObject(runHeadless, timestep, iterations, method[0]);
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();

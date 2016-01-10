@@ -25,6 +25,7 @@ public:
 	vector<int> mapV2TV;
 	MatrixXd TV;
 	SparseMatrix<double> ZeroMatrix;
+	char integrator;
 
 	//used in render implicit
 	SparseMatrix<double> global_gradForces;
@@ -41,7 +42,7 @@ public:
 	void createXFromTet();
 	void createForceVector();
 	void createTVFromTet();
-	void initializeSimulation(double deltaT, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map);
+	void initializeSimulation(double deltaT, char method, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map);
 	
 	void setXIntoTV(VectorXd& x_new);
 

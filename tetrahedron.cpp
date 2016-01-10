@@ -125,12 +125,12 @@ VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 
 
     ////////////////////TEST dDs correctness///////////
-    // double epsilon = 0.000001;
-	//f(v+[e,0,0,0...]) - f(v) / e = df/dx
+ //    double epsilon = 0.000001;
+	// // f(v+[e,0,0,0...]) - f(v) / e = df/dx
 	// cout<<"test dDs"<<endl;
 	// Matrix3d leftdDs = computeDeltaDs(dx*epsilon);
 	// Matrix3d rightdDs = computeDs(x + dx*epsilon) - Ds;
-	// cout<<leftdDs<<endl<<endl;
+	// cout<<leftdDs-rightdDs<<endl<<endl;
 	/////////////////////////////////////////////////
 
     Matrix3d F = Ds*this->InvRefShapeMatrix;
@@ -145,23 +145,23 @@ VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	// //////////////////////////////////////////////////////
     
     //Neohookean
-    //Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+    Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
     Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
     
     ////////////////////TEST dP correctness///////////
-    // cout<<"test dP"<<endl;
-    // Matrix3d leftdP = mu*leftdF + (mu - lambda*log(rightF.determinant()))*((rightF.inverse()).transpose())*leftdF.transpose()*((rightF.inverse()).transpose()) + lambda*(rightF.inverse()*leftdF).trace()*((rightF.inverse()).transpose());
+ //    cout<<"test dP"<<endl;
+ //    Matrix3d leftdP = mu*leftdF + (mu - lambda*log(rightF.determinant()))*((rightF.inverse()).transpose())*leftdF.transpose()*((rightF.inverse()).transpose()) + lambda*(rightF.inverse()*leftdF).trace()*((rightF.inverse()).transpose());
 	// Matrix3d rightP1 = mu*(rightF - ((rightF.inverse()).transpose())) + lambda*log(rightF.determinant())*((rightF.inverse()).transpose());
 	// Matrix3d rightP2 = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
 	// Matrix3d rightdP = rightP1 - rightP2;
-	//cout<< leftdP - (rightP1 - rightP2)<<endl<<endl;
+	// cout<< leftdP - (rightP1 - rightP2)<<endl<<endl;
 	//////////////////////////////////////////////////////
 
     Matrix3d dH = -1*this->undeformedVol*dP*((this->InvRefShapeMatrix).transpose());
     
     ////////////////////TEST dH correctness///////////
-    // cout<<"test dH"<<endl;
-    // Matrix3d leftdH = -1*this->undeformedVol*leftdP*((this->InvRefShapeMatrix).transpose());
+ //    cout<<"test dH"<<endl;
+ //    Matrix3d leftdH = -1*this->undeformedVol*leftdP*((this->InvRefShapeMatrix).transpose());
 	// Matrix3d rightH1 = -1*this->undeformedVol*rightP1*((this->InvRefShapeMatrix).transpose());
 	// Matrix3d rightH2 = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
 	// Matrix3d rightdH = rightH1 - rightH2;
@@ -195,13 +195,13 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
 
     //SVK
-    Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
-	this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+    // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
+	// this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
 
 
     //Neo
-	// Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
- //    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
+	Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
     
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
     Matrix<double, 3, 4> Forces;
