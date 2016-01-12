@@ -1,7 +1,7 @@
 0.001
-f
+t
 i
-100000
+10000
 
 #timestep
 #headless t/f

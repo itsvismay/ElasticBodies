@@ -19,7 +19,7 @@ using namespace Eigen;
 using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
-double rayleighCoeff = 1000;
+double rayleighCoeff = .01;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -29,6 +29,7 @@ ofstream momentumFile;
 ofstream energyFile;
 ofstream strainEnergyFile;
 ofstream kineticEnergyFile;
+ofstream gravityEnergyFile;
 // Tetrahedralized interior
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
@@ -147,7 +148,7 @@ void Simulation::setXIntoTV(VectorXd& x_new){
 
 void Simulation::createForceVector(){
 	f.setZero();
-	//calculateGravity();
+	calculateGravity();
 	calculateElasticForce();
 	// cout<<endl<<"Force sq norm"<<endl;
 	cout<<f.squaredNorm()<<endl;
@@ -210,18 +211,18 @@ VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	VectorXd forces(3*vertices);
 	forces.setZero();
 
-	// for(int i=0; i<M.tets.size(); i++){
-	// 	double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-	// 	Vector4i indices = M.tets[i].verticesIndex;
+	for(int i=0; i<M.tets.size(); i++){
+		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
+		Vector4i indices = M.tets[i].verticesIndex;
 
-	// 	forces(3*indices(0)+1) += vertex_mass*-9.81;
+		forces(3*indices(0)+1) += vertex_mass*-9.81;
 
-	// 	forces(3*indices(1)+1) += vertex_mass*-9.81; 
+		forces(3*indices(1)+1) += vertex_mass*-9.81; 
 
-	// 	forces(3*indices(2)+1) += vertex_mass*-9.81;
+		forces(3*indices(2)+1) += vertex_mass*-9.81;
 
-	// 	forces(3*indices(3)+1) += vertex_mass*-9.81;
-	// }
+		forces(3*indices(3)+1) += vertex_mass*-9.81;
+	}
 
 	//elastic
 	for(int i=0; i<M.tets.size(); i++){
@@ -329,12 +330,11 @@ void Simulation::renderImplicit(){
 	forceGradient.setZero();
 	forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
 	int i=0;
-	for(i=0; i<1; i++){
+	for(i=0; i<100; i++){
 		grad_g.setZero();
 		f=ImplicitCalculateForces(TVk, forceGradient, v_k);
-		cout<<f<<endl;
 		VectorXd g = v_k - (v_old + timestep*InvMass*f);
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - ZeroMatrix -timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient - ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 
 		//solve for 
 		ConjugateGradient<SparseMatrix<double>> cg;
@@ -397,8 +397,6 @@ void Simulation::render(){
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 		}		
 	}
-	//v_old.segment<3>(k).dot(v_old.segment<3>(k));
-	gravityE =0;
 	double strainE = 0;
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -414,6 +412,7 @@ void Simulation::render(){
 	energyFile<<t<<", "<<TotalEnergy<<"\n";
 	strainEnergyFile<<t<<", "<<strainE<<"\n";
 	kineticEnergyFile<<t<<", "<<kineticE<<"\n";
+	gravityEnergyFile<<t<<", "<<gravityE<<"\n";
 
 	////////////////////////////////////
 	
@@ -629,6 +628,7 @@ int main(int argc, char *argv[])
 	energyFile.open("../PythonScripts/energy.txt");
 	strainEnergyFile.open("../PythonScripts/senergy.txt");
 	kineticEnergyFile.open("../PythonScripts/kenergy.txt");
+	gravityEnergyFile.open("../PythonScripts/genergy.txt");
     ///////////////////
 	cout<<"###########################My Code ###################"<<endl;
 	bool runHeadless = false;
@@ -642,6 +642,7 @@ int main(int argc, char *argv[])
 	energyFile.close();
 	strainEnergyFile.close();
 	kineticEnergyFile.close();
+	gravityEnergyFile.close();
 	return 0;
 }
 //Get the E density fxn for neohookean.
