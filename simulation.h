@@ -23,7 +23,7 @@ public:
 	VectorXd x_old, v_old, vertex_masses;
 	VectorXd f;
 	vector<int> mapV2TV;
-	MatrixXd TV;
+	MatrixXd TV, TVk;
 	SparseMatrix<double> ZeroMatrix;
 	char integrator;
 
@@ -52,8 +52,8 @@ public:
 	void fixVertices(int fixed);
 	bool isFixed(int vert);
 
-	SparseMatrix<double> ImplicitCalculateElasticForceGradient(MatrixXd& TVk);
-	VectorXd ImplicitCalculateForces(MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k);
-	MatrixXd ImplicitXtoTV(VectorXd& x_tv);
+	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
+	void ImplicitCalculateForces(MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f);
+	void ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk);
 	void ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk);
 };

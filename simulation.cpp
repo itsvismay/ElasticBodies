@@ -19,7 +19,7 @@ using namespace Eigen;
 using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
-double rayleighCoeff = .01;
+double rayleighCoeff;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -44,6 +44,7 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	timestep = deltaT;
 	mapV2TV = map;
 	TV = TV_One;
+	TVk.resize(vertices, 3);
 	vertices = TV_One.rows();
 	ZeroMatrix.resize(3*vertices, 3*vertices);
 	ZeroMatrix.setZero();
@@ -73,10 +74,11 @@ void Simulation::createInvMassMatrix(){
 	InvMass.resize(3*vertices, 3*vertices);
 	InvMass.setZero();
 
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vol = (M.tets[i].undeformedVol/4);// TODO: add density 1/Mass for inv matrix,  assume density is 1, so volume=mass
 		Vector4i indices = M.tets[i].verticesIndex;
 		//TODO use segment here
+
 		vertex_masses(3*indices(0)) += vol;
 		vertex_masses(3*indices(0)+1) += vol;
 		vertex_masses(3*indices(0)+2) += vol;
@@ -115,7 +117,7 @@ void Simulation::fixVertices(int fixed){
 
 void Simulation::createXFromTet(){
 	x_old.setZero();
-	for(int i = 0; i < M.tets.size(); i++){
+	for(unsigned int i = 0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 
 		x_old(3*indices(0)) = TV.row(indices(0))[0];
@@ -137,7 +139,7 @@ void Simulation::createXFromTet(){
 }
 
 void Simulation::setXIntoTV(VectorXd& x_new){
-	for(int i=0; i < M.tets.size(); i++){
+	for(unsigned int i=0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 		TV.row(indices(0)) = Vector3d(x_new(3*indices(0)), x_new(3*indices(0)+1), x_new(3*indices(0) +2));
 		TV.row(indices(1)) = Vector3d(x_new(3*indices(1)), x_new(3*indices(1)+1), x_new(3*indices(1) +2));
@@ -155,7 +157,7 @@ void Simulation::createForceVector(){
 }
 
 void Simulation::calculateGravity(){
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
 
@@ -170,7 +172,7 @@ void Simulation::calculateGravity(){
 }
 
 void Simulation::calculateElasticForce(){
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 		MatrixXd F_tet = M.tets[i].computeElasticForces(TV, t%2);
 
@@ -193,56 +195,53 @@ void Simulation::calculateElasticForce(){
 	}
 }
 
-MatrixXd Simulation::ImplicitXtoTV(VectorXd& x_tv){
-	MatrixXd TVk(vertices, 3);
+void Simulation::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){
 	TVk.setZero();
-	for(int i=0; i < M.tets.size(); i++){
+	for(unsigned int i=0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 		TVk.row(indices(0)) = Vector3d(x_tv(3*indices(0)), x_tv(3*indices(0)+1), x_tv(3*indices(0) +2));
 		TVk.row(indices(1)) = Vector3d(x_tv(3*indices(1)), x_tv(3*indices(1)+1), x_tv(3*indices(1) +2));
 		TVk.row(indices(2)) = Vector3d(x_tv(3*indices(2)), x_tv(3*indices(2)+1), x_tv(3*indices(2) +2));
 		TVk.row(indices(3)) = Vector3d(x_tv(3*indices(3)), x_tv(3*indices(3)+1), x_tv(3*indices(3) +2)); 
 	}
-	return TVk;
+	return;
 }
 
-VectorXd Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k){
+void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f){
 	//gravity
-	VectorXd forces(3*vertices);
-	forces.setZero();
+	f.setZero();
 
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
 
-		forces(3*indices(0)+1) += vertex_mass*-9.81;
+		f(3*indices(0)+1) += vertex_mass*-9.81;
 
-		forces(3*indices(1)+1) += vertex_mass*-9.81; 
+		f(3*indices(1)+1) += vertex_mass*-9.81; 
 
-		forces(3*indices(2)+1) += vertex_mass*-9.81;
+		f(3*indices(2)+1) += vertex_mass*-9.81;
 
-		forces(3*indices(3)+1) += vertex_mass*-9.81;
+		f(3*indices(3)+1) += vertex_mass*-9.81;
 	}
 
 	//elastic
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 		MatrixXd F_tet = M.tets[i].computeElasticForces(TVk, t%2);
-		forces.segment<3>(3*indices(0)) += F_tet.col(0);
-		forces.segment<3>(3*indices(1)) += F_tet.col(1);
-		forces.segment<3>(3*indices(2)) += F_tet.col(2);
-		forces.segment<3>(3*indices(3)) += F_tet.col(3);
+		f.segment<3>(3*indices(0)) += F_tet.col(0);
+		f.segment<3>(3*indices(1)) += F_tet.col(1);
+		f.segment<3>(3*indices(2)) += F_tet.col(2);
+		f.segment<3>(3*indices(3)) += F_tet.col(3);
 	}
 
 	//damping
-	forces+= rayleighCoeff*forceGradient*v_k;
-	return forces;
+	f+= rayleighCoeff*forceGradient*v_k;
+	return;
 }
 
-SparseMatrix<double> Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk){
-	global_gradForces.setZero();
+void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 
-	for(int i=0; i<M.tets.size(); i++){
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
 		MatrixXd local_gradForces(12, 12);
@@ -250,7 +249,7 @@ SparseMatrix<double> Simulation::ImplicitCalculateElasticForceGradient(MatrixXd&
 
 		Vector12d dx(12);
 		dx.setZero();
-		for(int j=0; j<12; j++){
+		for(unsigned int j=0; j<12; j++){
 			dx(j) = 1;
 			VectorXd df = M.tets[i].computeForceDifferentials(TVk, dx);
 			local_gradForces.col(j) = df;// TODO values are really big. Check if correct
@@ -262,8 +261,8 @@ SparseMatrix<double> Simulation::ImplicitCalculateElasticForceGradient(MatrixXd&
 		vector<Trip> triplets;
 		triplets.reserve(9*16);//estimation of entries
 		Vector4i indices = M.tets[i].verticesIndex;
-		for(int ki=0; ki<4; ki++){
-			for(int kj=0; kj<4; kj++){
+		for(unsigned int ki=0; ki<4; ki++){
+			for(unsigned int kj=0; kj<4; kj++){
 				triplets.push_back(Trip(3*indices[ki], 3*indices[kj], local_gradForces(3*ki, 3*kj))); //dfxi/dxi
 				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
 				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
@@ -278,16 +277,16 @@ SparseMatrix<double> Simulation::ImplicitCalculateElasticForceGradient(MatrixXd&
 			}
 		}
 		//Now insert triplets into global matrix
-		global_gradForces.setFromTriplets(triplets.begin(), triplets.end());
+		forceGradient.setFromTriplets(triplets.begin(), triplets.end());
 	}
-	// cout<<"global forces"<<endl;
+	// cout<<"test global forces"<<endl;
 	// SparseMatrix<double> gFT = global_gradForces.transpose();
 	// cout<<global_gradForces-gFT<<endl;
-	return global_gradForces; //ASK is the -1 correct?
+	return;
 }
 void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
 	x_n1.setZero();
-	for(int i = 0; i < M.tets.size(); i++){
+	for(unsigned int i = 0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
 
 		x_n1.segment<3>(indices(0)) = TVk.row(indices(0));
@@ -326,13 +325,13 @@ void Simulation::renderImplicit(){
 	//Implicit Code
 	VectorXd v_k = v_old;
 	VectorXd x_k = x_old+timestep*v_k;	
-	MatrixXd TVk = ImplicitXtoTV(x_k);//TVk value changed in function
+	ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 	forceGradient.setZero();
-	forceGradient = ImplicitCalculateElasticForceGradient(TVk); 
+	ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 	int i=0;
 	for(i=0; i<100; i++){
 		grad_g.setZero();
-		f=ImplicitCalculateForces(TVk, forceGradient, v_k);
+		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 		VectorXd g = v_k - (v_old + timestep*InvMass*f);
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient - ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 
@@ -363,7 +362,7 @@ void Simulation::renderImplicit(){
 
 //TODO: Optimize this using hashing
 bool Simulation::isFixed(int vert){
-	for(int j=0; j<fixedVertices.size(); j++){
+	for(unsigned int j=0; j<fixedVertices.size(); j++){
 		if(vert == fixedVertices[j]){
 			return true;
 		}
@@ -398,8 +397,7 @@ void Simulation::render(){
 		}		
 	}
 	double strainE = 0;
-	for(int i=0; i<M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
+	for(unsigned int i=0; i<M.tets.size(); i++){
 		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 	}
 	TotalEnergy+= gravityE + kineticE + strainE;
@@ -480,7 +478,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	cout<<Sim.t<<endl;
 	Sim.render();
 
-	for(int i=0; i<Sim.mapV2TV.size(); i++){
+	for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
 		V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 	}
 
@@ -504,8 +502,8 @@ void useFullObject(bool headless, float timestep, int iterations, char method){
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 	// //constructs the map from V to TV
-	for(int i=0; i< V.rows(); i++){
-		for(int j=0; j<TV.rows(); j++){
+	for(unsigned int i=0; i< V.rows(); i++){
+		for(unsigned int j=0; j<TV.rows(); j++){
 			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
 				mapV2TV.push_back(j);
 				break;
@@ -521,7 +519,7 @@ void useFullObject(bool headless, float timestep, int iterations, char method){
 	}else{
 		while(Sim.t<iterations){
 			Sim.render();
-			for(int i=0; i<Sim.mapV2TV.size(); i++){
+			for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 			}
 			if(Sim.t%1000 == 0){
@@ -621,8 +619,13 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		iterations = atoi(line.c_str());
 		cout<<iterations<<endl;
+
+		getline(configFile, line);
+		rayleighCoeff = atof(line.c_str());
+		cout<<rayleighCoeff<<endl;
 	}else{
 		cout<<"Config file not found"<<endl;
+		return 0;
 	}
 	momentumFile.open("../PythonScripts/momentum.txt");
 	energyFile.open("../PythonScripts/energy.txt");
