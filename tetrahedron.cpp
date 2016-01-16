@@ -110,7 +110,7 @@ Matrix3d Tetrahedron::computeDs(const Vector12d& x){
     return Ds;
 }
 
-VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
+MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	Vector12d x;
     x.segment<3>(0) = TV.row(this->verticesIndex(0));
     x.segment<3>(3) = TV.row(this->verticesIndex(1));
@@ -144,8 +144,11 @@ VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	// //////////////////////////////////////////////////////
     
     //Neohookean
-    Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-    Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
+    double detF = F.determinant();
+    double logdetF = log(detF);
+    Matrix3d FInvTransp = (F.inverse()).transpose();
+    Matrix3d P = mu*(F - (FInvTransp)) + lambda*logdetF*(FInvTransp);
+    Matrix3d dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
     
     ////////////////////TEST dP correctness///////////
  //    cout<<"test dP"<<endl;
@@ -176,7 +179,7 @@ VectorXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
     // cout<<dForces<<endl<<endl;;
     // cout<<"Mapped vector"<<endl;
     // cout<<Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows())<<endl;
-    return Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());
+    return dForces;
 }
 
 MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){

@@ -20,7 +20,7 @@ public:
     Tetrahedron(VectorXi k);
     MatrixXd computeElasticForces(MatrixXd& TV, int e);
     void precomputeForces(MatrixXd& TV);
-    VectorXd computeForceDifferentials(MatrixXd& TV, Vector12d& dx);
+    MatrixXd computeForceDifferentials(MatrixXd& TV, Vector12d& dx);
     Matrix3d computeDeltaDs(const Vector12d& dx);
     Matrix3d computeDs(const Vector12d& x);
 
