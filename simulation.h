@@ -20,14 +20,14 @@ public:
 	vector<int> fixedVertices;
 	SolidMesh M;
 	int vertices;
-	VectorXd x_old, v_old, vertex_masses;
+	VectorXd x_old, v_old, vertex_masses, x_k, v_k;
 	VectorXd f;
 	vector<int> mapV2TV;
 	MatrixXd TV, TVk;
-	SparseMatrix<double> ZeroMatrix;
 	char integrator;
 
 	//used in render implicit
+	SparseMatrix<double> ZeroMatrix;
 	SparseMatrix<double> global_gradForces;
 	SparseMatrix<double> grad_g;
 	SparseMatrix<double> Ident;

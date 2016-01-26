@@ -1,8 +1,10 @@
-0.001
+0.00001
 t
 i
-10000
-0
+2000
+0.00
+1
+
 
 #timestep
 #headless t/f
@@ -10,3 +12,4 @@ i
 #number of steps if headless
 #add fixed vertices
 #rayleigh
+#object

@@ -20,6 +20,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
+double gravity = 9.81;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -52,6 +53,11 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	forceGradient.resize(3*vertices, 3*vertices);
 	Ident = MatrixXd::Identity(3*vertices, 3*vertices).sparseView();
 	grad_g.resize(3*vertices, 3*vertices);
+
+	x_k.resize(3*vertices);
+	x_k.setZero();
+	v_k.resize(3*vertices);
+	v_k.setZero();
 
 	x_old.resize(3*vertices);
 	x_old.setZero();
@@ -153,7 +159,6 @@ void Simulation::createForceVector(){
 	calculateGravity();
 	calculateElasticForce();
 	// cout<<endl<<"Force sq norm"<<endl;
-	cout<<f.squaredNorm()<<endl;
 }
 
 void Simulation::calculateGravity(){
@@ -161,13 +166,13 @@ void Simulation::calculateGravity(){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
 
-		f(3*indices(0)+1) += vertex_mass*-9.81;
+		f(3*indices(0)+1) += vertex_mass*gravity;
 
-		f(3*indices(1)+1) += vertex_mass*-9.81; 
+		f(3*indices(1)+1) += vertex_mass*gravity; 
 
-		f(3*indices(2)+1) += vertex_mass*-9.81;
+		f(3*indices(2)+1) += vertex_mass*gravity;
 
-		f(3*indices(3)+1) += vertex_mass*-9.81;
+		f(3*indices(3)+1) += vertex_mass*gravity;
 	}
 }
 
@@ -215,15 +220,14 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
 
-		f(3*indices(0)+1) += vertex_mass*-9.81;
+		f(3*indices(0)+1) += vertex_mass*gravity;
 
-		f(3*indices(1)+1) += vertex_mass*-9.81; 
+		f(3*indices(1)+1) += vertex_mass*gravity; 
 
-		f(3*indices(2)+1) += vertex_mass*-9.81;
+		f(3*indices(2)+1) += vertex_mass*gravity;
 
-		f(3*indices(3)+1) += vertex_mass*-9.81;
+		f(3*indices(3)+1) += vertex_mass*gravity;
 	}
-
 	//elastic
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -276,49 +280,6 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 		}
 	}
 	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
-
-	//OLD METHOD OF SETTING GLOBAL GRAD F, USING LOCAL GRAD F
-
-	// for(unsigned int i=0; i<M.tets.size(); i++){
-	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
-	// 	//P is the compute Force Differentials blackbox fxn
-	// 	MatrixXd local_gradForces(12, 12);
-	// 	local_gradForces.setZero();
-
-	// 	Vector12d dx(12);
-	// 	dx.setZero();
-	// 	for(unsigned int j=0; j<12; j++){
-	// 		dx(j) = 1;
-	// 		MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
-	// 		local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
-	// 		dx(j) = 0; //ASK check is this efficient?
-	// 	}
-
-
-	// 	//TODO optimize this somehow. Create Triplet list from local grad forces
-	// 	vector<Trip> triplets;
-	// 	triplets.reserve(9*16);//estimation of entries
-	// 	Vector4i indices = M.tets[i].verticesIndex;
-	// 	for(unsigned int ki=0; ki<4; ki++){
-	// 		for(unsigned int kj=0; kj<4; kj++){
-	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj], local_gradForces(3*ki, 3*kj))); //dfxi/dxi
-	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
-	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
-
-	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj], local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
-	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
-	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
-
-	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj], local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
-	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
-	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
-	// 		}
-	// 	}
-	// 	//Now insert triplets into global matrix
-	// 	forceGradient.setFromTriplets(triplets.begin(), triplets.end());
-	// }
-	// cout<<"test global forces"<<endl;
-	// cout<<global_gradForces-forceGradient<<endl;
 	return;
 }
 void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
@@ -330,22 +291,6 @@ void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
 		x_n1.segment<3>(indices(1)) = TVk.row(indices(1));
 		x_n1.segment<3>(indices(2)) = TVk.row(indices(2));
 		x_n1.segment<3>(indices(3)) = TVk.row(indices(3));
-
-		// x_n1(3*indices(0)) = TVk.row(indices(0))[0];
-		// x_n1(3*indices(0)+1) = TVk.row(indices(0))[1];
-		// x_n1(3*indices(0)+2) = TVk.row(indices(0))[2];
-
-		// x_n1(3*indices(1)) = TVk.row(indices(1))[0];
-		// x_n1(3*indices(1)+1) = TVk.row(indices(1))[1];
-		// x_n1(3*indices(1)+2) = TVk.row(indices(1))[2];
-
-		// x_n1(3*indices(2)) = TVk.row(indices(2))[0];
-		// x_n1(3*indices(2)+1) = TVk.row(indices(2))[1];
-		// x_n1(3*indices(2)+2) = TVk.row(indices(2))[2];
-
-		// x_n1(3*indices(3)) = TVk.row(indices(3))[0];
-		// x_n1(3*indices(3)+1) = TVk.row(indices(3))[1];
-		// x_n1(3*indices(3)+2) = TVk.row(indices(3))[2];
 	}
 }
 void Simulation::renderExplicit(){
@@ -360,40 +305,55 @@ void Simulation::renderExplicit(){
 void Simulation::renderImplicit(){
 	t+=1;
 	//Implicit Code
-	VectorXd v_k = v_old;
-	VectorXd x_k = x_old+timestep*v_k;	
-	ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+	v_k = v_old;
 	forceGradient.setZero();
-	ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
-	int i=0;
-	for(i=0; i<100; i++){
+	bool Nan=false;
+	int NEWTON_MAX = 100, i =0;
+	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
+
+		x_k = x_old+timestep*v_k;
+	
+		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 		VectorXd g = v_k - (v_old + timestep*InvMass*f);
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient - ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
-
-		//solve for 
+		
+		//solve for delta v
+		// Conj Grad
 		ConjugateGradient<SparseMatrix<double>> cg;
 		cg.compute(grad_g);
 		VectorXd deltaV = -1*cg.solve(g);
-		
+
+		//Sparse Cholesky LL^T
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(grad_g);
+		// VectorXd deltaV = -1* llt.solve(g);
+		// cout<<(grad_g*deltaV +g).squaredNorm()<<endl;
+		// cout<<g.squaredNorm()<<endl;
+
 		v_k = v_k + deltaV;
 
 		//cout<<g.squaredNorm()<<endl;
+		if(v_k != v_k){
+			Nan = true;
+			break;
+		}
 		if(g.squaredNorm()<0.000001){
-			//cout<<i<<endl;
 			break;
 		}
 	}
-	if(i>1){
-		cout<<"value of conv"<<endl;
-		cout<<i<<endl;	
+	if(Nan || i== NEWTON_MAX){
+		cout<<"ERROR: Newton's method doesn't converge"<<endl;
+		cout<<i<<endl;
+		exit(0);
 	}
 
 	//cout<<endl;
-	setXIntoTV(x_k);
-	x_old = x_k;
+	x_old = x_old+timestep*v_k;
 	v_old = v_k;
+	cout<<endl;
 	
 }
 
@@ -409,6 +369,7 @@ bool Simulation::isFixed(int vert){
 
 void Simulation::render(){
 	if(integrator == 'e'){
+		cout<<endl;
 		cout<<'e'<<t<<endl;
 		renderExplicit();
 	}else{
@@ -423,13 +384,13 @@ void Simulation::render(){
 	for(int i=0; i<vertices; i++){
 		if(!isFixed(i)){
 			int k=3*i;
-			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 			k++;
-			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 			k++;
-			gravityE +=  vertex_masses(k)*9.81*(x_old(k));
+			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 		}		
 	}
@@ -599,13 +560,6 @@ void useMyObject(bool headless, float timestep, int iterations, char method){
 	Sim.fixVertices(1);
 	Sim.fixVertices(2);
 	Sim.fixVertices(3);
-	// int i=0;
-	// while(i<2){
-	// 	i++;
-	// 	cout<<"--------------------------------"<<endl;
-	// 	Sim.render();
-	// 	cout<<"--------------------------------"<<endl;
-	// }
 
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
@@ -638,6 +592,7 @@ int main(int argc, char *argv[])
 	char headless;
 	char method;
 	int iterations = 0;
+	int object = 0;
 	string line;
 	ifstream configFile ("../config.txt");
 	if(configFile.is_open()){
@@ -660,6 +615,10 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		rayleighCoeff = atof(line.c_str());
 		cout<<rayleighCoeff<<endl;
+
+		getline(configFile, line);
+		object = atoi(line.c_str());
+		cout<<object<<endl;
 	}else{
 		cout<<"Config file not found"<<endl;
 		return 0;
@@ -675,8 +634,11 @@ int main(int argc, char *argv[])
 	if(headless=='t'){
 		runHeadless = true;
 	}
-	useMyObject(runHeadless, timestep, iterations, method);
-	// useFullObject(runHeadless, timestep, iterations, method);
+	if(object ==0){
+		useMyObject(runHeadless, timestep, iterations, method);	
+	}else{
+		useFullObject(runHeadless, timestep, iterations, method);
+	}
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
 	energyFile.close();
@@ -685,10 +647,23 @@ int main(int argc, char *argv[])
 	gravityEnergyFile.close();
 	return 0;
 }
-//Get the E density fxn for neohookean.
-//Plot the wheel with implicit E, and with Explicit Neohookean (several different time steps)
-//Redo optimization
-//Get Full SVK and Full Neohookean working
-////Redo consistency tests, pass obj into houdini/blender
 
-//read stuff on quasi newton methods
+//Get Full SVK and Full Neohookean working
+
+
+// read lbfgs and api
+// houdini
+
+// keep CG
+// get eigen sparse solvers (or suitesparse) - sparse cholesky, sparse QR
+// try profiler with real lambda and mu values
+
+// test implicit euler with real lambda and mu
+// - test with direct solver
+// - do consistency test with/without damping
+// - - find size of timestep, so as I decrease timestep, trajectory
+// - see if I need to use implicit midpoint newmark
+
+// test damping
+// - find real damping parameters for spring
+// - 
