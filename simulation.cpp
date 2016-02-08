@@ -20,7 +20,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
-double gravity = 9.81;
+double gravity = -9.81;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -63,7 +63,7 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	x_old.setZero();
 	v_old.resize(3*vertices);
 	v_old.setZero();
-	v_old = VectorXd::Random(3*vertices)*10;
+	// v_old = VectorXd::Random(3*vertices)*10;
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -239,13 +239,50 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 	}
 
 	//damping
-	f+= rayleighCoeff*forceGradient*v_k;
+	// f+= rayleighCoeff*forceGradient*v_k;
 	return;
 }
 
 void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
-	vector<Trip> triplets1;
-	triplets1.reserve(9*16);	
+	// vector<Trip> triplets1;
+	// triplets1.reserve(9*16);	
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
+	// 	//P is the compute Force Differentials blackbox fxn
+	// 	MatrixXd local_gradForces(12, 12);
+	// 	local_gradForces.setZero();
+
+	// 	Vector12d dx(12);
+	// 	dx.setZero();
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	int kj;
+	// 	for(unsigned int j=0; j<12; j++){
+	// 		dx(j) = 1;
+	// 		MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
+	// 		kj = j%3;
+	// 		//row in order for dfxi/dxi ..dfxi/dzl
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0], dForces(0,0)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+1, dForces(1,0)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+2, dForces(2,0)));
+
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1], dForces(0,1)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+1, dForces(1,1)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+2, dForces(2,1)));
+
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2], dForces(0,2)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+1, dForces(1,2)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+2, dForces(2,2)));
+
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], dForces(0,3)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, dForces(1,3)));
+	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, dForces(2,3)));
+	// 		dx(j) = 0; //ASK check is this efficient?
+	// 	}
+	// }
+	// forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
+
+	//OLD METHOD OF SETTING GLOBAL GRAD F, USING LOCAL GRAD F
+
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -254,32 +291,37 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 
 		Vector12d dx(12);
 		dx.setZero();
-		Vector4i indices = M.tets[i].verticesIndex;
-		int kj;
 		for(unsigned int j=0; j<12; j++){
 			dx(j) = 1;
 			MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
-			kj = j%3;
-			//row in order for dfxi/dxi ..dfxi/dzl
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0], dForces(0,0)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+1, dForces(1,0)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+2, dForces(2,0)));
-
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1], dForces(0,1)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+1, dForces(1,1)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+2, dForces(2,1)));
-
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2], dForces(0,2)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+1, dForces(1,2)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+2, dForces(2,2)));
-
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], dForces(0,3)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, dForces(1,3)));
-			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, dForces(2,3)));
+			local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
 			dx(j) = 0; //ASK check is this efficient?
 		}
+
+
+		//TODO optimize this somehow. Create Triplet list from local grad forces
+		vector<Trip> triplets;
+		triplets.reserve(9*16);//estimation of entries
+		Vector4i indices = M.tets[i].verticesIndex;
+		for(unsigned int ki=0; ki<4; ki++){
+			for(unsigned int kj=0; kj<4; kj++){
+				triplets.push_back(Trip(3*indices[ki], 3*indices[kj], local_gradForces(3*ki, 3*kj))); //dfxi/dxi
+				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
+				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
+
+				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj], local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
+				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
+				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
+
+				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj], local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
+				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
+				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
+			}
+		}
+		//Now insert triplets into global matrix
+		forceGradient.setFromTriplets(triplets.begin(), triplets.end());
 	}
-	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
+
 	return;
 }
 void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
@@ -305,20 +347,23 @@ void Simulation::renderExplicit(){
 void Simulation::renderImplicit(){
 	t+=1;
 	//Implicit Code
+	v_k.setZero();
+	x_k.setZero();
 	v_k = v_old;
+	x_k = x_old;
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
+
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
-
-		x_k = x_old+timestep*v_k;
 	
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
+
 		VectorXd g = v_k - (v_old + timestep*InvMass*f);
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient - ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient- ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 		
 		//solve for delta v
 		// Conj Grad
@@ -333,6 +378,7 @@ void Simulation::renderImplicit(){
 		// cout<<(grad_g*deltaV +g).squaredNorm()<<endl;
 		// cout<<g.squaredNorm()<<endl;
 
+		x_k = x_old+timestep*v_k;
 		v_k = v_k + deltaV;
 
 		//cout<<g.squaredNorm()<<endl;
@@ -340,9 +386,10 @@ void Simulation::renderImplicit(){
 			Nan = true;
 			break;
 		}
-		if(g.squaredNorm()<0.000001){
+		if(g.squaredNorm()<0.00001){
 			break;
 		}
+		setXIntoTV(x_k);
 	}
 	if(Nan || i== NEWTON_MAX){
 		cout<<"ERROR: Newton's method doesn't converge"<<endl;
@@ -353,7 +400,6 @@ void Simulation::renderImplicit(){
 	//cout<<endl;
 	x_old = x_old+timestep*v_k;
 	v_old = v_k;
-	cout<<endl;
 	
 }
 
@@ -373,6 +419,7 @@ void Simulation::render(){
 		cout<<'e'<<t<<endl;
 		renderExplicit();
 	}else{
+		cout<<endl;
 		cout<<'i'<<t<<endl;
 		renderImplicit();
 	}
@@ -496,7 +543,7 @@ void useFullObject(bool headless, float timestep, int iterations, char method){
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
 	V = V;
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 	// //constructs the map from V to TV
@@ -557,9 +604,7 @@ void useMyObject(bool headless, float timestep, int iterations, char method){
 	// 			-10, 0, 0;
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-	Sim.fixVertices(1);
-	Sim.fixVertices(2);
-	Sim.fixVertices(3);
+
 
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
