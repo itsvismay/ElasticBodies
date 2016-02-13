@@ -11,6 +11,7 @@
 #include <string>
 #include <math.h>
 #include "simulation.h"
+#include <set>
 #ifndef TUTORIAL_SHARED_PATH
 #define TUTORIAL_SHARED_PATH "../shared"
 #endif
@@ -20,7 +21,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
-double gravity = -9.81;
+double gravity = 0;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -36,6 +37,24 @@ Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
 Eigen::MatrixXi TF;
 
+class Spring{
+public:
+	int v1, v2;
+	float restLen;
+	float stiffness;
+
+	Spring(int vert1, int vert2);
+};
+
+Spring::Spring(int vert1, int vert2){
+		v1 = vert1;
+		v2 = vert2;
+		stiffness = 50;
+		restLen = 10;
+	
+}
+vector<Spring> springList;
+set< pair<int, int> > springSet;
 
 Simulation::Simulation(void){}
 
@@ -71,6 +90,45 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	M.initializeMesh(TT_One, TV);	
 	createInvMassMatrix(); //creates InvMass
 	createXFromTet(); //creates x_old
+
+	int v1, v2;
+
+	/////////////////////////////////
+	for(int i=0; i<M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+
+		insertToSpringSet(indices[0],  indices[1]);
+
+		insertToSpringSet(indices[0], indices[2]);
+		
+		insertToSpringSet(indices[0] , indices[3]);
+		
+		insertToSpringSet(indices[1], indices[2]);
+
+		insertToSpringSet(indices[1], indices[3]);
+
+		insertToSpringSet(indices[2], indices[3]);
+
+	}
+	/////////////////////////////////
+}
+
+void Simulation::insertToSpringSet(int i1, int i2){
+	pair<int, int> pair1(i1,  i2);
+	pair<int, int> pair2(i2,  i1);
+
+	pair<set< pair<int,int> >::iterator, bool> ret;
+	ret = springSet.insert(pair1);
+
+	if(ret.second==false){
+		//item exists in set
+		return;
+	}
+	springSet.insert(pair2);
+	Spring s(i1, i2);
+	springList.push_back(s);
+	return;
+
 }
 
 void Simulation::createInvMassMatrix(){
@@ -156,8 +214,26 @@ void Simulation::setXIntoTV(VectorXd& x_new){
 
 void Simulation::createForceVector(){
 	f.setZero();
-	calculateGravity();
-	calculateElasticForce();
+	//UNCOMMENT
+	// calculateGravity();
+	// calculateElasticForce();
+
+	////////////////////////////////////////
+	for(int i=0; i<springList.size(); i++){
+		int v1 = springList[i].v1;
+		int v2 = springList[i].v2;
+		Vector3d p1 = TV.row(v1);
+		Vector3d p2 = TV.row(v2);
+		float curlen = (p2-p1).norm();
+		f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
+		f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
+	}
+	for(int i=0; i<f.rows(); i++){
+		i++;
+		f(i) = gravity*vertex_masses(i/3);
+		i++;
+	}
+	////////////////////////////////////////
 	// cout<<endl<<"Force sq norm"<<endl;
 }
 
@@ -213,39 +289,56 @@ void Simulation::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){
 }
 
 void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f){
-	//gravity
+	// //gravity
 	f.setZero();
+	//UNCOMMENT
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
+	// 	Vector4i indices = M.tets[i].verticesIndex;
 
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-		Vector4i indices = M.tets[i].verticesIndex;
+	// 	f(3*indices(0)+1) += vertex_mass*gravity;
 
-		f(3*indices(0)+1) += vertex_mass*gravity;
+	// 	f(3*indices(1)+1) += vertex_mass*gravity; 
 
-		f(3*indices(1)+1) += vertex_mass*gravity; 
+	// 	f(3*indices(2)+1) += vertex_mass*gravity;
 
-		f(3*indices(2)+1) += vertex_mass*gravity;
+	// 	f(3*indices(3)+1) += vertex_mass*gravity;
+	// }
+	// //elastic
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	MatrixXd F_tet = M.tets[i].computeElasticForces(TVk, t%2);
+	// 	f.segment<3>(3*indices(0)) += F_tet.col(0);
+	// 	f.segment<3>(3*indices(1)) += F_tet.col(1);
+	// 	f.segment<3>(3*indices(2)) += F_tet.col(2);
+	// 	f.segment<3>(3*indices(3)) += F_tet.col(3);
+	// }
 
-		f(3*indices(3)+1) += vertex_mass*gravity;
-	}
-	//elastic
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		MatrixXd F_tet = M.tets[i].computeElasticForces(TVk, t%2);
-		f.segment<3>(3*indices(0)) += F_tet.col(0);
-		f.segment<3>(3*indices(1)) += F_tet.col(1);
-		f.segment<3>(3*indices(2)) += F_tet.col(2);
-		f.segment<3>(3*indices(3)) += F_tet.col(3);
-	}
-
-	//damping
+	// //damping
 	// f+= rayleighCoeff*forceGradient*v_k;
+
+	////////////////////////////////////////
+	for(int i=0; i<springList.size(); i++){
+		int v1 = springList[i].v1;
+		int v2 = springList[i].v2;
+		Vector3d p1 = TV.row(v1);
+		Vector3d p2 = TV.row(v2);
+		float curlen = (p2-p1).norm();
+		f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
+		f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
+	}
+	for(int i=0; i<f.rows(); i++){
+		i++;
+		f(i) = gravity*vertex_masses(i/3);
+		i++;
+	}
+	////////////////////////////////////////
 	return;
 }
 
 void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 	// vector<Trip> triplets1;
-	// triplets1.reserve(9*16);	
+	// triplets1.reserve(CHANGE);	
 	// for(unsigned int i=0; i<M.tets.size(); i++){
 	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 	// 	//P is the compute Force Differentials blackbox fxn
@@ -282,46 +375,155 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 	// forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
 
 	//OLD METHOD OF SETTING GLOBAL GRAD F, USING LOCAL GRAD F
+	//UNCOMMENT
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
+	// 	//P is the compute Force Differentials blackbox fxn
+	// 	MatrixXd local_gradForces(12, 12);
+	// 	local_gradForces.setZero();
 
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
-		//P is the compute Force Differentials blackbox fxn
-		MatrixXd local_gradForces(12, 12);
-		local_gradForces.setZero();
-
-		Vector12d dx(12);
-		dx.setZero();
-		for(unsigned int j=0; j<12; j++){
-			dx(j) = 1;
-			MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
-			local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
-			dx(j) = 0; //ASK check is this efficient?
-		}
+	// 	Vector12d dx(12);
+	// 	dx.setZero();
+	// 	for(unsigned int j=0; j<12; j++){
+	// 		dx(j) = 1;
+	// 		MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
+	// 		local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
+	// 		dx(j) = 0; //ASK check is this efficient?
+	// 	}
 
 
-		//TODO optimize this somehow. Create Triplet list from local grad forces
+	// 	//TODO optimize this somehow. Create Triplet list from local grad forces
 		vector<Trip> triplets;
-		triplets.reserve(9*16);//estimation of entries
-		Vector4i indices = M.tets[i].verticesIndex;
-		for(unsigned int ki=0; ki<4; ki++){
-			for(unsigned int kj=0; kj<4; kj++){
-				triplets.push_back(Trip(3*indices[ki], 3*indices[kj], local_gradForces(3*ki, 3*kj))); //dfxi/dxi
-				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
-				triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
+		triplets.reserve(3*vertices*3*vertices);//estimation of entries
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	for(unsigned int ki=0; ki<4; ki++){
+	// 		for(unsigned int kj=0; kj<4; kj++){
+	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj], local_gradForces(3*ki, 3*kj))); //dfxi/dxi
+	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
+	// 			triplets.push_back(Trip(3*indices[ki], 3*indices[kj]+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
 
-				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj], local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
-				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
-				triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
+	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj], local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
+	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
+	// 			triplets.push_back(Trip(3*indices[ki]+1,  3*indices[kj]+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
 
-				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj], local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
-				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
-				triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
-			}
-		}
-		//Now insert triplets into global matrix
-		forceGradient.setFromTriplets(triplets.begin(), triplets.end());
+	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj], local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
+	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
+	// 			triplets.push_back(Trip(3*indices[ki]+2,  3*indices[kj]+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
+	// 		}
+	// 	}
+	// 	//Now insert triplets into global matrix
+	// 	forceGradient.setFromTriplets(triplets.begin(), triplets.end());
+	// }
+	for(int i=0; i<springList.size(); i++){
+		int v1 = springList[i].v1;
+		int v2 = springList[i].v2;
+		Vector3d p1 = TV.row(v1);
+		Vector3d p2 = TV.row(v2);
+		double curlen = (p2-p1).norm();
+		
+		//figure out placement into global dF matrix
+		float K = springList[i].stiffness;
+		float L = springList[i].restLen;
+		double x = (p2-p1).squaredNorm();
+
+		double dfx1dx1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(0)-p1(0))*(p2(0)-p1(0));
+		double dfx1dy1 = -K*L*pow(x, -1.5)*(p2(0)-p1(0))*(p2(1) - p1(1));
+		double dfx1dz1 = -K*L*pow(x, -1.5)*(p2(0)-p1(0))*(p2(2) - p1(2));
+		double dfx1dx2 = -dfx1dx1;
+		double dfx1dy2 = -dfx1dy1;
+		double dfx1dz2 = -dfx1dz1;
+
+		double dfy1dx1 = dfx1dy1;
+		double dfy1dy1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(1)-p1(1))*(p2(1)-p1(1));
+		double dfy1dz1 = -K*L*pow(x, -1.5)*(p2(1)-p1(1))*(p2(2) - p1(2));
+		double dfy1dx2 = -dfy1dx1;
+		double dfy1dy2 = -dfy1dy1;
+		double dfy1dz2 = -dfy1dz1;
+
+		double dfz1dx1 = dfx1dz1;
+		double dfz1dy1 = dfy1dz1;
+		double dfz1dz1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(2)-p1(2))*(p2(2)-p1(2));
+		double dfz1dx2 = -dfz1dx1;
+		double dfz1dy2 = -dfz1dy1;
+		double dfz1dz2 = -dfz1dz1;
+
+		double dfx2dx1 = dfx1dx2;
+		double dfx2dy1 = dfy1dx2;
+		double dfx2dz1 = dfz1dz2;
+		double dfx2dx2 = -dfx1dx2;
+		double dfx2dy2 = -dfy1dx2;
+		double dfx2dz2 = -dfz1dz2;
+		
+		double dfy2dx1 = dfx1dy2;
+		double dfy2dy1 = dfy1dy2;
+		double dfy2dz1 = dfz1dy2;
+		double dfy2dx2 = -dfx1dy2;
+		double dfy2dy2 = -dfy1dy2;
+		double dfy2dz2 = -dfz1dy2;
+		
+		double dfz2dx1 = dfx1dz2;
+		double dfz2dy1 = dfy1dz2;
+		double dfz2dz1 = dfz1dz2;
+		double dfz2dx2 = -dfx1dz2;
+		double dfz2dy2 = -dfy1dz2;
+		double dfz2dz2 = -dfz1dz2;
+
+		//local matrix rows
+		//row 1
+		triplets.push_back(Trip(3*v1, 3*v1, dfx1dx1));
+		triplets.push_back(Trip(3*v1, 3*v1 + 1, dfx1dy1));
+		triplets.push_back(Trip(3*v1, 3*v1 + 2, dfx1dz1));
+
+		triplets.push_back(Trip(3*v1, 3*v2, dfx1dx2));
+		triplets.push_back(Trip(3*v1, 3*v2 + 1, dfx1dy2));
+		triplets.push_back(Trip(3*v1, 3*v2 + 2, dfx1dz2));
+
+		//row 2
+		triplets.push_back(Trip(3*v1 + 1, 3*v1, dfy1dx1));
+		triplets.push_back(Trip(3*v1 + 1, 3*v1 + 1, dfy1dy1));
+		triplets.push_back(Trip(3*v1 + 1, 3*v1 + 2, dfy1dz1));
+		
+		triplets.push_back(Trip(3*v1 + 1, 3*v2, dfy1dx2));
+		triplets.push_back(Trip(3*v1 + 1, 3*v2 + 1, dfy1dy2));
+		triplets.push_back(Trip(3*v1 + 1, 3*v2 + 2, dfy1dz2));
+
+		//row 3
+		triplets.push_back(Trip(3*v1 + 2, 3*v1, dfz1dx1));
+		triplets.push_back(Trip(3*v1 + 2, 3*v1 + 1, dfz1dy1));
+		triplets.push_back(Trip(3*v1 + 2, 3*v1 + 2, dfz1dz1));
+		
+		triplets.push_back(Trip(3*v1 + 2, 3*v2, dfz1dx2));
+		triplets.push_back(Trip(3*v1 + 2, 3*v2 + 1, dfz1dy2));
+		triplets.push_back(Trip(3*v1 + 2, 3*v2 + 2, dfz1dz2));
+
+		//row 4
+		triplets.push_back(Trip(3*v2, 3*v1, dfx2dx1));
+		triplets.push_back(Trip(3*v2, 3*v1 + 1, dfx2dy1));
+		triplets.push_back(Trip(3*v2, 3*v1 + 2, dfx2dz1));
+
+		triplets.push_back(Trip(3*v2, 3*v2, dfx2dx2));
+		triplets.push_back(Trip(3*v2, 3*v2 + 1, dfx2dy2));
+		triplets.push_back(Trip(3*v2, 3*v2 + 2, dfx2dz2));
+
+		//row 5
+		triplets.push_back(Trip(3*v2 + 1, 3*v1, dfy2dx1));
+		triplets.push_back(Trip(3*v2 + 1, 3*v1 + 1, dfy2dy1));
+		triplets.push_back(Trip(3*v2 + 1, 3*v1 + 2, dfy2dz1));
+		
+		triplets.push_back(Trip(3*v2 + 1, 3*v2, dfy2dx2));
+		triplets.push_back(Trip(3*v2 + 1, 3*v2 + 1, dfy2dy2));
+		triplets.push_back(Trip(3*v2 + 1, 3*v2 + 2, dfy2dz2));
+
+		//row 6
+		triplets.push_back(Trip(3*v2 + 2, 3*v1, dfz2dx1));
+		triplets.push_back(Trip(3*v2 + 2, 3*v1 + 1, dfz2dy1));
+		triplets.push_back(Trip(3*v2 + 2, 3*v1 + 2, dfz2dz1));
+		
+		triplets.push_back(Trip(3*v2 + 2, 3*v2, dfz2dx2));
+		triplets.push_back(Trip(3*v2 + 2, 3*v2 + 1, dfz2dy2));
+		triplets.push_back(Trip(3*v2 + 2, 3*v2 + 2, dfz2dz2));
 	}
-
+	forceGradient.setFromTriplets(triplets.begin(), triplets.end());
 	return;
 }
 void Simulation::ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk){
@@ -442,9 +644,19 @@ void Simulation::render(){
 		}		
 	}
 	double strainE = 0;
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
+	//UNCOMMENT
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
+	// }
+	for(unsigned int i=0; i<springList.size(); i++){
+		int v1 = springList[i].v1;
+		int v2 = springList[i].v2;
+		Vector3d p1 = TV.row(v1);
+		Vector3d p2 = TV.row(v2);
+		float curlen = (p2-p1).norm() - springList[i].restLen;
+		strainE += 0.5*springList[i].stiffness*(curlen*curlen);
 	}
+
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
 	// cout<<strainE<<endl;
@@ -604,7 +816,6 @@ void useMyObject(bool headless, float timestep, int iterations, char method){
 	// 			-10, 0, 0;
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-
 
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;

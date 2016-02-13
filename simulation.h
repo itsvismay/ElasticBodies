@@ -56,4 +56,8 @@ public:
 	void ImplicitCalculateForces(MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f);
 	void ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk);
 	void ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk);
+
+	void insertToSpringSet(int i1, int i2);
+
+	
 };
