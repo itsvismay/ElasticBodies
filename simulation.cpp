@@ -43,14 +43,14 @@ public:
 	float restLen;
 	float stiffness;
 
-	Spring(int vert1, int vert2);
+	Spring(int vert1, int vert2, float rL);
 };
 
-Spring::Spring(int vert1, int vert2){
+Spring::Spring(int vert1, int vert2, float rL){
 		v1 = vert1;
 		v2 = vert2;
-		stiffness = 50;
-		restLen = 20;
+		stiffness = 500000;
+		restLen = rL;
 	
 }
 vector<Spring> springList;
@@ -82,7 +82,7 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	x_old.setZero();
 	v_old.resize(3*vertices);
 	v_old.setZero();
-	// v_old = VectorXd::Random(3*vertices)*10;
+	v_old = VectorXd::Random(3*vertices)*10;
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -91,29 +91,27 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	createInvMassMatrix(); //creates InvMass
 	createXFromTet(); //creates x_old
 
-	int v1, v2;
-
 	/////////////////////////////////
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		// insertToSpringSet(indices[0],  indices[1]);
-		// insertToSpringSet(indices[0], indices[2]);
-		// insertToSpringSet(indices[0] , indices[3]);
-		// insertToSpringSet(indices[1], indices[2]);
-		// insertToSpringSet(indices[1], indices[3]);
-		// insertToSpringSet(indices[2], indices[3]);
-		Spring s1(indices[0], indices[1]);
-		springList.push_back(s1);
-		Spring s2(indices[0], indices[2]);
-		springList.push_back(s2);
-		Spring s3(indices[0], indices[3]);
-		springList.push_back(s3);
-		Spring s4(indices[1], indices[2]);
-		springList.push_back(s4);
-		Spring s5(indices[1], indices[3]);
-		springList.push_back(s5);
-		Spring s6(indices[2], indices[3]);
-		springList.push_back(s6);
+		insertToSpringSet(indices[0],  indices[1]);
+		insertToSpringSet(indices[0], indices[2]);
+		insertToSpringSet(indices[0] , indices[3]);
+		insertToSpringSet(indices[1], indices[2]);
+		insertToSpringSet(indices[1], indices[3]);
+		insertToSpringSet(indices[2], indices[3]);
+		// Spring s1(indices[0], indices[1]);
+		// springList.push_back(s1);
+		// Spring s2(indices[0], indices[2]);
+		// springList.push_back(s2);
+		// Spring s3(indices[0], indices[3]);
+		// springList.push_back(s3);
+		// Spring s4(indices[1], indices[2]);
+		// springList.push_back(s4);
+		// Spring s5(indices[1], indices[3]);
+		// springList.push_back(s5);
+		// Spring s6(indices[2], indices[3]);
+		// springList.push_back(s6);
 
 
 	}
@@ -132,7 +130,7 @@ void Simulation::insertToSpringSet(int i1, int i2){
 		return;
 	}
 	springSet.insert(pair2);
-	Spring s(i1, i2);
+	Spring s(i1, i2, (TV.row(i2)- TV.row(i1)).norm());
 	springList.push_back(s);
 	return;
 
@@ -170,6 +168,7 @@ void Simulation::createInvMassMatrix(){
 	for(int i=0; i<vertices*3; i++){
 		InvMass.coeffRef(i, i) = 1/vertex_masses(i);
 	}
+
 }
 
 void Simulation::fixVertices(int fixed){
@@ -241,7 +240,8 @@ void Simulation::createForceVector(){
 		i++;
 	}
 	////////////////////////////////////////
-	// cout<<endl<<"Force sq norm"<<endl;
+	// cout<<endl<<"Force"<<endl;
+
 }
 
 void Simulation::calculateGravity(){
@@ -348,7 +348,6 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 	// f+= rayleighCoeff*forceGradient*v_k;
 
 	////////////////////////////////////////
-	cout<<"------"<<endl;
 	for(int i=0; i<springList.size(); i++){
 		int v1 = springList[i].v1;
 		int v2 = springList[i].v2;
@@ -357,12 +356,11 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 		float curlen = (p2-p1).norm();
 		f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
 		f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
-		cout<<curlen<<endl;
+
 	}
-	cout<<"------"<<endl;
 	for(int i=0; i<f.rows(); i++){
 		i++;
-		f(i) = gravity*vertex_masses(i/3);
+		f(i) += gravity*vertex_masses(i/3);
 		i++;
 	}
 	////////////////////////////////////////
@@ -457,10 +455,9 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 		//figure out placement into global dF matrix
 		float K = springList[i].stiffness;
 		float L = springList[i].restLen;
-		double x = (p2-p1).squaredNorm();
 
 		Matrix3d I = MatrixXd::Identity(3,3);
-		Matrix3d localdF = K*(1-L/curlen)*I + K*L*(p2-p1)*(p2-p1).transpose()/curlen/curlen/curlen;
+		Matrix3d localdF = -K*(1-L/curlen)*I - K*L*(p2-p1)*(p2-p1).transpose()/curlen/curlen/curlen;
 		for(int j=0; j<3; j++){
 			for(int q=0; q<3; q++){
 				triplets.push_back(Trip(3*v1+j, 3*v1+q, localdF.coeff(j,q)));
@@ -512,22 +509,20 @@ void Simulation::renderImplicit(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 
-		// VectorXd g = v_k - (v_old + timestep*InvMass*f);
-		// grad_g = Ident - timestep*timestep*InvMass*forceGradient- ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
 		VectorXd g = x_k - (x_old + timestep*v_k + timestep*timestep*InvMass*f);
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;
+
 		//solve for delta v
 		// Conj Grad
-		ConjugateGradient<SparseMatrix<double>> cg;
-		cg.compute(grad_g);
-		VectorXd deltaX = -1*cg.solve(g);
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(grad_g);
+		// VectorXd deltaX = -1*cg.solve(g);
 
 		//Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaV = -1* llt.solve(g);
-		// cout<<(grad_g*deltaV +g).squaredNorm()<<endl;
-		// cout<<g.squaredNorm()<<endl;
+		SimplicialLLT<SparseMatrix<double>> llt;
+		llt.compute(grad_g);
+		VectorXd deltaX = -1* llt.solve(g);
+
 
 		// x_k = x_old+timestep*v_k;
 		// v_k = v_k + deltaV;
@@ -551,6 +546,7 @@ void Simulation::renderImplicit(){
 	// v_old = v_k;
 	v_old = (x_k - x_old)/timestep;
 	x_old = x_k;
+
 	ImplicitXtoTV(x_old, TV);
 
 	
