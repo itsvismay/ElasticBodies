@@ -50,7 +50,7 @@ Spring::Spring(int vert1, int vert2){
 		v1 = vert1;
 		v2 = vert2;
 		stiffness = 50;
-		restLen = 10;
+		restLen = 20;
 	
 }
 vector<Spring> springList;
@@ -96,18 +96,25 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	/////////////////////////////////
 	for(int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
+		// insertToSpringSet(indices[0],  indices[1]);
+		// insertToSpringSet(indices[0], indices[2]);
+		// insertToSpringSet(indices[0] , indices[3]);
+		// insertToSpringSet(indices[1], indices[2]);
+		// insertToSpringSet(indices[1], indices[3]);
+		// insertToSpringSet(indices[2], indices[3]);
+		Spring s1(indices[0], indices[1]);
+		springList.push_back(s1);
+		Spring s2(indices[0], indices[2]);
+		springList.push_back(s2);
+		Spring s3(indices[0], indices[3]);
+		springList.push_back(s3);
+		Spring s4(indices[1], indices[2]);
+		springList.push_back(s4);
+		Spring s5(indices[1], indices[3]);
+		springList.push_back(s5);
+		Spring s6(indices[2], indices[3]);
+		springList.push_back(s6);
 
-		insertToSpringSet(indices[0],  indices[1]);
-
-		insertToSpringSet(indices[0], indices[2]);
-		
-		insertToSpringSet(indices[0] , indices[3]);
-		
-		insertToSpringSet(indices[1], indices[2]);
-
-		insertToSpringSet(indices[1], indices[3]);
-
-		insertToSpringSet(indices[2], indices[3]);
 
 	}
 	/////////////////////////////////
@@ -288,6 +295,29 @@ void Simulation::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){
 	return;
 }
 
+void Simulation::ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk){
+	x_tv.setZero();
+	for(unsigned int i = 0; i < M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+
+		x_tv(3*indices(0)) = TVk.row(indices(0))[0];
+		x_tv(3*indices(0)+1) = TVk.row(indices(0))[1];
+		x_tv(3*indices(0)+2) = TVk.row(indices(0))[2];
+
+		x_tv(3*indices(1)) = TVk.row(indices(1))[0];
+		x_tv(3*indices(1)+1) = TVk.row(indices(1))[1];
+		x_tv(3*indices(1)+2) = TVk.row(indices(1))[2];
+
+		x_tv(3*indices(2)) = TVk.row(indices(2))[0];
+		x_tv(3*indices(2)+1) = TVk.row(indices(2))[1];
+		x_tv(3*indices(2)+2) = TVk.row(indices(2))[2];
+
+		x_tv(3*indices(3)) = TVk.row(indices(3))[0];
+		x_tv(3*indices(3)+1) = TVk.row(indices(3))[1];
+		x_tv(3*indices(3)+2) = TVk.row(indices(3))[2];
+	}
+}
+
 void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f){
 	// //gravity
 	f.setZero();
@@ -318,15 +348,18 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 	// f+= rayleighCoeff*forceGradient*v_k;
 
 	////////////////////////////////////////
+	cout<<"------"<<endl;
 	for(int i=0; i<springList.size(); i++){
 		int v1 = springList[i].v1;
 		int v2 = springList[i].v2;
-		Vector3d p1 = TV.row(v1);
-		Vector3d p2 = TV.row(v2);
+		Vector3d p1 = TVk.row(v1);
+		Vector3d p2 = TVk.row(v2);
 		float curlen = (p2-p1).norm();
 		f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
 		f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
+		cout<<curlen<<endl;
 	}
+	cout<<"------"<<endl;
 	for(int i=0; i<f.rows(); i++){
 		i++;
 		f(i) = gravity*vertex_masses(i/3);
@@ -417,8 +450,8 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 	for(int i=0; i<springList.size(); i++){
 		int v1 = springList[i].v1;
 		int v2 = springList[i].v2;
-		Vector3d p1 = TV.row(v1);
-		Vector3d p2 = TV.row(v2);
+		Vector3d p1 = TVk.row(v1);
+		Vector3d p2 = TVk.row(v2);
 		double curlen = (p2-p1).norm();
 		
 		//figure out placement into global dF matrix
@@ -426,102 +459,17 @@ void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatr
 		float L = springList[i].restLen;
 		double x = (p2-p1).squaredNorm();
 
-		double dfx1dx1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(0)-p1(0))*(p2(0)-p1(0));
-		double dfx1dy1 = -K*L*pow(x, -1.5)*(p2(0)-p1(0))*(p2(1) - p1(1));
-		double dfx1dz1 = -K*L*pow(x, -1.5)*(p2(0)-p1(0))*(p2(2) - p1(2));
-		double dfx1dx2 = -dfx1dx1;
-		double dfx1dy2 = -dfx1dy1;
-		double dfx1dz2 = -dfx1dz1;
-
-		double dfy1dx1 = dfx1dy1;
-		double dfy1dy1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(1)-p1(1))*(p2(1)-p1(1));
-		double dfy1dz1 = -K*L*pow(x, -1.5)*(p2(1)-p1(1))*(p2(2) - p1(2));
-		double dfy1dx2 = -dfy1dx1;
-		double dfy1dy2 = -dfy1dy1;
-		double dfy1dz2 = -dfy1dz1;
-
-		double dfz1dx1 = dfx1dz1;
-		double dfz1dy1 = dfy1dz1;
-		double dfz1dz1 = -K*(1-(L/sqrt(x))) - K*L*(pow(x, -1.5))*(p2(2)-p1(2))*(p2(2)-p1(2));
-		double dfz1dx2 = -dfz1dx1;
-		double dfz1dy2 = -dfz1dy1;
-		double dfz1dz2 = -dfz1dz1;
-
-		double dfx2dx1 = dfx1dx2;
-		double dfx2dy1 = dfy1dx2;
-		double dfx2dz1 = dfz1dz2;
-		double dfx2dx2 = -dfx1dx2;
-		double dfx2dy2 = -dfy1dx2;
-		double dfx2dz2 = -dfz1dz2;
+		Matrix3d I = MatrixXd::Identity(3,3);
+		Matrix3d localdF = K*(1-L/curlen)*I + K*L*(p2-p1)*(p2-p1).transpose()/curlen/curlen/curlen;
+		for(int j=0; j<3; j++){
+			for(int q=0; q<3; q++){
+				triplets.push_back(Trip(3*v1+j, 3*v1+q, localdF.coeff(j,q)));
+                triplets.push_back(Trip(3*v2+j, 3*v2+q, localdF.coeff(j,q)));
+                triplets.push_back(Trip(3*v1+j, 3*v2+q, -localdF.coeff(j,q)));
+                triplets.push_back(Trip(3*v2+j, 3*v1+q, -localdF.coeff(j,q)));
+			}
+		}
 		
-		double dfy2dx1 = dfx1dy2;
-		double dfy2dy1 = dfy1dy2;
-		double dfy2dz1 = dfz1dy2;
-		double dfy2dx2 = -dfx1dy2;
-		double dfy2dy2 = -dfy1dy2;
-		double dfy2dz2 = -dfz1dy2;
-		
-		double dfz2dx1 = dfx1dz2;
-		double dfz2dy1 = dfy1dz2;
-		double dfz2dz1 = dfz1dz2;
-		double dfz2dx2 = -dfx1dz2;
-		double dfz2dy2 = -dfy1dz2;
-		double dfz2dz2 = -dfz1dz2;
-
-		//local matrix rows
-		//row 1
-		triplets.push_back(Trip(3*v1, 3*v1, dfx1dx1));
-		triplets.push_back(Trip(3*v1, 3*v1 + 1, dfx1dy1));
-		triplets.push_back(Trip(3*v1, 3*v1 + 2, dfx1dz1));
-
-		triplets.push_back(Trip(3*v1, 3*v2, dfx1dx2));
-		triplets.push_back(Trip(3*v1, 3*v2 + 1, dfx1dy2));
-		triplets.push_back(Trip(3*v1, 3*v2 + 2, dfx1dz2));
-
-		//row 2
-		triplets.push_back(Trip(3*v1 + 1, 3*v1, dfy1dx1));
-		triplets.push_back(Trip(3*v1 + 1, 3*v1 + 1, dfy1dy1));
-		triplets.push_back(Trip(3*v1 + 1, 3*v1 + 2, dfy1dz1));
-		
-		triplets.push_back(Trip(3*v1 + 1, 3*v2, dfy1dx2));
-		triplets.push_back(Trip(3*v1 + 1, 3*v2 + 1, dfy1dy2));
-		triplets.push_back(Trip(3*v1 + 1, 3*v2 + 2, dfy1dz2));
-
-		//row 3
-		triplets.push_back(Trip(3*v1 + 2, 3*v1, dfz1dx1));
-		triplets.push_back(Trip(3*v1 + 2, 3*v1 + 1, dfz1dy1));
-		triplets.push_back(Trip(3*v1 + 2, 3*v1 + 2, dfz1dz1));
-		
-		triplets.push_back(Trip(3*v1 + 2, 3*v2, dfz1dx2));
-		triplets.push_back(Trip(3*v1 + 2, 3*v2 + 1, dfz1dy2));
-		triplets.push_back(Trip(3*v1 + 2, 3*v2 + 2, dfz1dz2));
-
-		//row 4
-		triplets.push_back(Trip(3*v2, 3*v1, dfx2dx1));
-		triplets.push_back(Trip(3*v2, 3*v1 + 1, dfx2dy1));
-		triplets.push_back(Trip(3*v2, 3*v1 + 2, dfx2dz1));
-
-		triplets.push_back(Trip(3*v2, 3*v2, dfx2dx2));
-		triplets.push_back(Trip(3*v2, 3*v2 + 1, dfx2dy2));
-		triplets.push_back(Trip(3*v2, 3*v2 + 2, dfx2dz2));
-
-		//row 5
-		triplets.push_back(Trip(3*v2 + 1, 3*v1, dfy2dx1));
-		triplets.push_back(Trip(3*v2 + 1, 3*v1 + 1, dfy2dy1));
-		triplets.push_back(Trip(3*v2 + 1, 3*v1 + 2, dfy2dz1));
-		
-		triplets.push_back(Trip(3*v2 + 1, 3*v2, dfy2dx2));
-		triplets.push_back(Trip(3*v2 + 1, 3*v2 + 1, dfy2dy2));
-		triplets.push_back(Trip(3*v2 + 1, 3*v2 + 2, dfy2dz2));
-
-		//row 6
-		triplets.push_back(Trip(3*v2 + 2, 3*v1, dfz2dx1));
-		triplets.push_back(Trip(3*v2 + 2, 3*v1 + 1, dfz2dy1));
-		triplets.push_back(Trip(3*v2 + 2, 3*v1 + 2, dfz2dz1));
-		
-		triplets.push_back(Trip(3*v2 + 2, 3*v2, dfz2dx2));
-		triplets.push_back(Trip(3*v2 + 2, 3*v2 + 1, dfz2dy2));
-		triplets.push_back(Trip(3*v2 + 2, 3*v2 + 2, dfz2dz2));
 	}
 	forceGradient.setFromTriplets(triplets.begin(), triplets.end());
 	return;
@@ -564,14 +512,15 @@ void Simulation::renderImplicit(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 
-		VectorXd g = v_k - (v_old + timestep*InvMass*f);
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient- ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
-		
+		// VectorXd g = v_k - (v_old + timestep*InvMass*f);
+		// grad_g = Ident - timestep*timestep*InvMass*forceGradient- ZeroMatrix +timestep*InvMass*rayleighCoeff*forceGradient;//Zero matrix for the Hessian term of damping
+		VectorXd g = x_k - (x_old + timestep*v_k + timestep*timestep*InvMass*f);
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient;
 		//solve for delta v
 		// Conj Grad
 		ConjugateGradient<SparseMatrix<double>> cg;
 		cg.compute(grad_g);
-		VectorXd deltaV = -1*cg.solve(g);
+		VectorXd deltaX = -1*cg.solve(g);
 
 		//Sparse Cholesky LL^T
 		// SimplicialLLT<SparseMatrix<double>> llt;
@@ -580,10 +529,10 @@ void Simulation::renderImplicit(){
 		// cout<<(grad_g*deltaV +g).squaredNorm()<<endl;
 		// cout<<g.squaredNorm()<<endl;
 
-		x_k = x_old+timestep*v_k;
-		v_k = v_k + deltaV;
+		// x_k = x_old+timestep*v_k;
+		// v_k = v_k + deltaV;
+		x_k+=deltaX;
 
-		//cout<<g.squaredNorm()<<endl;
 		if(v_k != v_k){
 			Nan = true;
 			break;
@@ -591,7 +540,6 @@ void Simulation::renderImplicit(){
 		if(g.squaredNorm()<0.00001){
 			break;
 		}
-		setXIntoTV(x_k);
 	}
 	if(Nan || i== NEWTON_MAX){
 		cout<<"ERROR: Newton's method doesn't converge"<<endl;
@@ -599,9 +547,12 @@ void Simulation::renderImplicit(){
 		exit(0);
 	}
 
-	//cout<<endl;
-	x_old = x_old+timestep*v_k;
-	v_old = v_k;
+	// x_old = x_old+timestep*v_k;
+	// v_old = v_k;
+	v_old = (x_k - x_old)/timestep;
+	x_old = x_k;
+	ImplicitXtoTV(x_old, TV);
+
 	
 }
 
@@ -660,6 +611,7 @@ void Simulation::render(){
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
 	// cout<<strainE<<endl;
+	cout<<v_old.squaredNorm()<<endl;
 	cout<<"Tot E"<<endl;
 	cout<<TotalEnergy<<endl;
 	cout<<"Strain E"<<endl;
