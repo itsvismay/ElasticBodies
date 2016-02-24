@@ -9,7 +9,7 @@ strain= open('senergy.txt', 'r')
 kinetic= open('kenergy.txt', 'r')
 grav = open('genergy.txt', 'r')
 i=0
-maxInt = 15000
+maxInt = 100000
 for line in f:
 	step = line.strip("\n").split(",")
 	t.append(step[0])

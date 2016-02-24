@@ -10,10 +10,10 @@
 
 using namespace Eigen;
 using namespace std;
-// double mu = 675450000.0;
-// double lambda = 3449700000.0;
-double mu = 10000;
-double lambda = 10000;
+double mu = 675450000.0;
+double lambda = 3449700000.0;
+// double mu = 10000;
+// double lambda = 10000;
 
 Tetrahedron::Tetrahedron(VectorXi k){
     verticesIndex = k ;
@@ -125,8 +125,8 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 
 
     ////////////////////TEST dDs correctness///////////
- //    double epsilon = 0.000001;
-	// // f(v+[e,0,0,0...]) - f(v) / e = df/dx
+    double epsilon = 0.000001;
+	// f(v+[e,0,0,0...]) - f(v) / e = df/dx
 	// cout<<"test dDs"<<endl;
 	// Matrix3d leftdDs = computeDeltaDs(dx*epsilon);
 	// Matrix3d rightdDs = computeDs(x + dx*epsilon) - Ds;
@@ -145,20 +145,20 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	// //////////////////////////////////////////////////////
     
     //Neohookean
-    // double detF = F.determinant();
-    // double logdetF = log(detF);
-    // Matrix3d FInvTransp = (F.inverse()).transpose();
+    double detF = F.determinant();
+    double logdetF = log(detF);
+    Matrix3d FInvTransp = (F.inverse()).transpose();
     // Matrix3d P = mu*(F - (FInvTransp)) + lambda*logdetF*(FInvTransp);
-    // Matrix3d dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
-    // Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-    // Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
+    Matrix3d dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
+    // OLD Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+    // OLD Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
     
     //SVK
-    Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
-    Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
-    Matrix3d dP = dF*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
-    dP+= F*(2*mu*(0.5*((dF.transpose()*F + F.transpose()*dF) - MatrixXd::Identity(3,3))));
-    dP+= F*(lambda*(0.5*((dF.transpose()*F + F.transpose()*dF)-MatrixXd::Identity(3,3))).trace());
+    // Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
+    // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
+    // Matrix3d dP = dF*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
+    // dP+= F*(2*mu*(0.5*((dF.transpose()*F + F.transpose()*dF) - MatrixXd::Identity(3,3))));
+    // dP+= F*(lambda*(s0.5*((dF.transpose()*F + F.transpose()*dF)-MatrixXd::Identity(3,3))).trace());
 
     ////////////////////TEST dP correctness///////////
  //    cout<<"test dP"<<endl;
@@ -166,8 +166,11 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 	// Matrix3d rightP1 = mu*(rightF - ((rightF.inverse()).transpose())) + lambda*log(rightF.determinant())*((rightF.inverse()).transpose());
 	// Matrix3d rightP2 = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
 	// Matrix3d rightdP = rightP1 - rightP2;
+ //    cout<<leftdP<<endl;
 	// cout<< leftdP - (rightP1 - rightP2)<<endl<<endl;
 	//////////////////////////////////////////////////////
+    // cout<<"dP matrix"<<endl;
+    // cout<<dP<<endl;
 
     Matrix3d dH = -1*this->undeformedVol*dP*((this->InvRefShapeMatrix).transpose());
     
@@ -207,19 +210,22 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
 
     //SVK
-    Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
-	this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+    // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
+	// this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
 
 
     //Neo
-	// Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
- //    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
-    
+	Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
+
+
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
+
     Matrix<double, 3, 4> Forces;
     Forces.col(0) = H.col(0);
     Forces.col(1) = H.col(1);
     Forces.col(2) = H.col(2);
     Forces.col(3) = -1*H.col(0) - H.col(1) - H.col(2);
+
     return Forces;
 }

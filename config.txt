@@ -1,15 +1,14 @@
 0.001
-f
+t
 i
-1
-0.01
-1
+11
+0.000
+0
 
 
-#timestep
-#headless t/f
-#explicit/implicit
-#number of steps if headless
-#add fixed vertices
-#rayleigh
-#object
+#1 timestep
+#2 headless t/f
+#3 explicit/implicit
+#4 number of steps if headless
+#5 rayleigh
+#6 object
