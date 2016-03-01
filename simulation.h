@@ -58,7 +58,7 @@ public:
 	void ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);
 
-	void insertToSpringSet(int i1, int i2);
+	// void insertToSpringSet(int i1, int i2);
 
 	
 };
