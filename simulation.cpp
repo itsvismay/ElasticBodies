@@ -13,6 +13,8 @@
 #include "simulation.h"
 #include <lbfgs.h>
 #include <set>
+#include "Eigen/SPQRSupport"
+#include <Eigen/CholmodSupport>
 #ifndef TUTORIAL_SHARED_PATH
 #define TUTORIAL_SHARED_PATH "../shared"
 #endif
@@ -85,7 +87,8 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	v_old.setZero();
 	v_old(0) =1;
 	// v_old(1) =1;
-	// v_old(2) =1;
+	v_old(2) =1;
+	v_old(3) =1;
 	// v_old = VectorXd::Random(3*vertices);
 
 	f.resize(3*vertices);
@@ -172,6 +175,7 @@ void Simulation::createInvMassMatrix(){
 	for(int i=0; i<vertices*3; i++){
 		InvMass.coeffRef(i, i) = 1/vertex_masses(i);
 	}
+	cout<<vertex_masses<<endl;
 
 }
 
@@ -361,82 +365,82 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 void Simulation::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 	forceGradient.setZero();
 	
-	// vector<Trip> triplets1;
-	// triplets1.reserve(3*vertices*3*vertices);	
-	// for(unsigned int i=0; i<M.tets.size(); i++){
-	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
-	// 	//P is the compute Force Differentials blackbox fxn
-
-	// 	Vector12d dx(12);
-	// 	dx.setZero();
-	// 	Vector4i indices = M.tets[i].verticesIndex;
-	// 	int kj;
-	// 	for(unsigned int j=0; j<12; j++){
-	// 		dx(j) = 1;
-	// 		MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
-	// 		kj = j%3;
-	// 		//row in order for dfxi/dxi ..dfxi/dzl
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0], dForces(0,0)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+1, dForces(1,0)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+2, dForces(2,0)));
-
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1], dForces(0,1)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+1, dForces(1,1)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+2, dForces(2,1)));
-
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2], dForces(0,2)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+1, dForces(1,2)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+2, dForces(2,2)));
-
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], dForces(0,3)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, dForces(1,3)));
-	// 		triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, dForces(2,3)));
-	// 		dx(j) = 0; //ASK check is this efficient?
-	// 	}
-	// }
-	// forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
-
-	// OLD METHOD OF SETTING GLOBAL GRAD F, USING LOCAL GRAD F
-	// UNCOMMENT
+	vector<Trip> triplets1;
+	triplets1.reserve(3*vertices*3*vertices);	
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
-		MatrixXd local_gradForces(12, 12);
-		local_gradForces.setZero();
 
 		Vector12d dx(12);
 		dx.setZero();
+		Vector4i indices = M.tets[i].verticesIndex;
+		int kj;
 		for(unsigned int j=0; j<12; j++){
 			dx(j) = 1;
 			MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
-			local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
+			kj = j%3;
+			//row in order for dfxi/dxi ..dfxi/dzl
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0], dForces(0,0)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+1, dForces(1,0)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+2, dForces(2,0)));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1], dForces(0,1)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+1, dForces(1,1)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+2, dForces(2,1)));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2], dForces(0,2)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+1, dForces(1,2)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+2, dForces(2,2)));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], dForces(0,3)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, dForces(1,3)));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, dForces(2,3)));
 			dx(j) = 0; //ASK check is this efficient?
 		}
-
-
-		//TODO optimize this somehow. Create Triplet list from local grad forces
-		vector<Trip> triplets;
-		triplets.reserve(16*9);//estimation of entries
-		Vector4i indices = M.tets[i].verticesIndex;
-		for(unsigned int ki=0; ki<4; ki++){
-			for(unsigned int kj=0; kj<4; kj++){
-				triplets.push_back(Trip(3*indices(ki), 3*indices(kj), local_gradForces(3*ki, 3*kj))); //dfxi/dxi
-
-				triplets.push_back(Trip(3*indices(ki), 3*indices(kj)+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
-				triplets.push_back(Trip(3*indices(ki), 3*indices(kj)+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
-
-				triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj), local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
-				triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj)+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
-				triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj)+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
-
-				triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj), local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
-				triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj)+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
-				triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj)+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
-			}
-		}
-		//Now insert triplets into global matrix
-		forceGradient.setFromTriplets(triplets.begin(), triplets.end());
 	}
+	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
+
+	// OLD METHOD OF SETTING GLOBAL GRAD F, USING LOCAL GRAD F
+	// UNCOMMENT
+	// for(unsigned int i=0; i<M.tets.size(); i++){
+	// 	//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
+	// 	//P is the compute Force Differentials blackbox fxn
+	// 	MatrixXd local_gradForces(12, 12);
+	// 	local_gradForces.setZero();
+
+	// 	Vector12d dx(12);
+	// 	dx.setZero();
+	// 	for(unsigned int j=0; j<12; j++){
+	// 		dx(j) = 1;
+	// 		MatrixXd dForces = M.tets[i].computeForceDifferentials(TVk, dx);
+	// 		local_gradForces.col(j) = Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows());;// TODO values are really big. Check if correct
+	// 		dx(j) = 0; //ASK check is this efficient?
+	// 	}
+
+
+	// 	//TODO optimize this somehow. Create Triplet list from local grad forces
+	// 	vector<Trip> triplets;
+	// 	triplets.reserve(16*9);//estimation of entries
+	// 	Vector4i indices = M.tets[i].verticesIndex;
+	// 	for(unsigned int ki=0; ki<4; ki++){
+	// 		for(unsigned int kj=0; kj<4; kj++){
+	// 			triplets.push_back(Trip(3*indices(ki), 3*indices(kj), local_gradForces(3*ki, 3*kj))); //dfxi/dxi
+
+	// 			triplets.push_back(Trip(3*indices(ki), 3*indices(kj)+1, local_gradForces(3*ki, 3*kj+1))); //dfxi/dyi
+	// 			triplets.push_back(Trip(3*indices(ki), 3*indices(kj)+2, local_gradForces(3*ki, 3*kj+2))); //dfxi/dzi
+
+	// 			triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj), local_gradForces(3*ki+1, 3*kj))); //dfyi/dxi
+	// 			triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj)+1, local_gradForces(3*ki+1, 3*kj+1))); //dfyi/dyi
+	// 			triplets.push_back(Trip(3*indices(ki)+1,  3*indices(kj)+2, local_gradForces(3*ki+1, 3*kj+2))); //dfyi/dzi
+
+	// 			triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj), local_gradForces(3*ki+2, 3*kj))); //dfzi/dxi
+	// 			triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj)+1, local_gradForces(3*ki+2, 3*kj+1))); //dfzi/dyi
+	// 			triplets.push_back(Trip(3*indices(ki)+2,  3*indices(kj)+2, local_gradForces(3*ki+2, 3*kj+2))); //dfzi/dzi
+	// 		}
+	// 	}
+	// 	//Now insert triplets into global matrix
+	// 	forceGradient.setFromTriplets(triplets.begin(), triplets.end());
+	// }
 
 	// for(int i=0; i<springList.size(); i++){
 	// 	int v1 = springList[i].v1;
@@ -496,9 +500,6 @@ void Simulation::renderImplicit(){
 	x_k.setZero();
 	v_k = v_old;
 	x_k = x_old;
-	x_k(1)=1;
-	x_k(2)=1;
-	x_k(14)=1;
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
@@ -518,10 +519,10 @@ void Simulation::renderImplicit(){
 		VectorXd g = x_k - (x_old +timestep*(v_k + timestep*InvMass*f));
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - timestep*rayleighCoeff*InvMass*forceGradient;
 		cout<<"G"<<t<<endl;
-		cout<<f<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
-		exit(0);
+		cout<<g<<endl<<endl;
+		cout<<"G Gradient"<<t<<endl;
+		cout<<grad_g<<endl;
+		// exit(0);
 
 		//solve for delta x
 		// Conj Grad
@@ -529,14 +530,30 @@ void Simulation::renderImplicit(){
 		// cg.compute(grad_g);
 		// VectorXd deltaX = -1*cg.solve(g);
 
-		// // Sparse Cholesky LL^T
+		// Sparse Cholesky LL^T
 		SimplicialLLT<SparseMatrix<double>> llt;
 		llt.compute(grad_g);
 		VectorXd deltaX = -1* llt.solve(g);
 
+		// cholmod_common Common, *cc;
+		// cholmod_sparse *A;
+		// cholmod_dense *d_X, *B;
+		// cc = &Common;
+		// cholmod_l_start(cc);
+		// A = (cholmod_sparse *) 
+		CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+		cholmodllt.compute(grad_g);
+		VectorXd d_x = -cholmodllt.solve(g);
+		
+
+		cout<<"Cholmod X"<<endl;
+		cout<<d_x<<endl<<endl;
+
+
 		// v_k+=deltaX/timestep;
 		x_k+=deltaX;
-
+		cout<<"Intermediate X"<<endl;
+		cout<<deltaX<<endl<<endl;
 		if(x_k != x_k){
 			Nan = true;
 			break;
@@ -554,8 +571,6 @@ void Simulation::renderImplicit(){
 	v_old = (x_k - x_old)/timestep;
 	x_old = x_k;
 	cout<<"*******************"<<endl;
-	cout<<"Velocities"<<endl;
-	cout<<sqrt(v_old.squaredNorm())<<endl;
 	cout<< "New Pos"<<t<<endl;
 	cout<<x_old<<endl<<endl;
 	cout<< "New Vels"<<t<<endl;
