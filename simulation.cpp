@@ -24,7 +24,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
-double gravity = 0;
+double gravity = -0;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -317,18 +317,15 @@ void Simulation::ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk){
 void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& v_k, VectorXd& f){
 	// //gravity
 	f.setZero();
-	// for(unsigned int i=0; i<M.tets.size(); i++){
-	// 	double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-	// 	Vector4i indices = M.tets[i].verticesIndex;
+	for(unsigned int i=0; i<M.tets.size(); i++){
+		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
+		Vector4i indices = M.tets[i].verticesIndex;
+		f(3*indices(0)+1) += vertex_mass*gravity;
+		f(3*indices(1)+1) += vertex_mass*gravity; 
+		f(3*indices(2)+1) += vertex_mass*gravity;
+		f(3*indices(3)+1) += vertex_mass*gravity;
+	}
 
-	// 	f(3*indices(0)+1) += vertex_mass*gravity;
-
-	// 	f(3*indices(1)+1) += vertex_mass*gravity; 
-
-	// 	f(3*indices(2)+1) += vertex_mass*gravity;
-
-	// 	f(3*indices(3)+1) += vertex_mass*gravity;
-	// }
 	//elastic
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -340,7 +337,7 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 	}
 
 	//damping
-	// f+= rayleighCoeff*forceGradient*v_k;
+	// f-= rayleighCoeff*forceGradient*v_old;
 
 	////////////////////////////////////////
 	// for(int i=0; i<springList.size(); i++){
@@ -500,15 +497,30 @@ void Simulation::renderImplicit(){
 	x_k.setZero();
 	v_k = v_old;
 	x_k = x_old;
+	// x_k(0) = 10;
+	// x_k(1) = 1;
+	// x_k(2) = 1;
+	// x_k(4) = 10;
+	// x_k(3) = 1;
+	// x_k(5) = 1;
+	// x_k(6) = 0;
+	// x_k(7) = 0;
+	// x_k(8) = 10;
+	// x_k(9) = 0;
+	// x_k(10) = 0;
+	// x_k(11) = 0;
+	// x_k(12) = 0;
+	// x_k(13) = -10;
+	// x_k(14) = 1;
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	cout<<"--------"<<t<<"-------"<<endl;
-	cout<<"x_k"<<endl;
-	cout<<x_k<<endl<<endl;
-	cout<<"v_k"<<endl;
-	cout<<v_k<<endl<<endl;
-	cout<<"--------------------"<<endl;
+	// cout<<"--------"<<t<<"-------"<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<x_k<<endl<<endl;
+	// cout<<"v_k"<<endl;
+	// cout<<v_k<<endl<<endl;
+	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 	
@@ -518,12 +530,10 @@ void Simulation::renderImplicit(){
 
 		VectorXd g = x_k - (x_old +timestep*(v_k + timestep*InvMass*f));
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - timestep*rayleighCoeff*InvMass*forceGradient;
-		cout<<"G"<<t<<endl;
-		cout<<g<<endl<<endl;
-		cout<<"G Gradient"<<t<<endl;
-		cout<<grad_g<<endl;
-		// exit(0);
-
+		// cout<<"G"<<t<<endl;
+		// cout<<g<<endl<<endl;
+		// cout<<"G Gradient"<<t<<endl;
+		// cout<<grad_g<<endl;
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
@@ -531,29 +541,22 @@ void Simulation::renderImplicit(){
 		// VectorXd deltaX = -1*cg.solve(g);
 
 		// Sparse Cholesky LL^T
-		SimplicialLLT<SparseMatrix<double>> llt;
-		llt.compute(grad_g);
-		VectorXd deltaX = -1* llt.solve(g);
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(grad_g);
+		// VectorXd deltaX = -1* llt.solve(g);
 
-		// cholmod_common Common, *cc;
-		// cholmod_sparse *A;
-		// cholmod_dense *d_X, *B;
-		// cc = &Common;
-		// cholmod_l_start(cc);
-		// A = (cholmod_sparse *) 
-		CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		cholmodllt.compute(grad_g);
-		VectorXd d_x = -cholmodllt.solve(g);
+		//Sparse QR 
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(grad_g);
+		VectorXd deltaX = -1*sqr.solve(g);
+
+		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+		// cholmodllt.compute(grad_g);
+		// VectorXd deltaX = -cholmodllt.solve(g);
 		
-
-		cout<<"Cholmod X"<<endl;
-		cout<<d_x<<endl<<endl;
-
 
 		// v_k+=deltaX/timestep;
 		x_k+=deltaX;
-		cout<<"Intermediate X"<<endl;
-		cout<<deltaX<<endl<<endl;
 		if(x_k != x_k){
 			Nan = true;
 			break;
@@ -562,20 +565,25 @@ void Simulation::renderImplicit(){
 			break;
 		}
 	}
-	if(Nan || i== NEWTON_MAX){
+	if(Nan){
 		cout<<"ERROR: Newton's method doesn't converge"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	if(i== NEWTON_MAX){
+		cout<<"ERROR: Newton max reached"<<endl;
 		cout<<i<<endl;
 		exit(0);
 	}
 	v_old.setZero();
 	v_old = (x_k - x_old)/timestep;
 	x_old = x_k;
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<t<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<t<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<t<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<t<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	ImplicitXtoTV(x_old, TV);
 
 	
