@@ -335,10 +335,10 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 		f.segment<3>(3*indices(2)) += F_tet.col(2);
 		f.segment<3>(3*indices(3)) += F_tet.col(3);
 	}
-
+	// cout<<f<<endl<<endl;
 	//damping
-	// f-= rayleighCoeff*forceGradient*v_old;
-
+	f += rayleighCoeff*forceGradient*v_k;
+	// cout<<f<<endl<<endl;
 	////////////////////////////////////////
 	// for(int i=0; i<springList.size(); i++){
 	// 	int v1 = springList[i].v1;
@@ -495,32 +495,36 @@ void Simulation::renderImplicit(){
 	// cout<<x_k - x_old<<endl<<endl;
 	v_k.setZero();
 	x_k.setZero();
-	v_k = v_old;
 	x_k = x_old;
+	// v_k = v_old;
 	// x_k(0) = 10;
 	// x_k(1) = 1;
 	// x_k(2) = 1;
-	// x_k(4) = 10;
-	// x_k(3) = 1;
+
+	// x_k(4) = 1;
+	// x_k(3) = 10;
 	// x_k(5) = 1;
+
 	// x_k(6) = 0;
 	// x_k(7) = 0;
 	// x_k(8) = 10;
+
 	// x_k(9) = 0;
 	// x_k(10) = 0;
 	// x_k(11) = 0;
+
 	// x_k(12) = 0;
 	// x_k(13) = -10;
 	// x_k(14) = 1;
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	// cout<<"--------"<<t<<"-------"<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<x_k<<endl<<endl;
-	// cout<<"v_k"<<endl;
-	// cout<<v_k<<endl<<endl;
-	// cout<<"--------------------"<<endl;
+	cout<<"--------"<<t<<"-------"<<endl;
+	cout<<"x_k"<<endl;
+	cout<<x_k<<endl<<endl;
+	cout<<"v_k"<<endl;
+	cout<<v_k<<endl<<endl;
+	cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 	
@@ -528,12 +532,14 @@ void Simulation::renderImplicit(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 
-		VectorXd g = x_k - (x_old +timestep*(v_k + timestep*InvMass*f));
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient;// - timestep*rayleighCoeff*InvMass*forceGradient;
+		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+		
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
 		// cout<<"G Gradient"<<t<<endl;
 		// cout<<grad_g<<endl;
+
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
@@ -557,6 +563,7 @@ void Simulation::renderImplicit(){
 
 		// v_k+=deltaX/timestep;
 		x_k+=deltaX;
+		//v_k = (x_k- x_old)/timestep;
 		if(x_k != x_k){
 			Nan = true;
 			break;
@@ -578,12 +585,12 @@ void Simulation::renderImplicit(){
 	v_old.setZero();
 	v_old = (x_k - x_old)/timestep;
 	x_old = x_k;
-	// cout<<"*******************"<<endl;
-	// cout<< "New Pos"<<t<<endl;
-	// cout<<x_old<<endl<<endl;
-	// cout<< "New Vels"<<t<<endl;
-	// cout<<v_old<<endl;
-	// cout<<"*****************"<<endl<<endl;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<t<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<t<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
 	ImplicitXtoTV(x_old, TV);
 
 	
@@ -804,7 +811,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-	// Sim.fixVertices(3);
+	Sim.fixVertices(3);
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
 	double timeVariable = 0.001;
