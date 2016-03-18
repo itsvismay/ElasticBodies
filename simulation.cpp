@@ -147,8 +147,11 @@ void Simulation::createInvMassMatrix(){
 	vertex_masses.resize(3*vertices);
 	vertex_masses.setZero();
 
+
 	InvMass.resize(3*vertices, 3*vertices);
 	InvMass.setZero();
+	RegMass.resize(3*vertices, 3*vertices);
+	RegMass.setZero();
 
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vol = (M.tets[i].undeformedVol/4);// TODO: add density 1/Mass for inv matrix,  assume density is 1, so volume=mass
@@ -174,8 +177,10 @@ void Simulation::createInvMassMatrix(){
 
 	for(int i=0; i<vertices*3; i++){
 		InvMass.coeffRef(i, i) = 1/vertex_masses(i);
+		RegMass.coeffRef(i, i) = vertex_masses(i);
 	}
-	cout<<vertex_masses<<endl;
+	// cout<<vertex_masses<<endl;
+	// cout<<RegMass<<endl;
 
 }
 
@@ -190,6 +195,11 @@ void Simulation::fixVertices(int fixed){
 	InvMass.coeffRef(3*fixed, 3*fixed) = 0;
 	InvMass.coeffRef(3*fixed+1, 3*fixed+1) = 0;
 	InvMass.coeffRef(3*fixed+2, 3*fixed+2) = 0;
+
+	RegMass.coeffRef(3*fixed, 3*fixed) = 1000000000000;
+	RegMass.coeffRef(3*fixed+1, 3*fixed+1) = 1000000000000;
+	RegMass.coeffRef(3*fixed+2, 3*fixed+2) = 1000000000000;
+
 	v_old.segment<3>(3*fixed)*=0;
 
 }
@@ -519,12 +529,12 @@ void Simulation::renderImplicit(){
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	cout<<"--------"<<t<<"-------"<<endl;
-	cout<<"x_k"<<endl;
-	cout<<x_k<<endl<<endl;
-	cout<<"v_k"<<endl;
-	cout<<v_k<<endl<<endl;
-	cout<<"--------------------"<<endl;
+	// cout<<"--------"<<t<<"-------"<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<x_k<<endl<<endl;
+	// cout<<"v_k"<<endl;
+	// cout<<v_k<<endl<<endl;
+	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 	
@@ -532,9 +542,11 @@ void Simulation::renderImplicit(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 
-		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+		// VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+		// grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
 		
+		VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
+		grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
 		// cout<<"G Gradient"<<t<<endl;
@@ -547,14 +559,14 @@ void Simulation::renderImplicit(){
 		// VectorXd deltaX = -1*cg.solve(g);
 
 		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaX = -1* llt.solve(g);
+		SimplicialLLT<SparseMatrix<double>> llt;
+		llt.compute(grad_g);
+		VectorXd deltaX = -1* llt.solve(g);
 
 		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g);
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(grad_g);
+		// VectorXd deltaX = -1*sqr.solve(g);
 
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);
@@ -585,12 +597,12 @@ void Simulation::renderImplicit(){
 	v_old.setZero();
 	v_old = (x_k - x_old)/timestep;
 	x_old = x_k;
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<t<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<t<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<t<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<t<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	ImplicitXtoTV(x_old, TV);
 
 	

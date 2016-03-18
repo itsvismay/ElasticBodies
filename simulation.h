@@ -17,6 +17,7 @@ public:
 	int t=0;
 	double timestep;
 	SparseMatrix<double> InvMass;
+	SparseMatrix<double> RegMass;
 	vector<int> fixedVertices;
 	SolidMesh M;
 	int vertices;
