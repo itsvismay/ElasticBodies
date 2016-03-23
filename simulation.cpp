@@ -24,7 +24,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
-double gravity = -0;
+double gravity = -9.810;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -85,11 +85,11 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	x_old.setZero();
 	v_old.resize(3*vertices);
 	v_old.setZero();
-	v_old(0) =1;
+	// v_old(0) =1;
 	// v_old(1) =1;
-	v_old(2) =1;
-	v_old(3) =1;
-	// v_old = VectorXd::Random(3*vertices);
+	// v_old(2) =1;
+	// v_old(3) =1;
+	// v_old = 10*VectorXd::Random(3*vertices);
 
 	f.resize(3*vertices);
 	f.setZero();
@@ -542,11 +542,11 @@ void Simulation::renderImplicit(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
 
-		// VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
-		// grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
 		
-		VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
-		grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
+		// VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
+		// grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
 		// cout<<"G Gradient"<<t<<endl;
@@ -559,14 +559,14 @@ void Simulation::renderImplicit(){
 		// VectorXd deltaX = -1*cg.solve(g);
 
 		// Sparse Cholesky LL^T
-		SimplicialLLT<SparseMatrix<double>> llt;
-		llt.compute(grad_g);
-		VectorXd deltaX = -1* llt.solve(g);
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(grad_g);
+		// VectorXd deltaX = -1* llt.solve(g);
 
 		//Sparse QR 
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		// sqr.compute(grad_g);
-		// VectorXd deltaX = -1*sqr.solve(g);
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(grad_g);
+		VectorXd deltaX = -1*sqr.solve(g);
 
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);
@@ -666,6 +666,9 @@ void Simulation::render(){
 	cout<<TotalEnergy<<endl;
 	cout<<"Strain E"<<endl;
 	cout<<strainE<<endl;
+	cout<<"kinetic E"<<endl;
+	cout<<kineticE<<endl;
+
 	energyFile<<t<<", "<<TotalEnergy<<"\n";
 	strainEnergyFile<<t<<", "<<strainE<<"\n";
 	kineticEnergyFile<<t<<", "<<kineticE<<"\n";
@@ -750,18 +753,18 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
-	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(45,0,0), RowVector3d(45,100,0), RowVector3d(1,1,1));
 	
 	viewer.data.set_mesh(V, F);
 	viewer.data.set_face_based(false);
 	return false;
 }
 
-void useFullObject(bool headless, double timestep, int iterations, char method){
+VectorXd useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
 	V = V;
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
@@ -777,6 +780,19 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		}
 	}
 	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
+	// cout<<TV<<endl;
+	for(unsigned int i=0; i<TV.rows(); i++){
+		// Sim.fixVertices(i);
+		if(TV.row(i)[0] >0){
+			cout<<TV.row(i)[0]<<endl;
+			cout<<i<<endl;
+			Sim.fixVertices(i);
+		}
+	}
+	// Sim.fixVertices(2);
+	// Sim.fixVertices(3);
+	// Sim.fixVertices(4);
+	// Sim.fixVertices(7);
 	if(!headless){
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
@@ -794,6 +810,23 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 			}
 		}
 	}
+	return Sim.x_old;
+}
+
+void consistencyTest(){
+	VectorXd test1 = useFullObject(true, 0.001, 100, 'i');
+	VectorXd test2 = useFullObject(true, 0.01, 10, 'i');
+	VectorXd test3 = useFullObject(true, 0.1, 1, 'i');
+	VectorXd test4 = useFullObject(true, 0.0001, 1000, 'i');
+	cout<<"consistency Tests"<<endl;
+	cout<<"consistency Tests"<<endl;
+	cout<<"consistency Tests"<<endl;
+	cout<<(test1-test2).squaredNorm()<<endl;
+	cout<<(test1-test3).squaredNorm()<<endl;
+	cout<<(test3-test2).squaredNorm()<<endl;
+	cout<<(test4-test3).squaredNorm()<<endl;
+	cout<<(test4-test2).squaredNorm()<<endl;
+	cout<<(test4-test1).squaredNorm()<<endl;
 }
 
 void useMyObject(bool headless, double timestep, int iterations, char method){
@@ -887,8 +920,13 @@ int main(int argc, char *argv[])
 	}
 	if(object ==0){
 		useMyObject(runHeadless, timestep, iterations, method);	
-	}else{
+	}else if(object==1){
 		useFullObject(runHeadless, timestep, iterations, method);
+	}else if(object==2){
+		consistencyTest();
+	}else{
+		cout<<"Invalid object"<<endl;
+		exit(0);
 	}
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
