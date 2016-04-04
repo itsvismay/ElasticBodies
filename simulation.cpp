@@ -496,7 +496,7 @@ void Simulation::renderImplicit(){
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
-	// v_k = v_old;
+	v_k = v_old;
 	// x_k(0) = 10;
 	// x_k(1) = 1;
 	// x_k(2) = 1;
@@ -535,10 +535,10 @@ void Simulation::renderImplicit(){
 		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
 		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
 		
-		// cout<<"G"<<t<<endl;
-		// cout<<g<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
+		cout<<"G"<<t<<endl;
+		cout<<g<<endl<<endl;
+		cout<<"G Gradient"<<t<<endl;
+		cout<<grad_g<<endl;
 
 		//solve for delta x
 		// Conj Grad
@@ -811,7 +811,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-	Sim.fixVertices(3);
+	// Sim.fixVertices(3);
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
 	double timeVariable = 0.001;
