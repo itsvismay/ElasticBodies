@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <fstream>
 #include <math.h>
-
+#include <lbfgs.h>
 
 #include "solidmesh.h"
 
@@ -59,7 +59,21 @@ public:
 	void ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);
 
-	// void insertToSpringSet(int i1, int i2);
+	void renderNewmark();
 
+	// void insertToSpringSet(int i1, int i2);
+	static lbfgsfloatval_t evaluate(void *instance, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step);
+	static int progress(
+		void *instance,
+	    const lbfgsfloatval_t *x,
+	    const lbfgsfloatval_t *g,
+	    const lbfgsfloatval_t fx,
+	    const lbfgsfloatval_t xnorm,
+	    const lbfgsfloatval_t gnorm,
+	    const lbfgsfloatval_t step,
+	    int n,
+	    int k,
+	    int ls);
+	
 	
 };

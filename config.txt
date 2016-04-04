@@ -1,9 +1,9 @@
-0.001
-f
-i
-100
 0.01
+t
+i
 1
+0.00
+0
 
 #1 timestep
 #2 headless t/f

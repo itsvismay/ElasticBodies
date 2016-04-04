@@ -24,7 +24,7 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 double rayleighCoeff;
-double gravity = -9.810;
+double gravity = -00;
 
 // Input polygon
 Eigen::MatrixXd V;
@@ -61,6 +61,36 @@ Eigen::MatrixXi TF;
 
 Simulation::Simulation(void){}
 
+lbfgsfloatval_t Simulation::evaluate(void *instance, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+
+	int i;
+	lbfgsfloatval_t fx = 0.0;
+	for(i=0; i<n; i+=2){
+		lbfgsfloatval_t t1 = 1.0 - x[i];
+		lbfgsfloatval_t t2 = 10.0*(x[i+1] - x[i]*x[i]);
+		g[i+1] = 20.0*t2;
+		g[i] = -2.0*(x[i]*g[i+1]+ t1);
+		fx += t1*t1 + t2*t2;
+	}
+	return fx;
+}
+
+int Simulation::progress(void *instance,
+	    const lbfgsfloatval_t *x,
+	    const lbfgsfloatval_t *g,
+	    const lbfgsfloatval_t fx,
+	    const lbfgsfloatval_t xnorm,
+	    const lbfgsfloatval_t gnorm,
+	    const lbfgsfloatval_t step,
+	    int n,
+	    int k,
+	    int ls){
+	printf("Iteration %d:\n", k);
+    printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
+    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+    printf("\n");
+    return 0;	
+}
 
 void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map){
 	integrator = method;
@@ -85,10 +115,10 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	x_old.setZero();
 	v_old.resize(3*vertices);
 	v_old.setZero();
-	// v_old(0) =1;
+	v_old(0) =1;
 	// v_old(1) =1;
-	// v_old(2) =1;
-	// v_old(3) =1;
+	v_old(2) =1;
+	v_old(3) =1;
 	// v_old = 10*VectorXd::Random(3*vertices);
 
 	f.resize(3*vertices);
@@ -97,56 +127,11 @@ void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_O
 	M.initializeMesh(TT_One, TV);	
 	createInvMassMatrix(); //creates InvMass
 	createXFromTet(); //creates x_old
-
-	/////////////////////////////////
-	// for(int i=0; i<M.tets.size(); i++){
-	// 	Vector4i indices = M.tets[i].verticesIndex;
-	// 	insertToSpringSet(indices[0],  indices[1]);
-	// 	insertToSpringSet(indices[0], indices[2]);
-	// 	insertToSpringSet(indices[0] , indices[3]);
-	// 	insertToSpringSet(indices[1], indices[2]);
-	// 	insertToSpringSet(indices[1], indices[3]);
-	// 	insertToSpringSet(indices[2], indices[3]);
-	// 	// Spring s1(indices[0], indices[1]);
-	// 	// springList.push_back(s1);
-	// 	// Spring s2(indices[0], indices[2]);
-	// 	// springList.push_back(s2);
-	// 	// Spring s3(indices[0], indices[3]);
-	// 	// springList.push_back(s3);
-	// 	// Spring s4(indices[1], indices[2]);
-	// 	// springList.push_back(s4);
-	// 	// Spring s5(indices[1], indices[3]);
-	// 	// springList.push_back(s5);
-	// 	// Spring s6(indices[2], indices[3]);
-	// 	// springList.push_back(s6);
-
-
-	// }
-	/////////////////////////////////
 }
-
-// void Simulation::insertToSpringSet(int i1, int i2){
-// 	pair<int, int> pair1(i1,  i2);
-// 	pair<int, int> pair2(i2,  i1);
-
-// 	pair<set< pair<int,int> >::iterator, bool> ret;
-// 	ret = springSet.insert(pair1);
-
-// 	if(ret.second==false){
-// 		//item exists in set
-// 		return;
-// 	}
-// 	springSet.insert(pair2);
-// 	Spring s(i1, i2, (TV.row(i2)- TV.row(i1)).norm());
-// 	springList.push_back(s);
-// 	return;
-
-// }
 
 void Simulation::createInvMassMatrix(){
 	vertex_masses.resize(3*vertices);
 	vertex_masses.setZero();
-
 
 	InvMass.resize(3*vertices, 3*vertices);
 	InvMass.setZero();
@@ -241,25 +226,6 @@ void Simulation::createForceVector(){
 	f.setZero();
 	calculateGravity();
 	calculateElasticForce();
-
-	////////////////////////////////////////
-	// for(int i=0; i<springList.size(); i++){
-	// 	int v1 = springList[i].v1;
-	// 	int v2 = springList[i].v2;
-	// 	Vector3d p1 = TV.row(v1);
-	// 	Vector3d p2 = TV.row(v2);
-	// 	double curlen = (p2-p1).norm();
-	// 	f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
-	// 	f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
-	// }
-	// for(int i=0; i<f.rows(); i++){
-	// 	i++;
-	// 	f(i) = gravity*vertex_masses(i/3);
-	// 	i++;
-	// }
-	////////////////////////////////////////
-	// cout<<endl<<"Force"<<endl;
-
 }
 
 void Simulation::calculateGravity(){
@@ -349,23 +315,7 @@ void Simulation::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& f
 	//damping
 	f += rayleighCoeff*forceGradient*v_k;
 	// cout<<f<<endl<<endl;
-	////////////////////////////////////////
-	// for(int i=0; i<springList.size(); i++){
-	// 	int v1 = springList[i].v1;
-	// 	int v2 = springList[i].v2;
-	// 	Vector3d p1 = TVk.row(v1);
-	// 	Vector3d p2 = TVk.row(v2);
-	// 	double curlen = (p2-p1).norm();
-	// 	f.segment<3>(3*v1) += (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
-	// 	f.segment<3>(3*v2) -= (springList[i].stiffness*(curlen - springList[i].restLen)/curlen)*(p2-p1);
 
-	// }
-	// for(int i=0; i<f.rows(); i++){
-	// 	i++;
-	// 	f(i) += gravity*vertex_masses(i/3);
-	// 	i++;
-	// }
-	////////////////////////////////////////
 	return;
 }
 
@@ -498,81 +448,28 @@ void Simulation::renderExplicit(){
 	v_old = v_old + timestep*InvMass*f;
 
 }
-void Simulation::renderImplicit(){
+
+void Simulation::renderNewmark(){
 	t+=1;
-	//Implicit Code
-	// cout<<"diff in x"<<endl;
-	// cout<<x_k - x_old<<endl<<endl;
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
-	// v_k = v_old;
-	// x_k(0) = 10;
-	// x_k(1) = 1;
-	// x_k(2) = 1;
-
-	// x_k(4) = 1;
-	// x_k(3) = 10;
-	// x_k(5) = 1;
-
-	// x_k(6) = 0;
-	// x_k(7) = 0;
-	// x_k(8) = 10;
-
-	// x_k(9) = 0;
-	// x_k(10) = 0;
-	// x_k(11) = 0;
-
-	// x_k(12) = 0;
-	// x_k(13) = -10;
-	// x_k(14) = 1;
 	forceGradient.setZero();
-	bool Nan=false;
-	int NEWTON_MAX = 100, i =0;
-	// cout<<"--------"<<t<<"-------"<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<x_k<<endl<<endl;
-	// cout<<"v_k"<<endl;
-	// cout<<v_k<<endl<<endl;
-	// cout<<"--------------------"<<endl;
-	for( i=0; i<NEWTON_MAX; i++){
+	bool Nan = false;
+	int NEWTON_MAX = 100, i=0;
+	double gamma = 0.5;
+	double beta =0.25;
+	VectorXd f_old = f;
+	for(i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
-	
-		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+		ImplicitXtoTV(x_k, TVk);
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
 		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
-
-		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
-		
-		// VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
-		// grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
-		// cout<<"G"<<t<<endl;
-		// cout<<g<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
-
-		//solve for delta x
-		// Conj Grad
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// VectorXd deltaX = -1*cg.solve(g);
-
-		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaX = -1* llt.solve(g);
-
-		//Sparse QR 
+		VectorXd g = x_k - x_old - timestep*v_old - (timestep*timestep/2)*(1-2*beta)*InvMass*f_old - (timestep*timestep*beta)*InvMass*f;
+		grad_g = Ident - timestep*timestep*beta*InvMass*(forceGradient+(rayleighCoeff/timestep)*forceGradient);
 		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		sqr.compute(grad_g);
 		VectorXd deltaX = -1*sqr.solve(g);
-
-		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g);
-		
-
 		// v_k+=deltaX/timestep;
 		x_k+=deltaX;
 		//v_k = (x_k- x_old)/timestep;
@@ -594,8 +491,8 @@ void Simulation::renderImplicit(){
 		cout<<i<<endl;
 		exit(0);
 	}
-	v_old.setZero();
-	v_old = (x_k - x_old)/timestep;
+	// v_old.setZero();
+	v_old = v_old + timestep*(1-gamma)*InvMass*f_old + timestep*gamma*InvMass*f;
 	x_old = x_k;
 	// cout<<"*******************"<<endl;
 	// cout<< "New Pos"<<t<<endl;
@@ -603,6 +500,115 @@ void Simulation::renderImplicit(){
 	// cout<< "New Vels"<<t<<endl;
 	// cout<<v_old<<endl;
 	// cout<<"*****************"<<endl<<endl;
+	ImplicitXtoTV(x_old, TV);
+}
+
+void Simulation::renderImplicit(){
+	t+=1;
+	//Implicit Code
+	// cout<<"diff in x"<<endl;
+	// cout<<x_k - x_old<<endl<<endl;
+	v_k.setZero();
+	x_k.setZero();
+	x_k = x_old;
+	v_k = v_old;
+	// v_k = v_old;
+	// x_k(0) = 10;
+	// x_k(1) = 1;
+	// x_k(2) = 1;
+	// x_k(4) = 1;
+	// x_k(3) = 10;
+	// x_k(5) = 1;
+	// x_k(6) = 0;
+	// x_k(7) = 0;
+	// x_k(8) = 10;
+	// x_k(9) = 0;
+	// x_k(10) = 0;
+	// x_k(11) = 0;
+	// x_k(12) = 0;
+	// x_k(13) = -10;
+	// x_k(14) = 1;
+	forceGradient.setZero();
+	bool Nan=false;
+	int NEWTON_MAX = 100, i =0;
+	cout<<"--------"<<t<<"-------"<<endl;
+	cout<<"x_k"<<endl;
+	cout<<x_k<<endl<<endl;
+	cout<<"v_k"<<endl;
+	cout<<v_k<<endl<<endl;
+	cout<<"--------------------"<<endl;
+	for( i=0; i<NEWTON_MAX; i++){
+		grad_g.setZero();
+	
+		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
+
+		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+
+		// VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
+		// grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
+		
+		cout<<"G"<<t<<endl;
+		cout<<g<<endl<<endl;
+		cout<<"G Gradient"<<t<<endl;
+		cout<<grad_g<<endl;
+
+		//solve for delta x
+		// Conj Grad
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(grad_g);
+		// VectorXd deltaX = -1*cg.solve(g);
+
+		// Sparse Cholesky LL^T
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(grad_g);
+		// VectorXd deltaX = -1* llt.solve(g);
+
+		//Sparse QR 
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(grad_g);
+		VectorXd deltaX = -1*sqr.solve(g);
+
+		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+		// cholmodllt.compute(grad_g);
+		// VectorXd deltaX = -cholmodllt.solve(g);
+		
+	
+
+		cout<<"gradg*dx"<<endl;
+		cout<<g+grad_g*deltaX<<endl;
+
+		// v_k+=deltaX/timestep;
+		x_k+=deltaX;
+		// v_k = (x_k- x_old)/timestep;
+		if(x_k != x_k){
+			Nan = true;
+			break;
+		}
+		if(g.squaredNorm()<.00000001){
+			break;
+		}
+	}
+	if(Nan){
+		cout<<"ERROR: Newton's method doesn't converge"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	if(i== NEWTON_MAX){
+		cout<<"ERROR: Newton max reached"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	v_old = (x_k - x_old)/timestep;
+	x_old = x_k;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<t<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<t<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
 	ImplicitXtoTV(x_old, TV);
 
 	
@@ -623,10 +629,17 @@ void Simulation::render(){
 		cout<<endl;
 		cout<<'e'<<t<<endl;
 		renderExplicit();
-	}else{
+	}else if(integrator == 'i'){
 		cout<<endl;
 		cout<<'i'<<t<<endl;
 		renderImplicit();
+	}else if(integrator == 'n'){
+		cout<<endl;
+		renderNewmark();
+		cout<<'n'<<t<<endl;
+	}else{
+		cout<<"IMPROPER INTEGRATOR"<<endl;
+		exit(0);
 	}
 
 	////////////////////////////////////
@@ -637,27 +650,19 @@ void Simulation::render(){
 	for(int i=0; i<vertices; i++){
 		if(!isFixed(i)){
 			int k=3*i;
-			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
+			// gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 			k++;
 			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 			k++;
-			gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
+			// gravityE +=  vertex_masses(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*vertex_masses(k)*v_old(k)*v_old(k);
 		}		
 	}
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 	}
-	// for(unsigned int i=0; i<springList.size(); i++){
-	// 	int v1 = springList[i].v1;
-	// 	int v2 = springList[i].v2;
-	// 	Vector3d p1 = TV.row(v1);
-	// 	Vector3d p2 = TV.row(v2);
-	// 	double curlen = (p2-p1).norm() - springList[i].restLen;
-	// 	strainE += 0.5*springList[i].stiffness*(curlen*curlen);
-	// }
 
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
@@ -736,8 +741,8 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(5), RowVector3d(0,0,0));
 
 
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
+	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
+	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
 	
 	return false;
@@ -751,12 +756,13 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 		V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
 	}
 
+	viewer.data.set_mesh(V, F);
+	viewer.data.set_face_based(false);
+	viewer.data.add_points(Sim.TV, RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(45,0,0), RowVector3d(45,100,0), RowVector3d(1,1,1));
 	
-	viewer.data.set_mesh(V, F);
-	viewer.data.set_face_based(false);
 	return false;
 }
 
@@ -767,7 +773,8 @@ VectorXd useFullObject(bool headless, double timestep, int iterations, char meth
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
 	V = V;
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq1.2", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2", TV,TT,TF);
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 	// //constructs the map from V to TV
@@ -813,23 +820,7 @@ VectorXd useFullObject(bool headless, double timestep, int iterations, char meth
 	return Sim.x_old;
 }
 
-void consistencyTest(){
-	VectorXd test1 = useFullObject(true, 0.001, 100, 'i');
-	VectorXd test2 = useFullObject(true, 0.01, 10, 'i');
-	VectorXd test3 = useFullObject(true, 0.1, 1, 'i');
-	VectorXd test4 = useFullObject(true, 0.0001, 1000, 'i');
-	cout<<"consistency Tests"<<endl;
-	cout<<"consistency Tests"<<endl;
-	cout<<"consistency Tests"<<endl;
-	cout<<(test1-test2).squaredNorm()<<endl;
-	cout<<(test1-test3).squaredNorm()<<endl;
-	cout<<(test3-test2).squaredNorm()<<endl;
-	cout<<(test4-test3).squaredNorm()<<endl;
-	cout<<(test4-test2).squaredNorm()<<endl;
-	cout<<(test4-test1).squaredNorm()<<endl;
-}
-
-void useMyObject(bool headless, double timestep, int iterations, char method){
+VectorXd useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> mapV2TV;
 
 
@@ -856,7 +847,8 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 
 				
 	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-	Sim.fixVertices(3);
+	// Sim.fixVertices(3);
+	// Sim.fixVertices(0);
 	igl::viewer::Viewer viewer;
 	bool boolVariable = true;
 	double timeVariable = 0.001;
@@ -868,6 +860,20 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 			Sim.render();
 		}
 	}
+	return Sim.x_old;
+}
+
+void consistencyTest(){
+	VectorXd test1 = useMyObject(true, 0.00001, 1000, 'n');
+	VectorXd test2 = useMyObject(true, 0.001, 100, 'n');
+	// VectorXd test4 = useFullObject(true, 0.001, 1000, 'i');
+	cout<<"consistency Tests"<<endl;
+	cout<<"consistency Tests"<<endl;
+	cout<<"consistency Tests"<<endl;
+	// cout<<test1<<endl;
+	cout<<(test1-test2).squaredNorm()<<endl;
+	// cout<<(test4-test2).squaredNorm()<<endl;
+	// cout<<(test4-test1).squaredNorm()<<endl;
 }
 
 int main(int argc, char *argv[])
@@ -942,10 +948,6 @@ int main(int argc, char *argv[])
 
 // read lbfgs and api
 // houdini
-
-// keep CG
-// get eigen sparse solvers (or suitesparse) - sparse cholesky, sparse QR
-// try profiler with real lambda and mu values
 
 // test implicit euler with real lambda and mu
 // - test with direct solver
