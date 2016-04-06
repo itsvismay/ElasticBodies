@@ -12,16 +12,24 @@
 using namespace Eigen;
 using namespace std;
 
-class Integrators{
+class Integrator{
 
-public:
+protected:
 	int t=0;
 	double timestep;
 	SparseMatrix<double> InvMass;
 	vector<int> fixedVertices;
-	int vertices;
+	int vertices; //number of vertices
 
-	SolidMesh M;
+	SolidMesh M; //NEW IDEA: Pass in from simulation
+	MatrixXd TV, TVk;
 
 	VectorXd x_old, v_old, x_k, v_k, vertex_masses, f;
+
+public:
+	virtual void render() = 0; //pure virtual render class
+	void setSolidMesh(MatrixXi& TT_One, MatrixXd& TV){//delete
+		M.initializeMesh(TT_One, TV);
+	}
+
 }
