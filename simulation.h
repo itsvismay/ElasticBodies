@@ -11,6 +11,7 @@
 
 using namespace Eigen;
 using namespace std;
+
 class Simulation{
 
 public:
@@ -42,7 +43,11 @@ public:
 	void createXFromTet();
 	void createForceVector();
 	void createTVFromTet();
-	void initializeSimulation(double deltaT, char method, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map);
+	void initializeSimulation(double deltaT, 
+		char method, 
+		MatrixXi& TT_One, 
+		MatrixXd& TV_One, 
+		vector<int>& map);
 	
 	void setXIntoTV(VectorXd& x_new);
 
