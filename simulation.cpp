@@ -4,11 +4,12 @@
 #include <fstream>
 #include <string>
 #include <math.h>
-#include "simulation.h"
 #include <lbfgs.h>
 #include <set>
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
+
+#include "simulation.h"
 #include "globals.h"
 
 
@@ -23,7 +24,6 @@ Simulation::Simulation(void){}
 void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT_One, MatrixXd& TV_One, vector<int>& map){
 	integrator = method;
 	timestep = deltaT;
-	mapV2TV = map;
 	TV = TV_One;
 	vertices = TV_One.rows();
 	TVk.resize(vertices, 3);
