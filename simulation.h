@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <fstream>
 #include <math.h>
-
+#include <lbfgs.h>
 
 #include "solidmesh.h"
 
@@ -18,11 +18,11 @@ public:
 	int t=0;
 	double timestep;
 	SparseMatrix<double> InvMass;
+	SparseMatrix<double> RegMass;
 	vector<int> fixedVertices;
 	SolidMesh M;
 	int vertices;
-	VectorXd x_old, v_old, vertex_masses, x_k, v_k;
-	VectorXd f;
+	VectorXd x_old, v_old, vertex_masses, x_k, v_k, f;
 	vector<int> mapV2TV;
 	MatrixXd TV, TVk;
 	char integrator;
@@ -62,4 +62,20 @@ public:
 	void ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk);
 	void ImplicitXfromTV(VectorXd& x_n1, MatrixXd& TVk);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);
+
+	// static lbfgsfloatval_t evaluate(void *instance, 
+	// 	const lbfgsfloatval_t *x, 
+	// 	lbfgsfloatval_t *g, 
+	// 	const int n, 
+	// 	const lbfgsfloatval_t step);
+	// static int progress(void *instance,
+	//     const lbfgsfloatval_t *x,
+	//     const lbfgsfloatval_t *g,
+	//     const lbfgsfloatval_t fx,
+	//     const lbfgsfloatval_t xnorm,
+	//     const lbfgsfloatval_t gnorm,
+	//     const lbfgsfloatval_t step,
+	//     int n,
+	//     int k,
+	//     int ls);	
 };

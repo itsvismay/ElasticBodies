@@ -15,9 +15,54 @@
 
 using namespace Eigen;
 using namespace std;
+
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
+
+
+static lbfgsfloatval_t evaluate(void *sim, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+	Simulation* in = (Simulation*) sim;
+	lbfgsfloatval_t fx = 0.0;
+	for(int i=0; i<3*in->vertices; i++){
+		fx+= 0.5*x[i]*in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i)*x[i] - in->vertex_masses(i)*in->timestep*in->v_old(i)*x[i]; //big G function, anti-deriv of g
+		g[i] = in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i) - in->vertex_masses(i)*in->timestep*in->v_old(i) - in->timestep*in->timestep*in->f(i);
+	}
+	double strainE=0;
+	for(unsigned int i=0; i<in->M.tets.size(); i++){
+		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
+	}
+	fx+= in->timestep*in->timestep*strainE;
+	return fx;
+	// int i;
+ //    lbfgsfloatval_t fx = 0.0;
+ //    for (i = 0;i < n;i += 2) {
+ //        lbfgsfloatval_t t1 = 1.0 - x[i];
+ //        lbfgsfloatval_t t2 = 10.0 * (x[i+1] - x[i] * x[i]);
+ //        g[i+1] = 20.0 * t2;
+ //        g[i] = -2.0 * (x[i] * g[i+1] + t1);
+ //        fx += t1 * t1 + t2 * t2;
+ //    }
+ //    return fx;
+
+}
+
+static int progress(void *instance,
+	    const lbfgsfloatval_t *x,
+	    const lbfgsfloatval_t *g,
+	    const lbfgsfloatval_t fx,
+	    const lbfgsfloatval_t xnorm,
+	    const lbfgsfloatval_t gnorm,
+	    const lbfgsfloatval_t step,
+	    int n,
+	    int k,
+	    int ls){
+	printf("Iteration %d:\n", k);
+    printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
+    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+    printf("\n");
+    return 0;	
+}
 
 Simulation::Simulation(void){}
 
@@ -64,6 +109,9 @@ void Simulation::createInvMassMatrix(){
 	InvMass.resize(3*vertices, 3*vertices);
 	InvMass.setZero();
 
+	RegMass.resize(3*vertices, 3*vertices);
+	RegMass.setZero();
+
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vol = (M.tets[i].undeformedVol/4);// TODO: add density 1/Mass for inv matrix,  assume density is 1, so volume=mass
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -88,8 +136,9 @@ void Simulation::createInvMassMatrix(){
 
 	for(int i=0; i<vertices*3; i++){
 		InvMass.coeffRef(i, i) = 1/vertex_masses(i);
+		RegMass.coeffRef(i, i) = vertex_masses(i);
 	}
-	cout<<vertex_masses<<endl;
+	// cout<<vertex_masses<<endl;
 
 }
 
@@ -104,6 +153,11 @@ void Simulation::fixVertices(int fixed){
 	InvMass.coeffRef(3*fixed, 3*fixed) = 0;
 	InvMass.coeffRef(3*fixed+1, 3*fixed+1) = 0;
 	InvMass.coeffRef(3*fixed+2, 3*fixed+2) = 0;
+
+	RegMass.coeffRef(3*fixed, 3*fixed) = 1000000000000;
+	RegMass.coeffRef(3*fixed+1, 3*fixed+1) = 1000000000000;
+	RegMass.coeffRef(3*fixed+2, 3*fixed+2) = 1000000000000;
+
 	v_old.segment<3>(3*fixed)*=0;
 
 }
@@ -301,91 +355,153 @@ void Simulation::renderExplicit(){
 
 }
 void Simulation::renderImplicit(){
+	// t+=1;
+	// //Implicit Code
+	// // cout<<"diff in x"<<endl;
+	// // cout<<x_k - x_old<<endl<<endl;
+	// v_k.setZero();
+	// x_k.setZero();
+	// x_k = x_old;
+	// v_k = v_old;
+
+	// forceGradient.setZero();
+	// bool Nan=false;
+	// int NEWTON_MAX = 100, i =0;
+	// cout<<"--------"<<t<<"-------"<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<x_k<<endl<<endl;
+	// cout<<"v_k"<<endl;
+	// cout<<v_k<<endl<<endl;
+	// cout<<"--------------------"<<endl;
+	// for( i=0; i<NEWTON_MAX; i++){
+	// 	grad_g.setZero();
+	
+	// 	ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+	// 	ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+	// 	ImplicitCalculateForces(TVk, forceGradient, x_k, f);
+
+	// 	VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+	// 	grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+		
+	// VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
+	// grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
+	
+	// 	// cout<<"G"<<t<<endl;
+	// 	// cout<<g<<endl<<endl;
+	// 	// cout<<"G Gradient"<<t<<endl;
+	// 	// cout<<grad_g<<endl;
+
+	// 	//solve for delta x
+	// 	// Conj Grad
+	// 	// ConjugateGradient<SparseMatrix<double>> cg;
+	// 	// cg.compute(grad_g);
+	// 	// VectorXd deltaX = -1*cg.solve(g);
+
+	// 	// Sparse Cholesky LL^T
+	// 	// SimplicialLLT<SparseMatrix<double>> llt;
+	// 	// llt.compute(grad_g);
+	// 	// VectorXd deltaX = -1* llt.solve(g);
+
+	// 	//Sparse QR 
+	// 	SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+	// 	sqr.compute(grad_g);
+	// 	VectorXd deltaX = -1*sqr.solve(g);
+
+	// 	// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+	// 	// cholmodllt.compute(grad_g);
+	// 	// VectorXd deltaX = -cholmodllt.solve(g);
+		
+
+	// 	x_k+=deltaX;
+	// 	if(x_k != x_k){
+	// 		Nan = true;
+	// 		break;
+	// 	}
+	// 	if(g.squaredNorm()<.00000001){
+	// 		break;
+	// 	}
+	// }
+	// if(Nan){
+	// 	cout<<"ERROR: Newton's method doesn't converge"<<endl;
+	// 	cout<<i<<endl;
+	// 	exit(0);
+	// }
+	// if(i== NEWTON_MAX){
+	// 	cout<<"ERROR: Newton max reached"<<endl;
+	// 	cout<<i<<endl;
+	// 	exit(0);
+	// }
+	// v_old.setZero();
+	// v_old = (x_k - x_old)/timestep;
+	// x_old = x_k;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<t<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<t<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
+	// ImplicitXtoTV(x_old, TV);
+
+	// t+=1;
+	// int ret =0;
+	// lbfgsfloatval_t fx;
+	// lbfgsfloatval_t *x = lbfgs_malloc(3*vertices);
+	// lbfgs_parameter_t param;
+
+	// if(x==NULL){
+	// 	cout<<"ERROR: Failed to alloc memory"<<endl;
+	// 	exit(0);
+	// }
+	// //initialize vars
+	// v_k.setZero();
+	// x_k.setZero();
+	// x_k = x_old;
+	// v_k = v_old;
+	// ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+	// ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+	// ImplicitCalculateForces(TVk, forceGradient, x_k, f);
+	
+	// //init liblbfgs param
+	// lbfgs_parameter_init(&param);
+
+	// //start opt
+	// for(int i=0; i<x_k.size(); i++){
+	// 	x[i] = x_k(i);
+	// }
+	// ret = lbfgs(1, x, &fx, evaluate, progress, NULL, &param);
+	// cout<<"AFTER LBFGS"<<endl;
+	// for(int i=0; i<x_k.size(); i++){
+	// 	x_k(i) = x[i];
+	// }
+	// cout<<x_k<<endl;
+	// lbfgs_free(x);
 	t+=1;
-	//Implicit Code
-	// cout<<"diff in x"<<endl;
-	// cout<<x_k - x_old<<endl<<endl;
-	v_k.setZero();
-	x_k.setZero();
-	x_k = x_old;
-	v_k = v_old;
-
-	forceGradient.setZero();
-	bool Nan=false;
-	int NEWTON_MAX = 100, i =0;
-	cout<<"--------"<<t<<"-------"<<endl;
-	cout<<"x_k"<<endl;
-	cout<<x_k<<endl<<endl;
-	cout<<"v_k"<<endl;
-	cout<<v_k<<endl<<endl;
-	cout<<"--------------------"<<endl;
-	for( i=0; i<NEWTON_MAX; i++){
-		grad_g.setZero();
-	
-		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
-		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-
-		VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
-		grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
-		
-		// cout<<"G"<<t<<endl;
-		// cout<<g<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
-
-		//solve for delta x
-		// Conj Grad
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// VectorXd deltaX = -1*cg.solve(g);
-
-		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaX = -1* llt.solve(g);
-
-		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g);
-
-		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g);
-		
-
-		x_k+=deltaX;
-		if(x_k != x_k){
-			Nan = true;
-			break;
-		}
-		if(g.squaredNorm()<.00000001){
-			break;
-		}
-	}
-	if(Nan){
-		cout<<"ERROR: Newton's method doesn't converge"<<endl;
-		cout<<i<<endl;
-		exit(0);
-	}
-	if(i== NEWTON_MAX){
-		cout<<"ERROR: Newton max reached"<<endl;
-		cout<<i<<endl;
-		exit(0);
-	}
-	v_old.setZero();
-	v_old = (x_k - x_old)/timestep;
-	x_old = x_k;
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<t<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<t<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
-	ImplicitXtoTV(x_old, TV);
-
-	
+	int N=3*vertices;
+	int i, ret = 0;
+    lbfgsfloatval_t fx;
+    lbfgsfloatval_t *x = lbfgs_malloc(N);
+    lbfgs_parameter_t param;
+    if (x == NULL) {
+        printf("ERROR: Failed to allocate a memory block for variables.\n");
+    }
+    /* Initialize the variables. */
+    for (i = 0;i < N; i++) {
+        x[i] = x_old(i);
+    }
+    /* Initialize the parameters for the L-BFGS optimization. */
+    lbfgs_parameter_init(&param);
+    /*param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;*/
+    /*
+        Start the L-BFGS optimization; this will invoke the callback functions
+        evaluate() and progress() when necessary.
+     */
+    ret = lbfgs(N, x, &fx, evaluate, progress, this, &param);
+    /* Report the result. */
+    printf("L-BFGS optimization terminated with status code = %d\n", ret);
+    for(i=0; i<N; i++){
+    	x_old(i) = x[i];
+    }
+    lbfgs_free(x);
 }
 
 //TODO: Optimize this using hashing
