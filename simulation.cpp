@@ -23,8 +23,17 @@ typedef Matrix<double, 12, 1> Vector12d;
 
 static lbfgsfloatval_t evaluate(void *sim, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
 	Simulation* in = (Simulation*) sim;
+	
+	//from x to x_k
+	for(int i=0; i< n; i++){
+		in->x_k(i) = x[i];
+	}
+	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
+	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
+	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+
 	lbfgsfloatval_t fx = 0.0;
-	for(int i=0; i<3*in->vertices; i++){
+	for(int i=0; i<n; i++){
 		fx+= 0.5*x[i]*in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i)*x[i] - in->vertex_masses(i)*in->timestep*in->v_old(i)*x[i]; //big G function, anti-deriv of g
 		g[i] = in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i) - in->vertex_masses(i)*in->timestep*in->v_old(i) - in->timestep*in->timestep*in->f(i);
 	}
@@ -442,39 +451,7 @@ void Simulation::renderImplicit(){
 	// cout<<"*****************"<<endl<<endl;
 	// ImplicitXtoTV(x_old, TV);
 
-	// t+=1;
-	// int ret =0;
-	// lbfgsfloatval_t fx;
-	// lbfgsfloatval_t *x = lbfgs_malloc(3*vertices);
-	// lbfgs_parameter_t param;
-
-	// if(x==NULL){
-	// 	cout<<"ERROR: Failed to alloc memory"<<endl;
-	// 	exit(0);
-	// }
-	// //initialize vars
-	// v_k.setZero();
-	// x_k.setZero();
-	// x_k = x_old;
-	// v_k = v_old;
-	// ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-	// ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
-	// ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-	
-	// //init liblbfgs param
-	// lbfgs_parameter_init(&param);
-
-	// //start opt
-	// for(int i=0; i<x_k.size(); i++){
-	// 	x[i] = x_k(i);
-	// }
-	// ret = lbfgs(1, x, &fx, evaluate, progress, NULL, &param);
-	// cout<<"AFTER LBFGS"<<endl;
-	// for(int i=0; i<x_k.size(); i++){
-	// 	x_k(i) = x[i];
-	// }
-	// cout<<x_k<<endl;
-	// lbfgs_free(x);
+	//LBFGS
 	t+=1;
 	int N=3*vertices;
 	int i, ret = 0;
@@ -484,23 +461,49 @@ void Simulation::renderImplicit(){
     if (x == NULL) {
         printf("ERROR: Failed to allocate a memory block for variables.\n");
     }
+
     /* Initialize the variables. */
+    x_k.setZero();
     for (i = 0;i < N; i++) {
         x[i] = x_old(i);
     }
+    cout<<"--------"<<t<<"-------"<<endl;
+	cout<<"x_old"<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<<"v_old"<<endl;
+	cout<<v_old<<endl<<endl;
+	cout<<"--------------------"<<endl;
+
     /* Initialize the parameters for the L-BFGS optimization. */
     lbfgs_parameter_init(&param);
-    /*param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;*/
+    //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
+    //param.gtol = 0.0001;
+    //param.ftol = 0.000001;
+    param.epsilon = 0.00000000001;
     /*
         Start the L-BFGS optimization; this will invoke the callback functions
         evaluate() and progress() when necessary.
      */
     ret = lbfgs(N, x, &fx, evaluate, progress, this, &param);
+    
     /* Report the result. */
-    printf("L-BFGS optimization terminated with status code = %d\n", ret);
+    cout<<"Ret X val"<<endl;
     for(i=0; i<N; i++){
-    	x_old(i) = x[i];
+    	printf("%f\n", x[i]);;
+    	x_k(i) = x[i];
     }
+    v_old = (x_k - x_old)/timestep;
+    x_old = x_k;
+    ImplicitXtoTV(x_old, TV);
+    
+
+    cout<<"*******************"<<endl;
+	cout<< "New Pos"<<t<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<t<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
+
     lbfgs_free(x);
 }
 
