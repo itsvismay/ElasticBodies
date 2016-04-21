@@ -39,6 +39,7 @@ public:
 	void render();
 	void renderExplicit();
 	void renderImplicit();
+	void renderNewmark();
 	void createInvMassMatrix();
 	void createXFromTet();
 	void createForceVector();

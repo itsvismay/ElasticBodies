@@ -28,8 +28,5 @@ protected:
 
 public:
 	virtual void render() = 0; //pure virtual render class
-	void setSolidMesh(MatrixXi& TT_One, MatrixXd& TV){//delete
-		M.initializeMesh(TT_One, TV);
-	}
-
+	void initializeIntegrator()	
 }

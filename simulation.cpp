@@ -23,11 +23,20 @@ typedef Matrix<double, 12, 1> Vector12d;
 
 static lbfgsfloatval_t evaluate(void *sim, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
 	Simulation* in = (Simulation*) sim;
+
+	// VectorXd deltaX = in->x_k;
+	// for(int i=0; i< deltaX.size(); i++){
+	// 	deltaX(i) = x[i] - deltaX(i);
+	// }
+	// VectorXd g_vec = in->RegMass*in->x_k - in->RegMass*in->x_old - in->timestep*in->RegMass*in->v_old - in->timestep*in->timestep*in->f;
+	// in->grad_g = in->RegMass - in->timestep*in->timestep*in->forceGradient - in->timestep*rayleighCoeff*in->forceGradient;
 	
 	//from x to x_k
 	for(int i=0; i< n; i++){
 		in->x_k(i) = x[i];
 	}
+	
+
 	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
 	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
 	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
@@ -37,11 +46,22 @@ static lbfgsfloatval_t evaluate(void *sim, const lbfgsfloatval_t *x, lbfgsfloatv
 		fx+= 0.5*x[i]*in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i)*x[i] - in->vertex_masses(i)*in->timestep*in->v_old(i)*x[i]; //big G function, anti-deriv of g
 		g[i] = in->vertex_masses(i)*x[i] - in->vertex_masses(i)*in->x_old(i) - in->vertex_masses(i)*in->timestep*in->v_old(i) - in->timestep*in->timestep*in->f(i);
 	}
+	//force anti-derivative
 	double strainE=0;
 	for(unsigned int i=0; i<in->M.tets.size(); i++){
 		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
 	}
-	fx+= in->timestep*in->timestep*strainE;
+	////////////////
+	double gnorm =0;
+	for(int i=0; i<n; i++){
+		gnorm+=g[i];
+	}
+	cout<<sqrt(abs(gnorm))<<endl;
+	////////////////
+
+	fx+= in->timestep*in->timestep*(-strainE);
+	//damping anti-derivative
+	fx += in->timestep*rayleighCoeff*((in->x_k.dot(in->f) + strainE) - in->f.dot(in->x_old));
 	return fx;
 	// int i;
  //    lbfgsfloatval_t fx = 0.0;
@@ -65,7 +85,8 @@ static int progress(void *instance,
 	    const lbfgsfloatval_t step,
 	    int n,
 	    int k,
-	    int ls){
+	    int ls){	
+
 	printf("Iteration %d:\n", k);
     printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
     printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
@@ -389,11 +410,11 @@ void Simulation::renderImplicit(){
 	// 	ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 	// 	ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 
-	// 	VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
-	// 	grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
+	// 	// VectorXd g = x_k - x_old -timestep*v_old -timestep*timestep*InvMass*f;
+	// 	// grad_g = Ident - timestep*timestep*InvMass*forceGradient - timestep*rayleighCoeff*InvMass*forceGradient;
 		
-	// VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
-	// grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
+	// 	VectorXd g = RegMass*x_k - RegMass*x_old - timestep*RegMass*v_old - timestep*timestep*f;
+	// 	grad_g = RegMass - timestep*timestep*forceGradient - timestep*rayleighCoeff*forceGradient;
 	
 	// 	// cout<<"G"<<t<<endl;
 	// 	// cout<<g<<endl<<endl;
@@ -465,8 +486,11 @@ void Simulation::renderImplicit(){
     /* Initialize the variables. */
     x_k.setZero();
     for (i = 0;i < N; i++) {
-        x[i] = x_old(i);
+       
+       x[i] = x_old(i);
     }
+    x_k = x_old;
+    v_k = v_old;
     cout<<"--------"<<t<<"-------"<<endl;
 	cout<<"x_old"<<endl;
 	cout<<x_old<<endl<<endl;
@@ -477,9 +501,9 @@ void Simulation::renderImplicit(){
     /* Initialize the parameters for the L-BFGS optimization. */
     lbfgs_parameter_init(&param);
     //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-    //param.gtol = 0.0001;
-    //param.ftol = 0.000001;
-    param.epsilon = 0.00000000001;
+    // param.gtol = 0.0001;
+    // param.ftol = 0.000001;
+    param.epsilon = 0.00001;
     /*
         Start the L-BFGS optimization; this will invoke the callback functions
         evaluate() and progress() when necessary.
@@ -507,6 +531,62 @@ void Simulation::renderImplicit(){
     lbfgs_free(x);
 }
 
+void Simulation::renderNewmark(){
+	t+=1;
+	v_k.setZero();
+	x_k.setZero();
+	x_k = x_old;
+	forceGradient.setZero();
+	bool Nan = false;
+	int NEWTON_MAX = 100, i=0;
+	double gamma = 0.5;
+	double beta =0.25;
+	VectorXd f_old = f;
+	for(i=0; i<NEWTON_MAX; i++){
+		grad_g.setZero();
+		ImplicitXtoTV(x_k, TVk);
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
+		ImplicitCalculateForces(TVk, forceGradient, v_k, f);
+		
+		VectorXd g = x_k - x_old - timestep*v_old - (timestep*timestep/2)*(1-2*beta)*InvMass*f_old - (timestep*timestep*beta)*InvMass*f;
+		grad_g = Ident - timestep*timestep*beta*InvMass*(forceGradient+(rayleighCoeff/timestep)*forceGradient);
+		
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(grad_g);
+		VectorXd deltaX = -1*sqr.solve(g);
+		// v_k+=deltaX/timestep;
+		x_k+=deltaX;
+		//v_k = (x_k- x_old)/timestep;
+		if(x_k != x_k){
+			Nan = true;
+			break;
+		}
+		if(g.squaredNorm()<.00000001){
+			break;
+		}
+	}
+	if(Nan){
+		cout<<"ERROR NEWMARK: Newton's method doesn't converge"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	if(i== NEWTON_MAX){
+		cout<<"ERROR NEWMARK: Newton max reached"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	// v_old.setZero();
+	v_old = v_old + timestep*(1-gamma)*InvMass*f_old + timestep*gamma*InvMass*f;
+	x_old = x_k;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<t<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<t<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
+	ImplicitXtoTV(x_old, TV);
+}
+
 //TODO: Optimize this using hashing
 bool Simulation::isFixed(int vert){
 	for(unsigned int j=0; j<fixedVertices.size(); j++){
@@ -522,10 +602,14 @@ void Simulation::render(){
 		cout<<endl;
 		cout<<'e'<<t<<endl;
 		renderExplicit();
-	}else{
+	}else if(integrator =='i'){
 		cout<<endl;
 		cout<<'i'<<t<<endl;
 		renderImplicit();
+	}else if(integrator == 'n'){
+		cout<<endl;
+		cout<<'n'<<t<<endl;
+		renderNewmark();
 	}
 
 	////////////////////////////////////
