@@ -7,7 +7,8 @@
 #include <math.h>
 #include <lbfgs.h>
 
-#include "solidmesh.h"
+#include "Verlet.h"
+
 
 using namespace Eigen;
 using namespace std;
@@ -15,24 +16,23 @@ using namespace std;
 class Simulation{
 
 public:
-	int t=0;
-	double timestep;
-	SparseMatrix<double> InvMass;
-	SparseMatrix<double> RegMass;
-	vector<int> fixedVertices;
+	// int t=0;
+	// double timestep;
+	// SparseMatrix<double> InvMass;
+	// SparseMatrix<double> RegMass;
+	// vector<int> fixedVertices;
 	SolidMesh M;
-	int vertices;
-	VectorXd x_old, v_old, vertex_masses, x_k, v_k, f;
-	vector<int> mapV2TV;
-	MatrixXd TV, TVk;
-	char integrator;
+	// int vertices;
+	// VectorXd x_old, v_old, vertex_masses, x_k, v_k, f;
+	// vector<int> mapV2TV;
+	// MatrixXd TV, TVk;
+	IntegratorAbstract* integrator;
 
-	//used in render implicit
-	SparseMatrix<double> ZeroMatrix;
-	SparseMatrix<double> global_gradForces;
-	SparseMatrix<double> grad_g;
-	SparseMatrix<double> Ident;
-	SparseMatrix<double> forceGradient;
+	// //used in render implicit
+	// SparseMatrix<double> ZeroMatrix;
+	// SparseMatrix<double> grad_g;
+	// SparseMatrix<double> Ident;
+	// SparseMatrix<double> forceGradient;
 
 
 	Simulation(void);
@@ -40,14 +40,14 @@ public:
 	void renderExplicit();
 	void renderImplicit();
 	void renderNewmark();
-	void createInvMassMatrix();
+	void createMassMatrix();
 	void createXFromTet();
 	void createForceVector();
 	void createTVFromTet();
 	void initializeSimulation(double deltaT, 
 		char method, 
-		MatrixXi& TT_One, 
-		MatrixXd& TV_One, 
+		MatrixXi& TT, 
+		MatrixXd& TV, 
 		vector<int>& map);
 	
 	void setXIntoTV(VectorXd& x_new);

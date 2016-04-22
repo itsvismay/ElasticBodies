@@ -41,25 +41,25 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 	Sim.render();
 	
 
-	viewer.data.add_points(Sim.TV, RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(0), Sim.TV.row(1), RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(0), Sim.TV.row(2), RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(0), Sim.TV.row(3), RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(1), Sim.TV.row(2), RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(1), Sim.TV.row(3), RowVector3d(1,0,0));
-	viewer.data.add_edges(Sim.TV.row(2), Sim.TV.row(3), RowVector3d(1,0,0));
+	viewer.data.add_points(Sim.integrator->TV, RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(0), Sim.integrator->TV.row(1), RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(0), Sim.integrator->TV.row(2), RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(0), Sim.integrator->TV.row(3), RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(1), Sim.integrator->TV.row(2), RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(1), Sim.integrator->TV.row(3), RowVector3d(1,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(2), Sim.integrator->TV.row(3), RowVector3d(1,0,0));
 
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(3), RowVector3d(0,1,0));
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(0), RowVector3d(0,0,1));
-	viewer.data.add_edges(Sim.TV.row(4), Sim.TV.row(2), RowVector3d(0,0,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(4), Sim.integrator->TV.row(3), RowVector3d(0,1,0));
+	viewer.data.add_edges(Sim.integrator->TV.row(4), Sim.integrator->TV.row(0), RowVector3d(0,0,1));
+	viewer.data.add_edges(Sim.integrator->TV.row(4), Sim.integrator->TV.row(2), RowVector3d(0,0,0));
 
-	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(3), RowVector3d(0,1,0));
-	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(0), RowVector3d(0,0,1));
-	// viewer.data.add_edges(Sim.TV.row(5), Sim.TV.row(1), RowVector3d(0,0,0));
+	// viewer.data.add_edges(Sim.integrator->TV.row(5), Sim.integrator->TV.row(3), RowVector3d(0,1,0));
+	// viewer.data.add_edges(Sim.integrator->TV.row(5), Sim.integrator->TV.row(0), RowVector3d(0,0,1));
+	// viewer.data.add_edges(Sim.integrator->TV.row(5), Sim.integrator->TV.row(1), RowVector3d(0,0,0));
 
-	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(3), RowVector3d(0,1,0));
-	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(0), RowVector3d(0,0,1));
-	// viewer.data.add_edges(Sim.TV.row(6), Sim.TV.row(5), RowVector3d(0,0,0));
+	// viewer.data.add_edges(Sim.integrator->TV.row(6), Sim.integrator->TV.row(3), RowVector3d(0,1,0));
+	// viewer.data.add_edges(Sim.integrator->TV.row(6), Sim.integrator->TV.row(0), RowVector3d(0,0,1));
+	// viewer.data.add_edges(Sim.integrator->TV.row(6), Sim.integrator->TV.row(5), RowVector3d(0,0,0));
 
 
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
@@ -69,61 +69,61 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 	return false;
 }
 
-bool drawLoop(igl::viewer::Viewer& viewer){
-	viewer.data.clear();
-	Sim.render();
+// bool drawLoop(igl::viewer::Viewer& viewer){
+// 	viewer.data.clear();
+// 	Sim.render();
 
-	for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-		V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
-	}
+// 	for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
+// 		V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
+// 	}
 
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
-	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
+// 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
+// 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
+// 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
 	
-	viewer.data.set_mesh(V, F);
-	viewer.data.set_face_based(false);
-	return false;
-}
+// 	viewer.data.set_mesh(V, F);
+// 	viewer.data.set_face_based(false);
+// 	return false;
+// }
 
-void useFullObject(bool headless, double timestep, int iterations, char method){
-	vector<int> mapV2TV;
-	// Load a surface mesh
-	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
-	V = V;
-	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	// // Compute barycenters
-	igl::barycenter(TV, TT,B);
-	// //constructs the map from V to TV
-	for(unsigned int i=0; i< V.rows(); i++){
-		for(unsigned int j=0; j<TV.rows(); j++){
-			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
-				mapV2TV.push_back(j);
-				break;
-			}
-		}
-	}
-	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
-	if(!headless){
-		igl::viewer::Viewer viewer;
-		viewer.callback_pre_draw = &drawLoop;
-		viewer.launch();
-	}else{
-		while(Sim.t<iterations){
-			Sim.render();
-			for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
-			}
-			if(Sim.t%1== 0){
-				cout<<"--"<<endl;
-				cout<<int(Sim.t*timestep*100)%10<<endl;
-				// igl::writeOBJ("../output1/object"+to_string(Sim.t)+".obj", V, F);
-			}
-		}
-	}
-}
+// void useFullObject(bool headless, double timestep, int iterations, char method){
+// 	vector<int> mapV2TV;
+// 	// Load a surface mesh
+// 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
+// 	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
+// 	V = V;
+// 	// Tetrahedralize the interior
+// 	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+// 	// // Compute barycenters
+// 	igl::barycenter(TV, TT,B);
+// 	// //constructs the map from V to TV
+// 	for(unsigned int i=0; i< V.rows(); i++){
+// 		for(unsigned int j=0; j<TV.rows(); j++){
+// 			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
+// 				mapV2TV.push_back(j);
+// 				break;
+// 			}
+// 		}
+// 	}
+// 	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
+// 	if(!headless){
+// 		igl::viewer::Viewer viewer;
+// 		viewer.callback_pre_draw = &drawLoop;
+// 		viewer.launch();
+// 	}else{
+// 		while(Sim.t<iterations){
+// 			Sim.render();
+// 			for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
+// 				V.row(i) = Sim.TV.row(Sim.mapV2TV[i]);
+// 			}
+// 			if(Sim.t%1== 0){
+// 				cout<<"--"<<endl;
+// 				cout<<int(Sim.t*timestep*100)%10<<endl;
+// 				// igl::writeOBJ("../output1/object"+to_string(Sim.t)+".obj", V, F);
+// 			}
+// 		}
+// 	}
+// }
 
 void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> mapV2TV;
@@ -159,7 +159,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
 	}else{
-		while(Sim.t<iterations){
+		while(Sim.integrator->simTime<iterations){
 			Sim.render();
 		}
 	}
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 	if(object ==0){
 		useMyObject(runHeadless, timestep, iterations, method);	
 	}else{
-		useFullObject(runHeadless, timestep, iterations, method);
+		// useFullObject(runHeadless, timestep, iterations, method);
 	}
 	cout<<"###########################My Code ###################"<<endl;
 	momentumFile.close();
@@ -228,6 +228,7 @@ int main(int argc, char *argv[])
 	strainEnergyFile.close();
 	kineticEnergyFile.close();
 	gravityEnergyFile.close();
+
 	return 0;
 }
 
