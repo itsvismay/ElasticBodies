@@ -8,6 +8,7 @@
 #include <lbfgs.h>
 
 #include "Verlet.h"
+#include "ImplicitEuler.h"
 
 
 using namespace Eigen;
@@ -23,9 +24,9 @@ public:
 	// vector<int> fixedVertices;
 	SolidMesh M;
 	// int vertices;
-	// VectorXd x_old, v_old, vertex_masses, x_k, v_k, f;
+
 	// vector<int> mapV2TV;
-	// MatrixXd TV, TVk;
+
 	IntegratorAbstract* integrator;
 
 	// //used in render implicit

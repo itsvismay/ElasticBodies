@@ -17,6 +17,7 @@ using namespace std;
 class Verlet: public IntegratorAbstract{
 
 public:
+	void initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV);
 	void setXIntoTV(VectorXd& x_new);
 	void createForceVector();
 	void calculateGravity();

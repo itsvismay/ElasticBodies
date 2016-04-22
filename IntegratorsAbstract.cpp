@@ -24,22 +24,25 @@ bool IntegratorAbstract::isFixed(int vert){
 	return false;
 }
 
-void IntegratorAbstract::render(){
+void IntegratorAbstract::printInfo(){
 	////////////////////////////////////
+
 	double TotalEnergy = 0;
 	double gravityE =0;
 	double kineticE =0;
 	double strainE = 0;
-	for(int i=0; i<3*vertsNum; i++){
+	for(int i=0; i<vertsNum; i++){
 		if(!isFixed(i)){
 			int k=3*i;
-			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
+			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
+			
 			k++;
 			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
+			
 			k++;
-			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
+			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 		}		
 	}
@@ -54,6 +57,11 @@ void IntegratorAbstract::render(){
 	cout<<TotalEnergy<<endl;
 	cout<<"Strain E"<<endl;
 	cout<<strainE<<endl;
+	cout<<"Gravity E"<<endl;
+	cout<<gravityE<<endl;
+	cout<<"Kinetic E"<<endl;
+	cout<<kineticE<<endl;
+
 	energyFile<<simTime<<", "<<TotalEnergy<<"\n";
 	strainEnergyFile<<simTime<<", "<<strainE<<"\n";
 	kineticEnergyFile<<simTime<<", "<<kineticE<<"\n";
@@ -92,10 +100,6 @@ void IntegratorAbstract::render(){
 void IntegratorAbstract::initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV){
 	//Constants
 	vertsNum = pTV.rows();
-	
-	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
-	ZeroMatrix.setZero();
-	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();
 
 	h = ph;
 	M = pM;

@@ -12,6 +12,11 @@
 using namespace Eigen;
 using namespace std;
 
+void Verlet::initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV){
+	cout<<"Here"<<endl;
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
+}
+
 void Verlet::setXIntoTV(VectorXd& x_new){
 	for(unsigned int i=0; i < M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -54,7 +59,13 @@ void Verlet::calculateElasticForce(){
 
 void Verlet::render(){
 	simTime+=1;
-	cout<<simTime<<endl;
+	cout<<"e"<<simTime<<endl;
+	// cout<<"XOld"<<endl;
+	// cout<<x_old<<endl;
+	// cout<<"VOld"<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"fOld"<<endl;
+	// cout<<f<<endl;
 
 	x_old = x_old + h*v_old;
 	if(x_old != x_old){
@@ -65,5 +76,5 @@ void Verlet::render(){
 	createForceVector();
 	v_old = v_old + h*InvMass*f;
 
-	IntegratorAbstract::render();
+	IntegratorAbstract::printInfo();
 }

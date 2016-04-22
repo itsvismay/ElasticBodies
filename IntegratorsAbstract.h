@@ -21,8 +21,7 @@ public:
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
-	SparseMatrix<double> ZeroMatrix;
-	SparseMatrix<double> Ident;
+	
 
 
 	vector<int> fixedVerts;
@@ -36,8 +35,9 @@ public:
 	int height;
 
 	bool isFixed(int vert);
+	void printInfo();
 	virtual void render()=0; //pure virtual render class
-	void initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV);
+	virtual void initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV)=0;
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(int fixMe);
