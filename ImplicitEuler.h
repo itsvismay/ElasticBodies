@@ -28,7 +28,10 @@ public:
 	MatrixXd TVk;
 
 	void render();
-	void initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV);
+	void renderNewtonsMethod();
+	void renderLBFGS();
+	
+	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV);
 	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);

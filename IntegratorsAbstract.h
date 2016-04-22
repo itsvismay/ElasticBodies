@@ -37,7 +37,7 @@ public:
 	bool isFixed(int vert);
 	void printInfo();
 	virtual void render()=0; //pure virtual render class
-	virtual void initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV)=0;
+	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV)=0;
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(int fixMe);

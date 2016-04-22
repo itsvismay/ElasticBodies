@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <fstream>
 #include <math.h>
-#include <lbfgs.h>
+
 
 #include "Verlet.h"
 #include "ImplicitEuler.h"

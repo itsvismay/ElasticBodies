@@ -97,7 +97,7 @@ void IntegratorAbstract::printInfo(){
 	// /////////////////
 }
 
-void IntegratorAbstract::initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV){
+void IntegratorAbstract::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
 	//Constants
 	vertsNum = pTV.rows();
 

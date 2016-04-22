@@ -12,7 +12,7 @@
 using namespace Eigen;
 using namespace std;
 
-void Verlet::initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV){
+void Verlet::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
 	cout<<"Here"<<endl;
 	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
 }

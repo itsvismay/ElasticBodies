@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <fstream>
 #include <math.h>
+#include <lbfgs.h>
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 
@@ -17,15 +18,91 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
-void ImplicitEuler::initializeIntegrator(int ph, SolidMesh& pM, MatrixXd& pTV){
-	cout<<"here again"<<endl;
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
+static lbfgsfloatval_t evaluate(void *impe, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+	ImplicitEuler* in = (ImplicitEuler*) impe;
 
+	// VectorXd deltaX = in->x_k;
+	// for(int i=0; i< deltaX.size(); i++){
+	// 	deltaX(i) = x[i] - deltaX(i);
+	// }
+	// VectorXd g_vec = in->RegMass*in->x_k - in->RegMass*in->x_old - in->h*in->RegMass*in->v_old - in->h*in->h*in->f;
+	// in->grad_g = in->RegMass - in->h*in->h*in->forceGradient - in->h*rayleighCoeff*in->forceGradient;
+	
+	//from x to x_k
+	for(int i=0; i< n; i++){
+		in->x_k(i) = x[i];
+	}
+	
+
+	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
+	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
+	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+
+	lbfgsfloatval_t fx = 0.0;
+	for(int i=0; i<n; i++){
+		fx+= 0.5*x[i]*in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i)*x[i] - in->massVector(i)*in->h*in->v_old(i)*x[i]; //big G function, anti-deriv of g
+		g[i] = in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i) - in->massVector(i)*in->h*in->v_old(i) - in->h*in->h*in->f(i);
+	}
+	//force anti-derivative
+	double strainE=0;
+	for(unsigned int i=0; i<in->M.tets.size(); i++){
+		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
+	}
+	////////////////
+	double gnorm =0;
+	for(int i=0; i<n; i++){
+		gnorm+=g[i];
+	}
+	cout<<sqrt(abs(gnorm))<<endl;
+	////////////////
+
+	fx+= in->h*in->h*(-strainE);
+	//damping anti-derivative
+	fx += in->h*rayleighCoeff*((in->x_k.dot(in->f) + strainE) - in->f.dot(in->x_old));
+	return fx;
+	// int i;
+ //    lbfgsfloatval_t fx = 0.0;
+ //    for (i = 0;i < n;i += 2) {
+ //        lbfgsfloatval_t t1 = 1.0 - x[i];
+ //        lbfgsfloatval_t t2 = 10.0 * (x[i+1] - x[i] * x[i]);
+ //        g[i+1] = 20.0 * t2;
+ //        g[i] = -2.0 * (x[i] * g[i+1] + t1);
+ //        fx += t1 * t1 + t2 * t2;
+ //    }
+ //    return fx;
+
+}
+
+static int progress(void *instance,
+	    const lbfgsfloatval_t *x,
+	    const lbfgsfloatval_t *g,
+	    const lbfgsfloatval_t fx,
+	    const lbfgsfloatval_t xnorm,
+	    const lbfgsfloatval_t gnorm,
+	    const lbfgsfloatval_t step,
+	    int n,
+	    int k,
+	    int ls){	
+
+	printf("Iteration %d:\n", k);
+    printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
+    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+    printf("\n");
+    return 0;	
+}
+
+void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
 	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();
 	forceGradient.resize(3*vertsNum, 3*vertsNum);
 	grad_g.resize(3*vertsNum, 3*vertsNum);
+	x_k.resize(3*vertsNum);
+	v_k.resize(3*vertsNum);
+	x_k.setZero();
+	v_k.setZero();
+	TVk = TV;
 }
 
 void ImplicitEuler::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){
@@ -130,14 +207,8 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
 	return;
 }
-
-void ImplicitEuler::render(){
-	simTime+=1;
-	cout<<"i"<<simTime<<endl;
-
+void ImplicitEuler::renderNewtonsMethod(){
 	//Implicit Code
-	// cout<<"diff in x"<<endl;
-	// cout<<x_k - x_old<<endl<<endl;
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
@@ -146,7 +217,7 @@ void ImplicitEuler::render(){
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	cout<<"--------"<<"-------"<<endl;
+	cout<<"--------"<<simTime<<"-------"<<endl;
 	cout<<"x_k"<<endl;
 	cout<<x_k<<endl<<endl;
 	cout<<"v_k"<<endl;
@@ -213,6 +284,65 @@ void ImplicitEuler::render(){
 	v_old.setZero();
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
+}
+void ImplicitEuler::renderLBFGS(){
+
+	//LBFGS
+	int N=3*vertsNum;
+	int i, ret = 0;
+    lbfgsfloatval_t fx;
+    lbfgsfloatval_t *x = lbfgs_malloc(N);
+    lbfgs_parameter_t param;
+    if (x == NULL) {
+        printf("ERROR: Failed to allocate a memory block for variables.\n");
+    }
+
+    /* Initialize the variables. */
+    x_k.setZero();
+    for (i = 0;i < N; i++) {
+       
+       x[i] = x_old(i);
+    }
+    x_k = x_old;
+    v_k = v_old;
+    cout<<"--------"<<simTime<<"-------"<<endl;
+	cout<<"x_old"<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<<"v_old"<<endl;
+	cout<<v_old<<endl<<endl;
+	cout<<"--------------------"<<endl;
+
+    /* Initialize the parameters for the L-BFGS optimization. */
+    lbfgs_parameter_init(&param);
+    //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
+    // param.gtol = 0.0001;
+    // param.ftol = 0.000001;
+    param.epsilon = 0.00001;
+    /*
+        Start the L-BFGS optimization; this will invoke the callback functions
+        evaluate() and progress() when necessary.
+     */
+    ret = lbfgs(N, x, &fx, evaluate, progress, this, &param);
+    
+    /* Report the result. */
+    cout<<"Ret X val"<<endl;
+    for(i=0; i<N; i++){
+    	printf("%f\n", x[i]);;
+    	x_k(i) = x[i];
+    }
+    v_old = (x_k - x_old)/h;
+    x_old = x_k;
+    ImplicitXtoTV(x_old, TV);
+
+    lbfgs_free(x);
+}
+void ImplicitEuler::render(){
+	simTime+=1;
+	cout<<"i"<<simTime<<endl;
+
+	renderNewtonsMethod();
+	// renderLBFGS();
+
 	cout<<"*******************"<<endl;
 	cout<< "New Pos"<<simTime<<endl;
 	cout<<x_old<<endl<<endl;
@@ -226,62 +356,5 @@ void ImplicitEuler::render(){
 // void Simulation::renderImplicit(){
 
 
-// 	//LBFGS
-// 	t+=1;
-// 	int N=3*vertices;
-// 	int i, ret = 0;
-//     lbfgsfloatval_t fx;
-//     lbfgsfloatval_t *x = lbfgs_malloc(N);
-//     lbfgs_parameter_t param;
-//     if (x == NULL) {
-//         printf("ERROR: Failed to allocate a memory block for variables.\n");
-//     }
-
-//     /* Initialize the variables. */
-//     x_k.setZero();
-//     for (i = 0;i < N; i++) {
-       
-//        x[i] = x_old(i);
-//     }
-//     x_k = x_old;
-//     v_k = v_old;
-//     cout<<"--------"<<t<<"-------"<<endl;
-// 	cout<<"x_old"<<endl;
-// 	cout<<x_old<<endl<<endl;
-// 	cout<<"v_old"<<endl;
-// 	cout<<v_old<<endl<<endl;
-// 	cout<<"--------------------"<<endl;
-
-//     /* Initialize the parameters for the L-BFGS optimization. */
-//     lbfgs_parameter_init(&param);
-//     //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-//     // param.gtol = 0.0001;
-//     // param.ftol = 0.000001;
-//     param.epsilon = 0.00001;
-//     /*
-//         Start the L-BFGS optimization; this will invoke the callback functions
-//         evaluate() and progress() when necessary.
-//      */
-//     ret = lbfgs(N, x, &fx, evaluate, progress, this, &param);
-    
-//     /* Report the result. */
-//     cout<<"Ret X val"<<endl;
-//     for(i=0; i<N; i++){
-//     	printf("%f\n", x[i]);;
-//     	x_k(i) = x[i];
-//     }
-//     v_old = (x_k - x_old)/h;
-//     x_old = x_k;
-//     ImplicitXtoTV(x_old, TV);
-    
-
-//     cout<<"*******************"<<endl;
-// 	cout<< "New Pos"<<t<<endl;
-// 	cout<<x_old<<endl<<endl;
-// 	cout<< "New Vels"<<t<<endl;
-// 	cout<<v_old<<endl;
-// 	cout<<"*****************"<<endl<<endl;
-
-//     lbfgs_free(x);
 // }
 
