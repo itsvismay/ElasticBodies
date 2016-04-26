@@ -94,7 +94,7 @@ void IntegratorAbstract::printInfo(){
 	// }else{
 	// 	cout<<"no open file"<<endl;
 	// }
-	// /////////////////
+	/////////////////
 }
 
 void IntegratorAbstract::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
@@ -121,10 +121,10 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	v_old(0) =1;
+	v_old(0) =10;
 	// v_old(1) =1;
-	v_old(2) =1;
-	v_old(3) =1;
+	v_old(2) =10;
+	v_old(3) =10;
 }
 
 void IntegratorAbstract::initMassMatrices(){
@@ -156,12 +156,12 @@ void IntegratorAbstract::initMassMatrices(){
 		InvMass.coeffRef(i,i) = 1/massVector(i);
 		RegMass.coeffRef(i,i) = massVector(i);
 	}
-	cout<<"Mass Vector"<<endl;
-	cout<<massVector<<endl;
-	cout<<"INV Mass"<<endl;
-	cout<<InvMass<<endl;
-	cout<<"Reg Mass"<<endl;
-	cout<<RegMass<<endl;
+	// cout<<"Mass Vector"<<endl;
+	// cout<<massVector<<endl;
+	// cout<<"INV Mass"<<endl;
+	// cout<<InvMass<<endl;
+	// cout<<"Reg Mass"<<endl;
+	// cout<<RegMass<<endl;
 }
 
 void IntegratorAbstract::fixVertices(int fixMe){

@@ -23,16 +23,18 @@ using namespace std;
 
 Simulation::Simulation(void){}
 
-void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT, MatrixXd& TV, vector<int>& map){
+void Simulation::initializeSimulation(double deltaT, char method, MatrixXi& TT, MatrixXd& TV, vector<int> map){
 	if (method =='e'){
 		integrator = new Verlet();		
 	}else if(method == 'i'){
 		integrator = new ImplicitEuler();
+	}else if(method == 'n'){
+		integrator = new ImplicitNewmark();
 	}else{
 		cout<<"Not supported yet"<<endl;
 		exit(0);
 	}
-	
+	mapV2TV = map;
 	M.initializeMesh(TT, TV);
 
 	integrator->initializeIntegrator(deltaT, M, TV);	
