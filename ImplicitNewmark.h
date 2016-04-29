@@ -14,7 +14,7 @@
 using namespace Eigen;
 using namespace std;
 
-class ImplicitEuler: public IntegratorAbstract{
+class ImplicitNewmark: public IntegratorAbstract{
 
 public:
 	//constants
@@ -29,7 +29,7 @@ public:
 
 	void render();
 	void renderNewtonsMethod();
-	void renderLBFGS();
+	
 	
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV);
 	void NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
