@@ -6,3 +6,5 @@ extern ofstream gravityEnergyFile;
 
 extern double rayleighCoeff;
 extern double gravity;
+
+extern bool headless;

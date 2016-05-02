@@ -61,6 +61,7 @@ void IntegratorAbstract::printInfo(){
 	cout<<gravityE<<endl;
 	cout<<"Kinetic E"<<endl;
 	cout<<kineticE<<endl;
+	cout<<endl;
 
 	energyFile<<simTime<<", "<<TotalEnergy<<"\n";
 	strainEnergyFile<<simTime<<", "<<strainE<<"\n";

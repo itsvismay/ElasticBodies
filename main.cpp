@@ -7,6 +7,7 @@
 
 #include "simulation.h"
 #include "globals.h"
+#include "ConsistencyTests.h"
 
 ofstream momentumFile;
 ofstream energyFile;
@@ -16,6 +17,7 @@ ofstream gravityEnergyFile;
 
 double rayleighCoeff;
 double gravity;
+bool headless;
 
 
 // Input polygon
@@ -36,7 +38,9 @@ MatrixXi TT_One_G;
 MatrixXd TV_One_G;
 
 Simulation Sim;
+
 bool drawLoopTest(igl::viewer::Viewer& viewer){
+	cout<<"Here"<<endl;
 	viewer.data.clear();
 	Sim.render();
 	
@@ -70,19 +74,55 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	viewer.data.clear();
 	Sim.render();
 
-	for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-		V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
+	// // for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
+	// // 	V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
+	// // }
+
+	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
+	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
+	// //viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
+	
+	// viewer.data.clear();
+	// viewer.data.set_mesh(V, F);
+	// viewer.data.set_face_based(false);
+
+	double refinement = '9';
+	double t = ((refinement - 1)+1) / 9.0;
+
+	VectorXd v = B.col(2).array() - B.col(2).minCoeff();
+	v /= v.col(0).maxCoeff();
+
+	vector<int> s;
+	for (unsigned i=0; i<v.size();++i){
+		if (v(i) < t){
+			s.push_back(i);
+		}
+	}
+
+	MatrixXd V_temp(s.size()*4,3);
+	MatrixXi F_temp(s.size()*4,3);
+
+	for (unsigned i=0; i<s.size();++i)
+	{
+		V_temp.row(i*4+0) = Sim.integrator->TV.row(TT(s[i],0));
+		V_temp.row(i*4+1) = Sim.integrator->TV.row(TT(s[i],1));
+		V_temp.row(i*4+2) = Sim.integrator->TV.row(TT(s[i],2));
+		V_temp.row(i*4+3) = Sim.integrator->TV.row(TT(s[i],3));
+		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
+		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
+		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
+		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
 	
-	viewer.data.set_mesh(V, F);
-	viewer.data.set_face_based(false);
+	viewer.data.clear();
+	viewer.data.set_mesh(V_temp,F_temp);
+	viewer.data.set_face_based(true);
 	return false;
 }
 
@@ -90,39 +130,57 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
-	V = V;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
+
 	// //constructs the map from V to TV
+	cout<<"Things"<<endl;
+	cout<<TV<<endl;
+	cout<<V<<endl;
 	for(unsigned int i=0; i< V.rows(); i++){
 		for(unsigned int j=0; j<TV.rows(); j++){
-			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
+			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.001){
 				mapV2TV.push_back(j);
 				break;
 			}
 		}
 	}
-	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
-	if(!headless){
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV);
+	Sim.mapV2TV = mapV2TV;
+	//fix vertices
+	Sim.integrator->fixVertices(0);
+	Sim.integrator->fixVertices(1);
+	// Sim.integrator->fixVertices(2);
+	if(headless){
+		Sim.headless();
+	}else{
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
-	}else{
-		while(Sim.integrator->simTime<iterations){
-			Sim.render();
-			for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-				V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
-			}
-			if(Sim.integrator->simTime%1== 0){
-				cout<<"--"<<endl;
-				cout<<int(Sim.integrator->simTime*timestep*100)%10<<endl;
-				// igl::writeOBJ("../output1/object"+to_string(Sim.t)+".obj", V, F);
-			}
-		}
 	}
+	// if(!headless){
+	// 	igl::viewer::Viewer viewer;
+	// 	viewer.callback_pre_draw = &drawLoop;
+	// 	viewer.launch();
+	// }else{
+		// while(integrator->simTime<iterations){
+		// 	Sim.render();
+		// 	for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
+		// 		V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
+		// 	}
+		// 	if(Sim.integrator->simTime%1== 0){
+		// 		cout<<"--"<<endl;
+		// 		cout<<int(Sim.integrator->simTime*timestep*100)%10<<endl;
+		// 		// igl::writeOBJ("../output1/object"+to_string(Sim.t)+".obj", V, F);
+		// 	}
+		// }	
+	// }
 }
 
 void useMyObject(bool headless, double timestep, int iterations, char method){
@@ -151,28 +209,27 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 
 
 				
-	Sim.initializeSimulation(timestep, method, TT_One_G, TV_One_G, mapV2TV);
-	igl::viewer::Viewer viewer;
-	bool boolVariable = true;
-	double timeVariable = 0.001;
-	if(!headless){
+	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G);
+	Sim.integrator->fixVertices(1);
+	if(headless){
+		Sim.headless();
+	}else{
+		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
-	}else{
-		while(Sim.integrator->simTime<iterations){
-			Sim.render();
-		}
 	}
+		
 }
 
-void consistencyTests(bool headless, double timestep, int iterations, char method){
+void consistencyTests( double timestep, int iterations, char method){
 	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
 	V = V;
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", TV,TT,TF);
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 	// //constructs the map from V to TV
@@ -184,33 +241,19 @@ void consistencyTests(bool headless, double timestep, int iterations, char metho
 			}
 		}
 	}
-	Sim.initializeSimulation(timestep, method, TT, TV, mapV2TV);
-	if(!headless){
-		igl::viewer::Viewer viewer;
-		viewer.callback_pre_draw = &drawLoop;
-		viewer.launch();
-	}else{
-		while(Sim.integrator->simTime<iterations){
-			Sim.render();
-			for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-				V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
-			}
-			if(Sim.integrator->simTime%1== 0){
-				cout<<"--"<<endl;
-				cout<<int(Sim.integrator->simTime*timestep*100)%10<<endl;
-				// igl::writeOBJ("../output1/object"+to_string(Sim.t)+".obj", V, F);
-			}
-		}
-	}
+
+	ConsistencyTest c;
+	c.initializeTest(timestep, method, TT, TV, Sim, mapV2TV);
+	
 }
 
 int main(int argc, char *argv[])
 {
 	double timestep = 0;
-	char headless;
 	char method;
-	int iterations = 0;
 	int object = 0;
+	char runHeadless;
+	int iterations;
 	string line;
 	ifstream configFile ("../config.txt");
 	if(configFile.is_open()){
@@ -219,7 +262,7 @@ int main(int argc, char *argv[])
 		cout<<timestep<<endl;
 		
 		getline(configFile, line);
-		headless = line.c_str()[0];
+		runHeadless = line.c_str()[0];
 		cout<<line<<endl;
 		
 		getline(configFile, line);
@@ -245,48 +288,45 @@ int main(int argc, char *argv[])
 		cout<<"Config file not found"<<endl;
 		return 0;
 	}
+	
+    ///////////////////
+	cout<<"###########################My Code ###################"<<endl;
+	headless = false;
+	if(runHeadless=='t'){
+		headless = true;
+	}
 	momentumFile.open("../PythonScripts/momentum.txt");
 	energyFile.open("../PythonScripts/energy.txt");
 	strainEnergyFile.open("../PythonScripts/senergy.txt");
 	kineticEnergyFile.open("../PythonScripts/kenergy.txt");
 	gravityEnergyFile.open("../PythonScripts/genergy.txt");
-    ///////////////////
-	cout<<"###########################My Code ###################"<<endl;
-	bool runHeadless = false;
-	if(headless=='t'){
-		runHeadless = true;
-	}
+	
 	if(object ==0){
-		useMyObject(runHeadless, timestep, iterations, method);	
+		useMyObject(headless, timestep, iterations, method);	
+	}else if(object ==1){
+		useFullObject(headless, timestep, iterations, method);
+	}else if(object == 2){
+		consistencyTests(timestep, iterations, method);
 	}else{
-		useFullObject(runHeadless, timestep, iterations, method);
+		cout<<"What do you want to run?"<<endl;
 	}
-	cout<<"###########################My Code ###################"<<endl;
-	momentumFile.close();
 	energyFile.close();
 	strainEnergyFile.close();
 	kineticEnergyFile.close();
 	gravityEnergyFile.close();
+	momentumFile.close();
+	cout<<"###########################My Code ###################"<<endl;
+	
 
 	return 0;
 }
 
-//Get Full SVK and Full Neohookean working
-
-
-// read lbfgs and api
-// houdini
-
-// keep CG
-// get eigen sparse solvers (or suitesparse) - sparse cholesky, sparse QR
-// try profiler with real lambda and mu values
-
-// test implicit euler with real lambda and mu
-// - test with direct solver
 // - do consistency test with/without damping
 // - - find size of timestep, so as I decrease timestep, trajectory
 // - see if I need to use implicit midpoint newmark
 
 // test damping
 // - find real damping parameters for spring
-// - 
+
+// fix mapping  from tetmesh to rendered surface faces
+// redo implicit methods fixVertices method (fix velocites every time step)

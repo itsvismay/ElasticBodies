@@ -223,11 +223,11 @@ void ImplicitEuler::renderNewtonsMethod(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 
-		// VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
-		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
+		VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
+		grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
-		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
-		grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
+		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
+		// grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
 	
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
