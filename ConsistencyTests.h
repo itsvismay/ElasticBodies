@@ -13,17 +13,22 @@ using namespace std;
 class ConsistencyTest{
 
 public:
+	MatrixXi cTT;
+	MatrixXi cTF;
+	MatrixXd cTV;
+	MatrixXd cB;
+	
 	double h;
 	int cmethod;
-	MatrixXi cTT;
-	MatrixXd cTV;
 	Simulation cSim;
 	vector<int> cMapV2TV;
 
 	ConsistencyTest(void);
-	void initializeTest(double deltaT, char method, MatrixXi& TT, MatrixXd& TV, Simulation& sim, vector<int> mapV2TV);
-	void runTests();
-
+	void runTimeTests(Simulation& sim);
+	void runSpaceTests(Simulation& sim);
+	
+	void timeTest(double timestep, double printThisOften, char method, string printToHere);
+	void printOBJ(double number, string printToHere);
 
 };
 

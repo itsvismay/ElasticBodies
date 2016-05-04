@@ -1,34 +1,127 @@
-#include "ConsistencyTests.h"
+#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
+#include <igl/barycenter.h>
+#include <igl/copyleft/tetgen/tetrahedralize.h>
 
+#include <ctime>
+#include "ConsistencyTests.h"
+#include <fstream>
 using namespace Eigen;
 using namespace std;
 
-
+#ifndef TUTORIAL_SHARED_PATH
+#define TUTORIAL_SHARED_PATH "../shared"
+#endif
 ConsistencyTest::ConsistencyTest(void){}
 
-void ConsistencyTest::initializeTest(double deltaT, char method, MatrixXi& TT, MatrixXd& TV, Simulation& sim, vector<int> mapV2TV){
-	h = deltaT;
-	cmethod = method;
-	cTT = TT;
-	cTV = TV;
+void ConsistencyTest::runSpaceTests(Simulation& sim){
+	double timestep = 1e-3;
 	cSim = sim;
-	cMapV2TV = mapV2TV;
-	runTests();
+
+	MatrixXd V;
+	MatrixXi F;
+	MatrixXd B;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+
+	//EXPLICIT SPACE TESTS
+	for(int i=0; i<3; i++){
+		timeTest(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/timestep:"+to_string(explicitTimestep)+"/");
+		explicitTimestep*=.1;
+	}
+
+	return;
 }
 
-void ConsistencyTest::runTests(){
-	cout<<"Begin Tests"<<endl;
-	int iters = 2;
+void ConsistencyTest::runTimeTests(Simulation& sim){
+	cSim = sim;
+
 	MatrixXd V;
-	V.resize(cMapV2TV.size(), 3);
+	MatrixXi F;
+	MatrixXd B;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
 
-	cSim.initializeSimulation(h, iters, cmethod, cTT, cTV);
+	//Time stuff------
+	time_t now = time(0);
+	string dt = ctime(&now);//local time, replace all spaces and new lines
+	dt.erase('\n');
+	replace(dt.begin(), dt.end(), ' ', '-');
+	//-----------------
 
-	// //SET V from TV
-	// for(unsigned int i=0; i<cSim.mapV2TV.size(); i++){
-	// 	V.row(i) = cSim.integrator->TV.row(cMapV2TV[i]);
-	// 	cout<<cMapV2TV[i]<<endl;
-	// }
+	//EXPLICIT TIME TESTS
+	double explicitTimestep = 1e-3;
+	for(int i=0; i<3; i++){
+		timeTest(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
+		explicitTimestep*=.1;
+	}
+
+	//IMPLICIT TIME TESTS
+	double implicitTimestep = 1e-1;
+	for(int i=0; i<3; i++){
+		timeTest(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
+		implicitTimestep*=.1;
+	}
+
+	
+
+	return;
+}
+
+void ConsistencyTest::timeTest(double timestep, double printThisOften, char method, string printToHere){
+	double seconds =0;
+	int iters =0;
+
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB);
+	cSim.integrator->fixVertices(0);
+	cSim.integrator->fixVertices(1);
+	double printForThisManySeconds = 2;
+	while(seconds<printForThisManySeconds){
+		iters+=1;
+		// cSim.render();
+		if(iters*timestep>=printThisOften){
+			seconds+=printThisOften;
+			iters =0;
+			printOBJ(seconds, printToHere);
+		}
+	}
+
+}
+
+void ConsistencyTest::printOBJ(double seconds, string printToHere){
+
+	double refinement = 9;
+	double t = ((refinement - 1)+1) / 9.0;
+
+
+	VectorXd v = cB.col(2).array() - cB.col(2).minCoeff();
+	v /= v.col(0).maxCoeff();
+
+	vector<int> s;
+	for (unsigned i=0; i<v.size();++i){
+		if (v(i) < t){
+			s.push_back(i);
+		}
+	}
+
+	MatrixXd V_temp(s.size()*4,3);
+	MatrixXi F_temp(s.size()*4,3);
+
+	for (unsigned i=0; i<s.size();++i)
+	{
+		V_temp.row(i*4+0) = cSim.integrator->TV.row(cTT(s[i],0));
+		V_temp.row(i*4+1) = cSim.integrator->TV.row(cTT(s[i],1));
+		V_temp.row(i*4+2) = cSim.integrator->TV.row(cTT(s[i],2));
+		V_temp.row(i*4+3) = cSim.integrator->TV.row(cTT(s[i],3));
+		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
+		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
+		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
+		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
+	}
+
+	cout<<printToHere + to_string(seconds)<<endl;
+	system(("mkdir -p "+printToHere).c_str());
+	igl::writeOBJ(printToHere + to_string(seconds)+".obj", V_temp, F_temp);
 
 	return;
 }

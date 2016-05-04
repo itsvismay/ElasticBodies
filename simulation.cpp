@@ -23,8 +23,9 @@ using namespace std;
 
 Simulation::Simulation(void){}
 
-int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV){
+int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B){
 	iters = iterations;
+	B = B;
 	if (method =='e'){
 		integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;	
@@ -40,7 +41,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
-	// mapV2TV = map;
+	//Initialize Solid Mesh
 	M.initializeMesh(TT, TV);
 
 	integrator->initializeIntegrator(deltaT, M, TV);

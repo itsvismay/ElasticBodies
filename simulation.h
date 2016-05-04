@@ -6,7 +6,6 @@
 #include <iostream>
 #include <vector>
 #include <pthread.h>
-#include <fstream>
 #include <math.h>
 
 
@@ -26,9 +25,10 @@ public:
 	IntegratorAbstract* integrator;
 	vector<int> mapV2TV;
 	int iters;
+	MatrixXd B;
 
 	Simulation(void);
-	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV);
+	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B);
 	
 	void headless();
 	void render();

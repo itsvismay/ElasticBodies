@@ -4,6 +4,7 @@
 #include <igl/readOBJ.h>
 #include <igl/writeOBJ.h>
 #include <igl/barycenter.h>
+#include <fstream>
 
 #include "simulation.h"
 #include "globals.h"
@@ -40,7 +41,6 @@ MatrixXd TV_One_G;
 Simulation Sim;
 
 bool drawLoopTest(igl::viewer::Viewer& viewer){
-	cout<<"Here"<<endl;
 	viewer.data.clear();
 	Sim.render();
 	
@@ -88,7 +88,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	// viewer.data.set_mesh(V, F);
 	// viewer.data.set_face_based(false);
 
-	double refinement = '9';
+	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
 
 	VectorXd v = B.col(2).array() - B.col(2).minCoeff();
@@ -115,12 +115,11 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
-
+	viewer.data.clear();
+	
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
-	
-	viewer.data.clear();
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -133,25 +132,13 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 
-	// //constructs the map from V to TV
-	cout<<"Things"<<endl;
-	cout<<TV<<endl;
-	cout<<V<<endl;
-	for(unsigned int i=0; i< V.rows(); i++){
-		for(unsigned int j=0; j<TV.rows(); j++){
-			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.001){
-				mapV2TV.push_back(j);
-				break;
-			}
-		}
-	}
-	Sim.initializeSimulation(timestep,iterations, method, TT, TV);
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B);
 	Sim.mapV2TV = mapV2TV;
 	//fix vertices
 	Sim.integrator->fixVertices(0);
@@ -209,7 +196,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 
 
 				
-	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G);
+	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B);
 	Sim.integrator->fixVertices(1);
 	if(headless){
 		Sim.headless();
@@ -221,29 +208,10 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 		
 }
 
-void consistencyTests( double timestep, int iterations, char method){
-	vector<int> mapV2TV;
-	// Load a surface mesh
-	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/wheel.obj", V, F);
-	V = V;
-	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", TV,TT,TF);
-	// // Compute barycenters
-	igl::barycenter(TV, TT,B);
-	// //constructs the map from V to TV
-	for(unsigned int i=0; i< V.rows(); i++){
-		for(unsigned int j=0; j<TV.rows(); j++){
-			if( (V.row(i)-TV.row(j)).squaredNorm() <= 0.00001){
-				mapV2TV.push_back(j);
-				break;
-			}
-		}
-	}
+void consistencyTests( double timestep, int iterations, char method){	
 
 	ConsistencyTest c;
-	c.initializeTest(timestep, method, TT, TV, Sim, mapV2TV);
+	c.runTimeTests(Sim);
 	
 }
 
