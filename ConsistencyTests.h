@@ -27,7 +27,7 @@ public:
 	void runTimeTests(Simulation& sim);
 	void runSpaceTests(Simulation& sim);
 	
-	void timeTest(double timestep, double printThisOften, char method, string printToHere);
+	void test(double timestep, double printThisOften, char method, string printToHere);
 	void printOBJ(double number, string printToHere);
 
 };

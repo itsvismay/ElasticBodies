@@ -15,32 +15,9 @@ using namespace std;
 ConsistencyTest::ConsistencyTest(void){}
 
 void ConsistencyTest::runSpaceTests(Simulation& sim){
-	double timestep = 1e-3;
+	double explicitTimestep = 1e-5;
+	double implicitTimestep = 1e-3;
 	cSim = sim;
-
-	MatrixXd V;
-	MatrixXi F;
-	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
-
-	//EXPLICIT SPACE TESTS
-	for(int i=0; i<3; i++){
-		timeTest(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/timestep:"+to_string(explicitTimestep)+"/");
-		explicitTimestep*=.1;
-	}
-
-	return;
-}
-
-void ConsistencyTest::runTimeTests(Simulation& sim){
-	cSim = sim;
-
-	MatrixXd V;
-	MatrixXi F;
-	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
 
 	//Time stuff------
 	time_t now = time(0);
@@ -49,17 +26,73 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 	replace(dt.begin(), dt.end(), ' ', '-');
 	//-----------------
 
+	MatrixXd V;
+	MatrixXi F;
+	MatrixXd B;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+
+	int retT = -1;
+	
+	//SPACE TESTS Coarse
+	retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+	if(retT ==0){
+		//Explicit
+		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
+		//Implicit
+		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
+	}
+
+	// SPACE TESTS Middle
+	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa300", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+	if(retT ==0){
+		//Explicit
+		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
+		//Implicit
+		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
+	}
+	//SPACE TESTS Fine
+	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+	if(retT ==0){
+		//Explicit
+		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
+		//Implicit
+		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
+	}
+
+	return;
+}
+
+void ConsistencyTest::runTimeTests(Simulation& sim){
+	cSim = sim;
+	//Time stuff------
+	time_t now = time(0);
+	string dt = ctime(&now);//local time, replace all spaces and new lines
+	dt.erase('\n');
+	replace(dt.begin(), dt.end(), ' ', '-');
+	//-----------------
+
+	MatrixXd V;
+	MatrixXi F;
+	MatrixXd B;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+
+
 	//EXPLICIT TIME TESTS
 	double explicitTimestep = 1e-3;
 	for(int i=0; i<3; i++){
-		timeTest(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
+		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
 		explicitTimestep*=.1;
 	}
 
 	//IMPLICIT TIME TESTS
 	double implicitTimestep = 1e-1;
 	for(int i=0; i<3; i++){
-		timeTest(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
+		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
 		implicitTimestep*=.1;
 	}
 
@@ -68,7 +101,7 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 	return;
 }
 
-void ConsistencyTest::timeTest(double timestep, double printThisOften, char method, string printToHere){
+void ConsistencyTest::test(double timestep, double printThisOften, char method, string printToHere){
 	double seconds =0;
 	int iters =0;
 
@@ -78,13 +111,14 @@ void ConsistencyTest::timeTest(double timestep, double printThisOften, char meth
 	double printForThisManySeconds = 2;
 	while(seconds<printForThisManySeconds){
 		iters+=1;
-		// cSim.render();
+		cSim.render();
 		if(iters*timestep>=printThisOften){
 			seconds+=printThisOften;
 			iters =0;
 			printOBJ(seconds, printToHere);
 		}
 	}
+	return;
 
 }
 

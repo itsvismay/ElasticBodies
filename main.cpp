@@ -211,7 +211,8 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 void consistencyTests( double timestep, int iterations, char method){	
 
 	ConsistencyTest c;
-	c.runTimeTests(Sim);
+	// c.runTimeTests(Sim);
+	c.runSpaceTests(Sim);
 	
 }
 
