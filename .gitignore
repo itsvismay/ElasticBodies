@@ -33,6 +33,7 @@
 
 build/*
 
-PythonScripts/*.txt
+Scripts/*.txt
+Scripts/BeamTestOpenCV/build/*
 
 TestsResults/*
