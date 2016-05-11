@@ -35,5 +35,6 @@ build/*
 
 Scripts/*.txt
 Scripts/BeamTestOpenCV/build/*
+Scripts/BeamTestOpenCV/*.mp4
 
 TestsResults/*
