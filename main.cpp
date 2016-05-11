@@ -132,18 +132,24 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
 
 	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	
 	// // Compute barycenters
 	igl::barycenter(TV, TT,B);
 
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B);
 	Sim.mapV2TV = mapV2TV;
+
 	//fix vertices
-	Sim.integrator->fixVertices(0);
-	Sim.integrator->fixVertices(1);
-	// Sim.integrator->fixVertices(2);
+	for(int i=0; i<Sim.integrator->vertsNum; i++){
+		if(Sim.integrator->TV.row(i)[0]<=-50){
+			cout<<Sim.integrator->TV.row(i)<<endl;
+			cout<<i<<endl;
+			Sim.integrator->fixVertices(i);
+		}
+	}
+	
 	if(headless){
 		Sim.headless();
 	}else{
@@ -151,6 +157,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
 	}
+
 	// if(!headless){
 	// 	igl::viewer::Viewer viewer;
 	// 	viewer.callback_pre_draw = &drawLoop;
@@ -211,8 +218,8 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 void consistencyTests( double timestep, int iterations, char method){	
 
 	ConsistencyTest c;
-	// c.runTimeTests(Sim);
-	c.runSpaceTests(Sim);
+	c.runTimeTests(Sim);
+	// c.runSpaceTests(Sim);
 	
 }
 

@@ -12,7 +12,10 @@ using namespace std;
 #ifndef TUTORIAL_SHARED_PATH
 #define TUTORIAL_SHARED_PATH "../shared"
 #endif
-ConsistencyTest::ConsistencyTest(void){}
+ConsistencyTest::ConsistencyTest(void){
+	printThisOften = 0.1;
+	printForThisManySeconds = 100;
+}
 
 void ConsistencyTest::runSpaceTests(Simulation& sim){
 	double explicitTimestep = 1e-5;
@@ -34,33 +37,34 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	int retT = -1;
 	
 	//SPACE TESTS Coarse
-	retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
-	}
+	// retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
+	// igl::barycenter(cTV, cTT, cB);
+	// if(retT ==0){
+	// 	//Explicit
+	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
+	// 	//Implicit
+	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
+	// }
 
 	// SPACE TESTS Middle
-	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa300", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
-	}
+	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa300", cTV, cTT, cTF);
+	// igl::barycenter(cTV, cTT, cB);
+	// if(retT ==0){
+	// 	//Explicit
+	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
+	// 	//Implicit
+	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
+	// }
+	
 	//SPACE TESTS Fine
-	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
-	}
+	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
+	// igl::barycenter(cTV, cTT, cB);
+	// if(retT ==0){
+	// 	//Explicit
+	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
+	// 	//Implicit
+	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
+	// }
 
 	return;
 }
@@ -83,46 +87,52 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 
 
 	//EXPLICIT TIME TESTS
-	double explicitTimestep = 1e-3;
-	for(int i=0; i<3; i++){
-		test(explicitTimestep, 0.5, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
+	double explicitTimestep = 1e-6;
+	for(int i=0; i<4; i++){
+		test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
 		explicitTimestep*=.1;
 	}
 
-	//IMPLICIT TIME TESTS
-	double implicitTimestep = 1e-1;
-	for(int i=0; i<3; i++){
-		test(implicitTimestep, 0.5, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
-		implicitTimestep*=.1;
-	}
+	// //IMPLICIT TIME TESTS
+	// double implicitTimestep = 1e-1;
+	// for(int i=0; i<3; i++){
+	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
+	// 	implicitTimestep*=.1;
+	// }
 
 	
 
 	return;
 }
 
-void ConsistencyTest::test(double timestep, double printThisOften, char method, string printToHere){
+void ConsistencyTest::test(double timestep, char method, string printToHere){
 	double seconds =0;
 	int iters =0;
+	int numberOfPrints =0;
 
 	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB);
-	cSim.integrator->fixVertices(0);
-	cSim.integrator->fixVertices(1);
-	double printForThisManySeconds = 2;
+	//fix vertices
+	for(int i=0; i<cSim.integrator->vertsNum; i++){
+		if(cSim.integrator->TV.row(i)[0]<=-50){
+			cSim.integrator->fixVertices(i);
+		}
+	}
+
 	while(seconds<printForThisManySeconds){
 		iters+=1;
 		cSim.render();
 		if(iters*timestep>=printThisOften){
 			seconds+=printThisOften;
 			iters =0;
-			printOBJ(seconds, printToHere);
+			printOBJ(numberOfPrints, printToHere);
+			numberOfPrints+=1;
 		}
 	}
 	return;
 
 }
 
-void ConsistencyTest::printOBJ(double seconds, string printToHere){
+void ConsistencyTest::printOBJ(int numberOfPrints, string printToHere){
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -153,9 +163,9 @@ void ConsistencyTest::printOBJ(double seconds, string printToHere){
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	cout<<printToHere + to_string(seconds)<<endl;
+	cout<<printToHere + to_string(numberOfPrints)<<endl;
 	system(("mkdir -p "+printToHere).c_str());
-	igl::writeOBJ(printToHere + to_string(seconds)+".obj", V_temp, F_temp);
+	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
 	return;
 }

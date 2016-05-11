@@ -23,12 +23,14 @@ public:
 	Simulation cSim;
 	vector<int> cMapV2TV;
 
+	double printThisOften, printForThisManySeconds;
+
 	ConsistencyTest(void);
 	void runTimeTests(Simulation& sim);
 	void runSpaceTests(Simulation& sim);
 	
-	void test(double timestep, double printThisOften, char method, string printToHere);
-	void printOBJ(double number, string printToHere);
+	void test(double timestep, char method, string printToHere);
+	void printOBJ(int numberOfPrints, string printToHere);
 
 };
 
