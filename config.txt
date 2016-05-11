@@ -1,8 +1,8 @@
-0.001
+0.0001
 f
-i
+e
 1
-0.01
+0.0
 1
 
 
@@ -10,6 +10,5 @@ i
 #headless t/f
 #explicit/implicit
 #number of steps if headless
-#add fixed vertices
 #rayleigh
 #object
