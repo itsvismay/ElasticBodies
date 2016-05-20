@@ -42,9 +42,9 @@ for line in grav:
 f.close()
 
 total, = plt.plot(t, x, "-", label="total")
-# strain, = plt.plot(t, s, "ro", label="strain")
-# kinetic, = plt.plot(t, k, "bo", label = "kinetic")
-# gravity, = plt.plot(t, g, "go", label = "gravity")
+strain, = plt.plot(t, s, "ro", label="strain")
+kinetic, = plt.plot(t, k, "bo", label = "kinetic")
+gravity, = plt.plot(t, g, "go", label = "gravity")
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0.)
 plt.show()
 

@@ -31,7 +31,7 @@ public:
 	void renderNewtonsMethod();
 	
 	
-	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV);
+	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
 	void NewmarkTVtoX(VectorXd& x_tv, MatrixXd& TVk);

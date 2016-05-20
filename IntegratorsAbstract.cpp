@@ -98,13 +98,14 @@ void IntegratorAbstract::printInfo(){
 	/////////////////
 }
 
-void IntegratorAbstract::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
+void IntegratorAbstract::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
 	//Constants
 	vertsNum = pTV.rows();
 
 	h = ph;
 	M = pM;
 	TV = pTV;
+	TT = pTT;
 	
 	initVectors();
 	initMassMatrices();
@@ -122,10 +123,10 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	v_old(0) =10;
+	v_old(0) =1;
 	// v_old(1) =1;
-	v_old(2) =10;
-	v_old(3) =10;
+	v_old(2) =1;
+	v_old(3) =1;
 }
 
 void IntegratorAbstract::initMassMatrices(){
@@ -159,8 +160,8 @@ void IntegratorAbstract::initMassMatrices(){
 	}
 	// cout<<"Mass Vector"<<endl;
 	// cout<<massVector<<endl;
-	// cout<<"INV Mass"<<endl;
-	// cout<<InvMass<<endl;
+	cout<<"INV Mass"<<endl;
+	cout<<InvMass<<endl;
 	// cout<<"Reg Mass"<<endl;
 	// cout<<RegMass<<endl;
 }

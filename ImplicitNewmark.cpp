@@ -18,8 +18,8 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
-void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
+void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
 	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();

@@ -12,8 +12,8 @@
 using namespace Eigen;
 using namespace std;
 
-void Verlet::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
+void Verlet::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
 }
 
 void Verlet::setXIntoTV(VectorXd& x_new){

@@ -106,10 +106,10 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 	for (unsigned i=0; i<s.size();++i)
 	{
-		V_temp.row(i*4+0) = Sim.integrator->TV.row(TT(s[i],0));
-		V_temp.row(i*4+1) = Sim.integrator->TV.row(TT(s[i],1));
-		V_temp.row(i*4+2) = Sim.integrator->TV.row(TT(s[i],2));
-		V_temp.row(i*4+3) = Sim.integrator->TV.row(TT(s[i],3));
+		V_temp.row(i*4+0) = Sim.integrator->TV.row(Sim.integrator->TT(s[i],0));
+		V_temp.row(i*4+1) = Sim.integrator->TV.row(Sim.integrator->TT(s[i],1));
+		V_temp.row(i*4+2) = Sim.integrator->TV.row(Sim.integrator->TT(s[i],2));
+		V_temp.row(i*4+3) = Sim.integrator->TV.row(Sim.integrator->TT(s[i],3));
 		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
 		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
 		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
@@ -126,21 +126,16 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 }
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
-	vector<int> mapV2TV;
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
 	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	
-	// // Compute barycenters
-	igl::barycenter(TV, TT,B);
 
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B);
-	Sim.mapV2TV = mapV2TV;
-
 	//fix vertices
 	for(int i=0; i<Sim.integrator->vertsNum; i++){
 		if(Sim.integrator->TV.row(i)[0]<=-50){
@@ -149,6 +144,20 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 			Sim.integrator->fixVertices(i);
 		}
 	}
+
+	vector<int> moveVertices;
+	// //move vertices
+	for(int i=0; i<Sim.integrator->vertsNum; i++){
+		if(Sim.integrator->TV.row(i)[0]>=50){
+			cout<<Sim.integrator->TV.row(i)<<endl;
+			cout<<i<<endl;
+			moveVertices.push_back(i);
+		}
+	}
+	Sim.setInitPosition(moveVertices);
+	
+	// // Compute barycenters
+	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT,B);
 	
 	if(headless){
 		Sim.headless();
@@ -178,9 +187,6 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 }
 
 void useMyObject(bool headless, double timestep, int iterations, char method){
-	vector<int> mapV2TV;
-
-
 	// TT_One_G.resize(1, 4);
 	// TT_One_G<< 1, 2, 3, 0;
 
@@ -205,6 +211,13 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B);
 	Sim.integrator->fixVertices(1);
+
+	vector<int> moveVertices;
+	//move vertices
+	// moveVertices.push_back(0);
+	// moveVertices.push_back(1);
+	Sim.setInitPosition( moveVertices);
+	
 	if(headless){
 		Sim.headless();
 	}else{
@@ -261,7 +274,7 @@ int main(int argc, char *argv[])
 		object = atoi(line.c_str());
 		cout<<object<<endl;
 	}else{
-		cout<<"Config file not found"<<endl;
+		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;
 	}
 	
@@ -271,11 +284,11 @@ int main(int argc, char *argv[])
 	if(runHeadless=='t'){
 		headless = true;
 	}
-	momentumFile.open("../PythonScripts/momentum.txt");
-	energyFile.open("../PythonScripts/energy.txt");
-	strainEnergyFile.open("../PythonScripts/senergy.txt");
-	kineticEnergyFile.open("../PythonScripts/kenergy.txt");
-	gravityEnergyFile.open("../PythonScripts/genergy.txt");
+	momentumFile.open("../Scripts/momentum.txt");
+	energyFile.open("../Scripts/energy.txt");
+	strainEnergyFile.open("../Scripts/senergy.txt");
+	kineticEnergyFile.open("../Scripts/kenergy.txt");
+	gravityEnergyFile.open("../Scripts/genergy.txt");
 	
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);	

@@ -29,7 +29,8 @@ public:
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B);
-	
+	void setInitPosition(vector<int> moveVertices);
+	int reIndexClampedVertices(vector<int>& moveVertices);
 	void headless();
 	void render();
 

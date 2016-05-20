@@ -84,8 +84,8 @@ static int progress(void *instance,
     return 0;	
 }
 
-void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV){
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV);
+void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
 	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();
@@ -210,12 +210,12 @@ void ImplicitEuler::renderNewtonsMethod(){
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	// cout<<"--------"<<simTime<<"-------"<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<x_k<<endl<<endl;
-	// cout<<"v_k"<<endl;
-	// cout<<v_k<<endl<<endl;
-	// cout<<"--------------------"<<endl;
+	cout<<"--------"<<simTime<<"-------"<<endl;
+	cout<<"x_k"<<endl;
+	cout<<x_k<<endl<<endl;
+	cout<<"v_k"<<endl;
+	cout<<v_k<<endl<<endl;
+	cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 	
@@ -226,6 +226,9 @@ void ImplicitEuler::renderNewtonsMethod(){
 		VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
 		grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
+		// cout<<"Forces"<<endl;
+		// cout<<f<<endl;
+		// exit(0);
 		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		// grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
 	
@@ -338,12 +341,13 @@ void ImplicitEuler::render(){
 	renderNewtonsMethod();
 	// renderLBFGS();
 
-	// cout<<"*******************"<<endl;
-	// cout<< "New Pos"<<simTime<<endl;
-	// cout<<x_old<<endl<<endl;
-	// cout<< "New Vels"<<simTime<<endl;
-	// cout<<v_old<<endl;
-	// cout<<"*****************"<<endl<<endl;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<simTime<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<simTime<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
+
 	ImplicitXtoTV(x_old, TV);
 
 	IntegratorAbstract::printInfo();

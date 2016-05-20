@@ -29,6 +29,7 @@ public:
 
 	SolidMesh M; //NEW IDEA: Pass in from simulation
 	MatrixXd TV;
+	MatrixXi TT;
 
 	VectorXd x_old, v_old, f, massVector;
 	int width;
@@ -37,7 +38,7 @@ public:
 	bool isFixed(int vert);
 	void printInfo();
 	virtual void render()=0; //pure virtual render class
-	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV)=0;
+	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT)=0;
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(int fixMe);

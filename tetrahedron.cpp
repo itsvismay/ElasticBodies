@@ -12,8 +12,10 @@ using namespace Eigen;
 using namespace std;
 // double mu = 675450000.0;
 // double lambda = 3449700000.0;
-double mu = 10000;
-double lambda = 10000;
+double youngs = 1000000;//1e9;
+double poisson = 10;// 0.35;
+double mu = youngs/(2+ 2*poisson);
+double lambda = youngs*poisson/((1+poisson)*(1-2*poisson));
 
 Tetrahedron::Tetrahedron(VectorXi k){
     verticesIndex = k ;
