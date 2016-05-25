@@ -28,9 +28,13 @@ public:
 	MatrixXd B;
 
 	Simulation(void);
-	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B);
-	void setInitPosition(vector<int> moveVertices);
-	int reIndexClampedVertices(vector<int>& moveVertices);
+	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices);
+	
+	int reIndexClampedVertices(vector<int>& moveVertices, MatrixXd& TV, MatrixXi& TT);
+	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT);
+	void setTVtoX(VectorXd &x, MatrixXd &TV);
+	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
+	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);
 	void headless();
 	void render();
 

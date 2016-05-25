@@ -109,8 +109,8 @@ void ConsistencyTest::test(double timestep, char method, string printToHere){
 	double seconds =0;
 	int iters =0;
 	int numberOfPrints =0;
-
-	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB);
+	vector<int> moveVertices;
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices);
 	//fix vertices
 	for(int i=0; i<cSim.integrator->vertsNum; i++){
 		if(cSim.integrator->TV.row(i)[0]<=-50){

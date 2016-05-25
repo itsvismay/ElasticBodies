@@ -134,30 +134,28 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
 	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	
-
-	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B);
-	//fix vertices
-	for(int i=0; i<Sim.integrator->vertsNum; i++){
-		if(Sim.integrator->TV.row(i)[0]<=-50){
-			cout<<Sim.integrator->TV.row(i)<<endl;
-			cout<<i<<endl;
-			Sim.integrator->fixVertices(i);
-		}
-	}
-
 	vector<int> moveVertices;
-	// //move vertices
-	for(int i=0; i<Sim.integrator->vertsNum; i++){
-		if(Sim.integrator->TV.row(i)[0]>=50){
-			cout<<Sim.integrator->TV.row(i)<<endl;
-			cout<<i<<endl;
-			moveVertices.push_back(i);
-		}
-	}
-	Sim.setInitPosition(moveVertices);
+	// // //move vertices
+	// for(int i=0; i<Sim.integrator->vertsNum; i++){
+	// 	if(Sim.integrator->TV.row(i)[0]>=50){
+	// 		cout<<Sim.integrator->TV.row(i)<<endl;
+	// 		cout<<i<<endl;
+	// 		moveVertices.push_back(i);
+	// 	}
+	// }
+
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices);
+	// //fix vertices
+	// for(int i=0; i<Sim.integrator->vertsNum; i++){
+	// 	if(Sim.integrator->TV.row(i)[0]<=-50){
+	// 		cout<<Sim.integrator->TV.row(i)<<endl;
+	// 		cout<<i<<endl;
+	// 		Sim.integrator->fixVertices(i);
+	// 	}
+	// }
 	
 	// // Compute barycenters
-	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT,B);
+	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT, B);
 	
 	if(headless){
 		Sim.headless();
@@ -208,15 +206,12 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				0, -10, 0;
 
 
-				
-	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B);
-	Sim.integrator->fixVertices(1);
-
 	vector<int> moveVertices;
 	//move vertices
 	// moveVertices.push_back(0);
-	// moveVertices.push_back(1);
-	Sim.setInitPosition( moveVertices);
+				
+	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices);
+	// Sim.integrator->fixVertices(1);
 	
 	if(headless){
 		Sim.headless();

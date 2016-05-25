@@ -22,8 +22,6 @@ public:
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
 	
-
-
 	vector<int> fixedVerts;
 	int vertsNum; //number of vertices
 

@@ -124,8 +124,8 @@ void IntegratorAbstract::initVectors(){
 	massVector.setZero();
 
 	v_old(0) =1;
-	// v_old(1) =1;
-	v_old(2) =1;
+	v_old(1) =1;
+	// v_old(2) =1;
 	v_old(3) =1;
 }
 
@@ -168,6 +168,7 @@ void IntegratorAbstract::initMassMatrices(){
 
 void IntegratorAbstract::fixVertices(int fixMe){
 	fixedVerts.push_back(fixMe);
+	cout<<fixMe<<endl;
 
 	massVector(3*fixMe) = 1000000000000;
 	massVector(3*fixMe+1) = 1000000000000;
