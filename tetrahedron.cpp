@@ -10,8 +10,8 @@
 
 using namespace Eigen;
 using namespace std;
-double mu = 1000.0;
-double lambda = 1000.0;
+double mu = 10000.0;
+double lambda = 10000.0;
 // double youngs = 1000000;//1e9;
 // double poisson = .3;// 0.35;
 // double mu = youngs/(2+ 2*poisson);

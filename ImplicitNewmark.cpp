@@ -209,7 +209,6 @@ void ImplicitNewmark::renderNewtonsMethod(){
 		cout<<i<<endl;
 		exit(0);
 	}
-	// v_old.setZero();
 	v_old = v_old + h*(1-gamma)*InvMass*f_old + h*gamma*InvMass*f;
 	x_old = x_k;
 }
@@ -218,6 +217,7 @@ void ImplicitNewmark::render(){
 	simTime+=1;
 	cout<<"n"<<simTime<<endl;
 	renderNewtonsMethod();
+	NewmarkXtoTV(x_old, TV);
 	IntegratorAbstract::printInfo();
 	return;
 }

@@ -145,14 +145,14 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// }
 
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices);
-	// //fix vertices
-	// for(int i=0; i<Sim.integrator->vertsNum; i++){
-	// 	if(Sim.integrator->TV.row(i)[0]<=-50){
-	// 		cout<<Sim.integrator->TV.row(i)<<endl;
-	// 		cout<<i<<endl;
-	// 		Sim.integrator->fixVertices(i);
-	// 	}
-	// }
+	//fix vertices
+	for(int i=0; i<Sim.integrator->vertsNum; i++){
+		if(Sim.integrator->TV.row(i)[0]<=-50){
+			cout<<Sim.integrator->TV.row(i)<<endl;
+			cout<<i<<endl;
+			Sim.integrator->fixVertices(i);
+		}
+	}
 	
 	// // Compute barycenters
 	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT, B);
