@@ -57,14 +57,14 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	// }
 	
 	//SPACE TESTS Fine
-	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
-	// igl::barycenter(cTV, cTT, cB);
-	// if(retT ==0){
-	// 	//Explicit
-	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
-	// 	//Implicit
-	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
-	// }
+	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+	if(retT ==0){
+		//Explicit
+		test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
+		//Implicit
+		test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
+	}
 
 	return;
 }
@@ -110,7 +110,8 @@ void ConsistencyTest::test(double timestep, char method, string printToHere){
 	int iters =0;
 	int numberOfPrints =0;
 	vector<int> moveVertices;
-	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices);
+	vector<int> fixedVertices;
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices);
 	//fix vertices
 	for(int i=0; i<cSim.integrator->vertsNum; i++){
 		if(cSim.integrator->TV.row(i)[0]<=-50){

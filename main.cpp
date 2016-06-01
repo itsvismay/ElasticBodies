@@ -135,6 +135,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
 	
 	vector<int> moveVertices;
+	vector<int> fixedVertices;
 	// // //move vertices
 	// for(int i=0; i<Sim.integrator->vertsNum; i++){
 	// 	if(Sim.integrator->TV.row(i)[0]>=50){
@@ -144,7 +145,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// 	}
 	// }
 
-	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices);
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
 	//fix vertices
 	for(int i=0; i<Sim.integrator->vertsNum; i++){
 		if(Sim.integrator->TV.row(i)[0]<=-50){
@@ -204,13 +205,23 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				0, 0, 10,
 				0, 0, 0,
 				0, -10, 0;
+	// TV_One_G << 0, 0, 0, //affect
+	// 			1, 10, 0,
+	// 			2, 0, 10,
+	// 			3, 0, 0,
+	// 			4, -10, 0;
 
 
 	vector<int> moveVertices;
+	vector<int> fixedVertices;
 	//move vertices
-	// moveVertices.push_back(0);
+	moveVertices.push_back(0);
+	//fix vertices
+	fixedVertices.push_back(1);
+	// fixedVertices.push_back(2);
+
 				
-	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices);
+	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices);
 	// Sim.integrator->fixVertices(1);
 	
 	if(headless){

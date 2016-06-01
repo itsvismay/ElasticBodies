@@ -21,7 +21,7 @@ typedef Matrix<double, 12, 1> Vector12d;
 
 Simulation::Simulation(void){}
 
-int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices){
+int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices){
 	iters = iterations;
 	B = B;
 	if (method =='e'){
@@ -40,14 +40,17 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
-	// reIndexClampedVertices(moveVertices, TV, TT);
+	reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
+
+	reIndexClampedVertices(moveVertices, TV, TT);
 
 	//Initialize Solid Mesh
 	M.initializeMesh(TT, TV);
 	
-	// setInitPosition(moveVertices, TV, TT);
+	setInitPosition(moveVertices, TV, TT, fixVertices.size());
 
-	integrator->initializeIntegrator(deltaT, M, TV, TT);
+	// integrator->initializeIntegrator(deltaT, M, TV, TT);
+	// integrator->fixVertices(fixVertices[0]);
 
 	return 1;
 }
@@ -59,6 +62,30 @@ void Simulation::headless(){
 }
 void Simulation::render(){
 	integrator->render();
+}
+
+//Logic errors here if fixVertices size is large or TV.rows() is small
+int Simulation::reIndexFixedVertices(vector<int>& fixVertices, MatrixXd& TV, MatrixXi& TT, int mv){
+	//Re-index fixed verts
+	for(int i=0; i<fixVertices.size(); i++){
+		int ind1 = fixVertices[i];
+		int ind2r = TV.rows() - fixVertices.size() - mv + i;
+		Vector3d ro2 = TV.row(ind2r);
+		TV.row(ind2r) = TV.row(ind1);
+		TV.row(ind1) = ro2;
+
+		//re-index all the tet pointers
+		for(int k=0; k< TT.rows(); k++){
+			for(int j=0; j<4; j++){
+				if (TT.row(k)[j]== ind1){
+					TT.row(k)[j] = ind2r;
+				}else if(TT.row(k)[j]==ind2r){
+					TT.row(k)[j] = ind1;
+				}
+			}
+		}
+	}
+
 }
 
 int Simulation::reIndexClampedVertices(vector<int>& moveVertices, MatrixXd& TV, MatrixXi& TT){
@@ -114,6 +141,7 @@ void Simulation::setTVtoX(VectorXd &x, MatrixXd &TV){
 }
 
 void Simulation::calculateElasticForces(VectorXd &f, MatrixXd& TV){
+	f.setZero();
 	//elastic
 	for(unsigned int i=0; i< M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -166,31 +194,30 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	return;
 }
 
-void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT){	
+void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv){	
 	//Move vertices slightly
 	for(int i=0; i<moveVertices.size(); i++){
-		TV.row(moveVertices[i])[1]+=1;
+		TV.row(TV.rows()-i-1)[1]+=1;
 	}
-	cout<<TT<<endl;
-	cout<<TV<<endl;
-	cout<<"-----"<<endl;
+	
 	//Newtons method static solve for minimum Strain E
+	int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
 	double strainE;
 	SparseMatrix<double> forceGradient;
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
 	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*(TV.rows() - moveVertices.size()), 3*(TV.rows() - moveVertices.size()));
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	VectorXd f, x;
 	f.resize(3*TV.rows());
 	f.setZero();
 	x.resize(3*TV.rows());
 	x.setZero();
 	setTVtoX(x, TV);
-	cout<<TT<<endl;
 	cout<<TV<<endl;
-	cout<<x<<endl;
+	cout<<(ignorePastIndex)<<endl;
+	cout<<"-----"<<endl;
 	// exit(0);
-	int NEWTON_MAX = 10, k=0;
+	int NEWTON_MAX = 100, k=0;
 	for(k=0; k<NEWTON_MAX; k++){
 		// X to TV
 		TV.setZero();
@@ -203,23 +230,26 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 		}
 		calculateForceGradient(TV, forceGradient);
 		calculateElasticForces(f, TV);
-
+		
 		//Block forceGrad and f to exclude the fixed verts
-		forceGradientStaticBlock = forceGradient.block(0,0,(TV.rows() - moveVertices.size())*3, 3*(TV.rows() - moveVertices.size()));
-
-
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		// cout<<"Force Gradient"<<endl;
+		// cout<<forceGradient<<endl<<endl;
+		// cout<<"FG Block"<<endl;
+		// cout<<forceGradientStaticBlock<<endlIn
+		VectorXd fblock = f.head(ignorePastIndex*3);
 		//Sparse QR 
 		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		sqr.compute(forceGradientStaticBlock);
-		VectorXd deltaX = -1*sqr.solve(f.head((TV.rows() - moveVertices.size())*3));
+		VectorXd deltaX = -1*sqr.solve(fblock);
 
-		x+=deltaX;
-
+		x.segment(0,3*(ignorePastIndex))+=deltaX;
+		cout<<"X"<<k<<endl;
 		if(x != x){
 			cout<<"NAN"<<endl;
 			exit(0);
 		}
-		if (f.squaredNorm() < 0.00001){
+		if (fblock.squaredNorm() < 0.00001){
 			break;
 		}
 	}
@@ -228,9 +258,13 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 		cout<<k<<endl;
 		exit(0);
 	}
+	for(unsigned int i=0; i<M.tets.size(); i++){
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
+	}
 	cout<<"Forces"<<endl;
 	cout<<f<<endl;
 	cout<<"Strain E"<<endl;
 	cout<<strainE<<endl;
-	exit(0);
+	cout<<"New pos"<<endl;
+	cout<<TV<<endl;
 }
