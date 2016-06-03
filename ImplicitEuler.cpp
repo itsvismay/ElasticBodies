@@ -88,7 +88,8 @@ void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV
 	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
-	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();
+	Ident.resize(3*vertsNum, 3*vertsNum);
+	Ident.setIdentity();
 	forceGradient.resize(3*vertsNum, 3*vertsNum);
 	grad_g.resize(3*vertsNum, 3*vertsNum);
 	x_k.resize(3*vertsNum);
@@ -165,7 +166,7 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 	forceGradient.setZero();
 	
 	vector<Trip> triplets1;
-	triplets1.reserve(3*vertsNum*3*vertsNum);	
+	triplets1.reserve(12*12*M.tets.size());	
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -210,12 +211,12 @@ void ImplicitEuler::renderNewtonsMethod(){
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	cout<<"--------"<<simTime<<"-------"<<endl;
-	cout<<"x_k"<<endl;
-	cout<<x_k<<endl<<endl;
-	cout<<"v_k"<<endl;
-	cout<<v_k<<endl<<endl;
-	cout<<"--------------------"<<endl;
+	// cout<<"--------"<<simTime<<"-------"<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<x_k<<endl<<endl;
+	// cout<<"v_k"<<endl;
+	// cout<<v_k<<endl<<endl;
+	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 	
@@ -225,6 +226,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 
 		VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
 		grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
+		// g[i] = in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i) - in->massVector(i)*in->h*in->v_old(i) - in->h*in->h*in->f(i);
 		
 		// cout<<"Forces"<<endl;
 		// cout<<f<<endl;
@@ -323,11 +325,7 @@ void ImplicitEuler::renderLBFGS(){
     	cout<<"ERROR: Liblbfgs did not converge, code "<<ret<<endl;
     	exit(0);
     }
-    /* Report the result. */
-    for(i=0; i<N; i++){
-    	printf("%f\n", x[i]);;
-    	x_k(i) = x[i];
-    }
+
     v_old = (x_k - x_old)/h;
     x_old = x_k;
     ImplicitXtoTV(x_old, TV);
@@ -338,15 +336,15 @@ void ImplicitEuler::render(){
 	simTime+=1;
 	cout<<"i"<<simTime<<endl;
 
-	renderNewtonsMethod();
-	// renderLBFGS();
+	// renderNewtonsMethod();
+	renderLBFGS();
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 
 	ImplicitXtoTV(x_old, TV);
 

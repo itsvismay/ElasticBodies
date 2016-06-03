@@ -18,11 +18,57 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
+static lbfgsfloatval_t evaluateNewmark(void *impn, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+	ImplicitNewmark* in = (ImplicitNewmark*) impn;
+
+	double beta =0.25;
+	//from x to x_k
+	for(int i=0; i<n; i++){
+		in->x_k(i) = x[i];
+	}
+
+	in->NewmarkXtoTV(in->x_k, in->TVk);
+	in->NewmarkCalculateElasticForceGradient(in->TVk, in->forceGradient);
+	in->NewmarkCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+
+	lbfgsfloatval_t fx = 0.0;
+	for(int i=0; i<n; i++){
+		fx += 0.5*x[i]*in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i)*x[i] - in->massVector(i)*in->h*in->v_old(i)*x[i] - 0.5*(in->h*in->h)*(1-2*beta)*in->f_old(i)*x[i];
+		g[i] = in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i) - in->massVector(i)*in->h*in->v_old(i) - (in->h*in->h*0.5)*(1-2*beta)*in->f_old(i) - in->h*in->h*beta*in->f(i);
+	}
+
+	double strainE=0;
+	for(unsigned int i=0; i<in->M.tets.size(); i++){
+		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
+	}
+	fx +=in->h*in->h*beta*strainE;
+	return fx;
+}
+
+static int progressNewmark(void *instance,
+	    const lbfgsfloatval_t *x,
+	    const lbfgsfloatval_t *g,
+	    const lbfgsfloatval_t fx,
+	    const lbfgsfloatval_t xnorm,
+	    const lbfgsfloatval_t gnorm,
+	    const lbfgsfloatval_t step,
+	    int n,
+	    int k,
+	    int ls){	
+
+	printf("Iteration %d:\n", k);
+    printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
+    printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+    printf("\n");
+    return 0;	
+}
+
 void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
 	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
-	Ident = MatrixXd::Identity(3*vertsNum, 3*vertsNum).sparseView();
+	Ident.resize(3*vertsNum, 3*vertsNum);
+	Ident.setIdentity();
 	forceGradient.resize(3*vertsNum, 3*vertsNum);
 	grad_g.resize(3*vertsNum, 3*vertsNum);
 	x_k.resize(3*vertsNum);
@@ -71,7 +117,7 @@ void ImplicitNewmark::NewmarkCalculateElasticForceGradient(MatrixXd& TVk, Sparse
 	forceGradient.setZero();
 	
 	vector<Trip> triplets1;
-	triplets1.reserve(3*vertsNum*3*vertsNum);	
+	triplets1.reserve(12*12*M.tets.size());	
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -148,6 +194,7 @@ void ImplicitNewmark::renderNewtonsMethod(){
 	int NEWTON_MAX = 100, i =0;
 	double gamma = 0.5;
 	double beta =0.25;
+
 	// cout<<"--------"<<simTime<<"-------"<<endl;
 	// cout<<"x_k"<<endl;
 	// cout<<x_k<<endl<<endl;
@@ -213,10 +260,55 @@ void ImplicitNewmark::renderNewtonsMethod(){
 	x_old = x_k;
 }
 
+void ImplicitNewmark::renderLBFGS(){
+	//LBFGS
+	int N=3*vertsNum;
+	int i, ret = 0;
+
+	double gamma = 0.5;
+
+    lbfgsfloatval_t fx;
+    lbfgsfloatval_t *x = lbfgs_malloc(N);
+    lbfgs_parameter_t param;
+    if (x == NULL) {
+        printf("ERROR: Newmark Failed to allocate a memory block for variables.\n");
+    }
+
+    /* Initialize the variables. */
+    x_k.setZero();
+    for (i = 0;i < N; i++) {
+       
+       x[i] = x_old(i);
+    }
+    x_k = x_old;
+    v_k = v_old;
+    f_old = f;
+
+    /* Initialize the parameters for the L-BFGS optimization. */
+    lbfgs_parameter_init(&param);
+
+    /*
+        Start the L-BFGS optimization; this will invoke the callback functions
+        evaluateEuler() and progress() when necessary.
+     */
+    ret = lbfgs(N, x, &fx, evaluateNewmark, progressNewmark, this, &param);
+    if(ret<0){
+    	cout<<"ERROR: Newmark Liblbfgs did not converge, code "<<ret<<endl;
+    	exit(0);
+    }
+    
+    v_old = v_old + h*(1-gamma)*InvMass*f_old + h*gamma*InvMass*f;
+	x_old = x_k;
+
+    lbfgs_free(x);
+}
+
 void ImplicitNewmark::render(){
 	simTime+=1;
 	cout<<"n"<<simTime<<endl;
-	renderNewtonsMethod();
+	renderLBFGS();
+	// renderNewtonsMethod();
+
 	NewmarkXtoTV(x_old, TV);
 	IntegratorAbstract::printInfo();
 	return;

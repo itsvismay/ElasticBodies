@@ -24,11 +24,14 @@ public:
 	SparseMatrix<double> forceGradient;
 	SparseMatrix<double> grad_g;
 
-	VectorXd x_k, v_k;
+	VectorXd x_k, v_k, f_old;
 	MatrixXd TVk;
-
+	double gamma = 0.5;
+	double beta =0.25;
+	
 	void render();
 	void renderNewtonsMethod();
+	void renderLBFGS();
 	
 	
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);

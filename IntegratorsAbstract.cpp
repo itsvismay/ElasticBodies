@@ -160,8 +160,8 @@ void IntegratorAbstract::initMassMatrices(){
 	}
 	// cout<<"Mass Vector"<<endl;
 	// cout<<massVector<<endl;
-	cout<<"INV Mass"<<endl;
-	cout<<InvMass<<endl;
+	// cout<<"INV Mass"<<endl;
+	// cout<<InvMass<<endl;
 	// cout<<"Reg Mass"<<endl;
 	// cout<<RegMass<<endl;
 }

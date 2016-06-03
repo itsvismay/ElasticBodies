@@ -25,6 +25,9 @@ public:
 	SparseMatrix<double> forceGradient;
 	SparseMatrix<double> grad_g;
 
+	double gamma = 0.5;
+	double beta =0.25;
+
 	VectorXd x_k, v_k;
 	MatrixXd TVk;
 

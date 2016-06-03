@@ -40,16 +40,16 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
-	reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
+	// reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
 
-	reIndexClampedVertices(moveVertices, TV, TT);
+	// reIndexClampedVertices(moveVertices, TV, TT);
 
 	//Initialize Solid Mesh
 	M.initializeMesh(TT, TV);
 	
-	setInitPosition(moveVertices, TV, TT, fixVertices.size());
+	// setInitPosition(moveVertices, TV, TT, fixVertices.size());
 
-	// integrator->initializeIntegrator(deltaT, M, TV, TT);
+	integrator->initializeIntegrator(deltaT, M, TV, TT);
 	// integrator->fixVertices(fixVertices[0]);
 
 	return 1;

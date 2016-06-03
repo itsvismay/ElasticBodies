@@ -128,11 +128,11 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOFF(TUTORIAL_SHARED_PATH "/3holes.off",V,F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "/spring.obj", V, F);
 
 	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq2/0", TV,TT,TF);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414Y", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pq200000", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
@@ -146,14 +146,14 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// }
 
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
-	//fix vertices
-	for(int i=0; i<Sim.integrator->vertsNum; i++){
-		if(Sim.integrator->TV.row(i)[0]<=-50){
-			cout<<Sim.integrator->TV.row(i)<<endl;
-			cout<<i<<endl;
-			Sim.integrator->fixVertices(i);
-		}
-	}
+	// //fix vertices
+	// for(int i=0; i<Sim.integrator->vertsNum; i++){
+	// 	if(Sim.integrator->TV.row(i)[0]<=-50){
+	// 		cout<<Sim.integrator->TV.row(i)<<endl;
+	// 		cout<<i<<endl;
+	// 		Sim.integrator->fixVertices(i);
+	// 	}
+	// }
 	
 	// // Compute barycenters
 	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT, B);
