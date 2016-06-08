@@ -39,9 +39,9 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	igl::barycenter(cTV, cTT, cB);
 	if(retT ==0){
 		//Explicit
-		// test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
+		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
 		//Implicit
-		//test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
+		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
 		//Newmark
 		test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/coarse"+to_string(newmarkTimestep)+"/");
 	}
