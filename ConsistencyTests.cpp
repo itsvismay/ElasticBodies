@@ -34,16 +34,18 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	int retT = -1;
 	
 	//SPACE TESTS Coarse
-	// retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
-	// igl::barycenter(cTV, cTT, cB);
-	// if(retT ==0){
-	// 	//Explicit
-	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
-	// 	//Implicit
-	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
-	// }
+	retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
+	igl::barycenter(cTV, cTT, cB);
+	if(retT ==0){
+		//Explicit
+		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
+		//Implicit
+		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
+		//newmark
+		test(implicitTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/coarse"+to_string(implicitTimestep)+"/");
+	}
 
-	// SPACE TESTS Middle
+	// // SPACE TESTS Middle
 	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa300", cTV, cTT, cTF);
 	// igl::barycenter(cTV, cTT, cB);
 	// if(retT ==0){
@@ -51,17 +53,20 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
 	// 	//Implicit
 	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
+	// 	//Newmark
+	// 	test(implicitTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/middle"+to_string(implicitTimestep)+"/");
 	// }
 	
-	//SPACE TESTS Fine
-	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
-	}
+	// //SPACE TESTS Fine
+	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
+	// igl::barycenter(cTV, cTT, cB);
+	// if(retT ==0){
+	// 	//Explicit
+	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
+	// 	//Implicit
+	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
+	// 	//Newmark
+	// }	test(implicitTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/fine"+to_string(implicitTimestep)+"/");
 
 	return;
 }
@@ -84,16 +89,23 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 
 
 	//EXPLICIT TIME TESTS
-	double explicitTimestep = 1e-6;
-	for(int i=0; i<4; i++){
-		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
-		explicitTimestep*=.1;
-	}
+	// double explicitTimestep = 1e-6;
+	// for(int i=0; i<8; i++){
+	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
+	// 	explicitTimestep*=.1;
+	// }
 
 	// //IMPLICIT TIME TESTS
 	// double implicitTimestep = 1e-1;
-	// for(int i=0; i<3; i++){
+	// for(int i=0; i<8; i++){
 	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
+	// 	implicitTimestep*=.1;
+	// }
+
+	// Newmark Time Tests
+	// double implicitTimestep = 1e-1;
+	// for(int i=0; i<8; i++){
+	// 	test(implicitTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/time/timestep:"+to_string(implicitTimestep)+"/");
 	// 	implicitTimestep*=.1;
 	// }
 
