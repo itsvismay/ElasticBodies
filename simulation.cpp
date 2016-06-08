@@ -54,7 +54,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	// setInitPosition(moveVertices, TV, TT, fixVertices.size());
 
 	integrator->initializeIntegrator(deltaT, M, TV, TT);
-	integrator->fixVertices(fixVertices);
 
 	return 1;
 }
@@ -70,7 +69,6 @@ void Simulation::headless(){
 	cout<<"Seconds Elapsed: "<<double(end-begin)/CLOCKS_PER_SEC<<endl;
 }
 void Simulation::render(){
-	cout<<"Here"<<endl;
 	integrator->render();
 }
 

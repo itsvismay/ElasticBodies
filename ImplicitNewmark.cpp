@@ -309,8 +309,8 @@ void ImplicitNewmark::renderLBFGS(){
 void ImplicitNewmark::render(){
 	simTime+=1;
 	cout<<"n"<<simTime<<endl;
-	renderLBFGS();
-	// renderNewtonsMethod();
+	// renderLBFGS();
+	renderNewtonsMethod();
 
 	NewmarkXtoTV(x_old, TV);
 	IntegratorAbstract::printInfo();
