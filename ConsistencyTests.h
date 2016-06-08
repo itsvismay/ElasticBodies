@@ -10,6 +10,9 @@
 using namespace Eigen;
 using namespace std;
 
+#define TUTORIAL_SHARED_PATH "../"
+#define CONSISTENCY_TEST_SAVE_PATH  "../"
+
 class ConsistencyTest{
 
 public:

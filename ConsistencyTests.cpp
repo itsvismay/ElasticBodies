@@ -7,11 +7,8 @@
 #include "ConsistencyTests.h"
 #include <fstream>
 using namespace Eigen;
-using namespace std;
+using namespace std; 
 
-#ifndef TUTORIAL_SHARED_PATH
-#define TUTORIAL_SHARED_PATH "../shared"
-#endif
 ConsistencyTest::ConsistencyTest(void){
 	printThisOften = 0.1;
 	printForThisManySeconds = 100;
@@ -32,7 +29,7 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	MatrixXd V;
 	MatrixXi F;
 	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
 
 	int retT = -1;
 	
@@ -41,9 +38,9 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	// igl::barycenter(cTV, cTT, cB);
 	// if(retT ==0){
 	// 	//Explicit
-	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
+	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
 	// 	//Implicit
-	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
+	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
 	// }
 
 	// SPACE TESTS Middle
@@ -51,9 +48,9 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	// igl::barycenter(cTV, cTT, cB);
 	// if(retT ==0){
 	// 	//Explicit
-	// 	test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
+	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
 	// 	//Implicit
-	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
+	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
 	// }
 	
 	//SPACE TESTS Fine
@@ -61,9 +58,9 @@ void ConsistencyTest::runSpaceTests(Simulation& sim){
 	igl::barycenter(cTV, cTT, cB);
 	if(retT ==0){
 		//Explicit
-		test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
+		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
 		//Implicit
-		test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
+		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
 	}
 
 	return;
@@ -81,7 +78,7 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 	MatrixXd V;
 	MatrixXi F;
 	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "/beam.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
 	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", cTV, cTT, cTF);
 	igl::barycenter(cTV, cTT, cB);
 
@@ -89,14 +86,14 @@ void ConsistencyTest::runTimeTests(Simulation& sim){
 	//EXPLICIT TIME TESTS
 	double explicitTimestep = 1e-6;
 	for(int i=0; i<4; i++){
-		test(explicitTimestep, 'e', "../TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
+		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
 		explicitTimestep*=.1;
 	}
 
 	// //IMPLICIT TIME TESTS
 	// double implicitTimestep = 1e-1;
 	// for(int i=0; i<3; i++){
-	// 	test(implicitTimestep, 'i', "../TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
+	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
 	// 	implicitTimestep*=.1;
 	// }
 
@@ -111,13 +108,13 @@ void ConsistencyTest::test(double timestep, char method, string printToHere){
 	int numberOfPrints =0;
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
-	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices);
 	//fix vertices
 	for(int i=0; i<cSim.integrator->vertsNum; i++){
 		if(cSim.integrator->TV.row(i)[0]<=-50){
-			cSim.integrator->fixVertices(i);
+			fixedVertices.push_back(i);
 		}
 	}
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices);
 
 	while(seconds<printForThisManySeconds){
 		iters+=1;

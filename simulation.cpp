@@ -6,6 +6,7 @@
 #include <math.h>
 #include <lbfgs.h>
 #include <set>
+#include <ctime>
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 
@@ -39,9 +40,12 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
+	cout<<"Fix Verts"<<endl;
+	for(int i=0; i<fixVertices.size(); i++){
+		cout<<fixVertices[i]<<endl;
+	}
 
 	// reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
-
 	// reIndexClampedVertices(moveVertices, TV, TT);
 
 	//Initialize Solid Mesh
@@ -50,17 +54,23 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	// setInitPosition(moveVertices, TV, TT, fixVertices.size());
 
 	integrator->initializeIntegrator(deltaT, M, TV, TT);
-	// integrator->fixVertices(fixVertices[0]);
+	integrator->fixVertices(fixVertices);
 
 	return 1;
 }
 
 void Simulation::headless(){
+	clock_t begin = clock();
+
 	while(integrator->simTime<iters){
 		integrator->render();
 	}
+
+	clock_t end = clock();
+	cout<<"Seconds Elapsed: "<<double(end-begin)/CLOCKS_PER_SEC<<endl;
 }
 void Simulation::render(){
+	cout<<"Here"<<endl;
 	integrator->render();
 }
 
@@ -195,76 +205,82 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 }
 
 void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv){	
-	//Move vertices slightly
-	for(int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[1]+=1;
-	}
-	
-	//Newtons method static solve for minimum Strain E
-	int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
-	double strainE;
-	SparseMatrix<double> forceGradient;
-	forceGradient.resize(3*TV.rows(), 3*TV.rows());
-	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
-	VectorXd f, x;
-	f.resize(3*TV.rows());
-	f.setZero();
-	x.resize(3*TV.rows());
-	x.setZero();
-	setTVtoX(x, TV);
-	cout<<TV<<endl;
-	cout<<(ignorePastIndex)<<endl;
-	cout<<"-----"<<endl;
-	// exit(0);
-	int NEWTON_MAX = 100, k=0;
-	for(k=0; k<NEWTON_MAX; k++){
-		// X to TV
-		TV.setZero();
-		for(unsigned int i=0; i < M.tets.size(); i++){
-			Vector4i indices = M.tets[i].verticesIndex;
-			TV.row(indices(0)) = Vector3d(x(3*indices(0)), x(3*indices(0)+1), x(3*indices(0) +2));
-			TV.row(indices(1)) = Vector3d(x(3*indices(1)), x(3*indices(1)+1), x(3*indices(1) +2));
-			TV.row(indices(2)) = Vector3d(x(3*indices(2)), x(3*indices(2)+1), x(3*indices(2) +2));
-			TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2)); 
+	//size of move
+	double move_amount = 1;
+	int number_of_moves = 10;
+	for(int j=0; j<number_of_moves; j++){
+		//Move vertices slightly
+		for(int i=0; i<moveVertices.size(); i++){
+			TV.row(TV.rows()-i-1)[1]+= move_amount/number_of_moves;
 		}
-		calculateForceGradient(TV, forceGradient);
-		calculateElasticForces(f, TV);
 		
-		//Block forceGrad and f to exclude the fixed verts
-		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		// cout<<"Force Gradient"<<endl;
-		// cout<<forceGradient<<endl<<endl;
-		// cout<<"FG Block"<<endl;
-		// cout<<forceGradientStaticBlock<<endlIn
-		VectorXd fblock = f.head(ignorePastIndex*3);
-		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(forceGradientStaticBlock);
-		VectorXd deltaX = -1*sqr.solve(fblock);
+		//Newtons method static solve for minimum Strain E
+		int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
+		double strainE;
+		SparseMatrix<double> forceGradient;
+		forceGradient.resize(3*TV.rows(), 3*TV.rows());
+		SparseMatrix<double> forceGradientStaticBlock;
+		forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+		VectorXd f, x;
+		f.resize(3*TV.rows());
+		f.setZero();
+		x.resize(3*TV.rows());
+		x.setZero();
+		setTVtoX(x, TV);
+		cout<<TV<<endl;
+		cout<<(ignorePastIndex)<<endl;
+		cout<<"-----"<<endl;
+		// exit(0);
+		int NEWTON_MAX = 100, k=0;
+		for(k=0; k<NEWTON_MAX; k++){
+			// X to TV
+			TV.setZero();
+			for(unsigned int i=0; i < M.tets.size(); i++){
+				Vector4i indices = M.tets[i].verticesIndex;
+				TV.row(indices(0)) = Vector3d(x(3*indices(0)), x(3*indices(0)+1), x(3*indices(0) +2));
+				TV.row(indices(1)) = Vector3d(x(3*indices(1)), x(3*indices(1)+1), x(3*indices(1) +2));
+				TV.row(indices(2)) = Vector3d(x(3*indices(2)), x(3*indices(2)+1), x(3*indices(2) +2));
+				TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2)); 
+			}
+			calculateForceGradient(TV, forceGradient);
+			calculateElasticForces(f, TV);
+			
+			//Block forceGrad and f to exclude the fixed verts
+			forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+			// cout<<"Force Gradient"<<endl;
+			// cout<<forceGradient<<endl<<endl;
+			// cout<<"FG Block"<<endl;
+			// cout<<forceGradientStaticBlock<<endlIn
+			VectorXd fblock = f.head(ignorePastIndex*3);
+			//Sparse QR 
+			SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+			sqr.compute(forceGradientStaticBlock);
+			VectorXd deltaX = -1*sqr.solve(fblock);
 
-		x.segment(0,3*(ignorePastIndex))+=deltaX;
-		cout<<"X"<<k<<endl;
-		if(x != x){
-			cout<<"NAN"<<endl;
+			x.segment(0,3*(ignorePastIndex))+=deltaX;
+			cout<<"X"<<k<<endl;
+			if(x != x){
+				cout<<"NAN"<<endl;
+				exit(0);
+			}
+			if (fblock.squaredNorm() < 0.00001){
+				break;
+			}
+		}
+		if(k== NEWTON_MAX){
+			cout<<"ERROR Static Solve: Newton max reached"<<endl;
+			cout<<k<<endl;
 			exit(0);
 		}
-		if (fblock.squaredNorm() < 0.00001){
-			break;
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 		}
+		cout<<"Forces"<<endl;
+		cout<<f<<endl;
+		cout<<"Strain E"<<endl;
+		cout<<strainE<<endl;
+		cout<<"New pos"<<endl;
+		cout<<TV<<endl;
 	}
-	if(k== NEWTON_MAX){
-		cout<<"ERROR Static Solve: Newton max reached"<<endl;
-		cout<<k<<endl;
-		exit(0);
-	}
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
-	}
-	cout<<"Forces"<<endl;
-	cout<<f<<endl;
-	cout<<"Strain E"<<endl;
-	cout<<strainE<<endl;
-	cout<<"New pos"<<endl;
-	cout<<TV<<endl;
+	
 }

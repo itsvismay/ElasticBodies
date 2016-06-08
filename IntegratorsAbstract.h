@@ -39,7 +39,7 @@ public:
 	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT)=0;
 	void initVectors();
 	void initMassMatrices();
-	void fixVertices(int fixMe);
+	void fixVertices(vector<int> fixMe);
 	void createXFromTet();
 };
 #endif

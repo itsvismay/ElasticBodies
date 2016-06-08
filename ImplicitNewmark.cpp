@@ -208,8 +208,11 @@ void ImplicitNewmark::renderNewtonsMethod(){
 		NewmarkCalculateElasticForceGradient(TVk, forceGradient); 
 		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
 
-		VectorXd g = x_k - x_old - h*v_old - (h*h/2)*(1-2*beta)*InvMass*f_old - (h*h*beta)*InvMass*f;
-		grad_g = Ident - h*h*beta*InvMass*(forceGradient+(rayleighCoeff/h)*forceGradient);
+		// VectorXd g = x_k - x_old - h*v_old - (h*h/2)*(1-2*beta)*InvMass*f_old - (h*h*beta)*InvMass*f;
+		// grad_g = Ident - h*h*beta*InvMass*(forceGradient+(rayleighCoeff/h)*forceGradient);
+
+		VectorXd g = RegMass*x_k - RegMass*x_old - RegMass*h*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
+		grad_g = RegMass - h*h*beta*(forceGradient+(rayleighCoeff/h)*forceGradient);
 	
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
@@ -228,13 +231,13 @@ void ImplicitNewmark::renderNewtonsMethod(){
 		// VectorXd deltaX = -1* llt.solve(g);
 
 		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g);
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(grad_g);
+		// VectorXd deltaX = -1*sqr.solve(g);
 
-		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g);
+		CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+		cholmodllt.compute(grad_g);
+		VectorXd deltaX = -cholmodllt.solve(g);
 		
 
 		x_k+=deltaX;

@@ -166,24 +166,26 @@ void IntegratorAbstract::initMassMatrices(){
 	// cout<<RegMass<<endl;
 }
 
-void IntegratorAbstract::fixVertices(int fixMe){
-	fixedVerts.push_back(fixMe);
-	cout<<fixMe<<endl;
+void IntegratorAbstract::fixVertices(vector<int> fixMe){
+	fixedVerts.insert(fixedVerts.end(), fixMe.begin(), fixMe.end());
 
-	massVector(3*fixMe) = 1000000000000;
-	massVector(3*fixMe+1) = 1000000000000;
-	massVector(3*fixMe+2) = 1000000000000;
+	for(int i=0; i<fixMe.size(); i++){
+		massVector(3*fixMe[i]) = 1000000000000;
+		massVector(3*fixMe[i]+1) = 1000000000000;
+		massVector(3*fixMe[i]+2) = 1000000000000;
 
-	InvMass.coeffRef(3*fixMe, 3*fixMe) = 0;
-	InvMass.coeffRef(3*fixMe+1, 3*fixMe+1) = 0;
-	InvMass.coeffRef(3*fixMe+2, 3*fixMe+2) = 0;
+		InvMass.coeffRef(3*fixMe[i], 3*fixMe[i]) = 0;
+		InvMass.coeffRef(3*fixMe[i]+1, 3*fixMe[i]+1) = 0;
+		InvMass.coeffRef(3*fixMe[i]+2, 3*fixMe[i]+2) = 0;
 
-	RegMass.coeffRef(3*fixMe, 3*fixMe) = 1000000000000;
-	RegMass.coeffRef(3*fixMe+1, 3*fixMe+1) = 1000000000000;
-	RegMass.coeffRef(3*fixMe+2, 3*fixMe+2) = 1000000000000;
+		RegMass.coeffRef(3*fixMe[i], 3*fixMe[i]) = 1000000000000;
+		RegMass.coeffRef(3*fixMe[i]+1, 3*fixMe[i]+1) = 1000000000000;
+		RegMass.coeffRef(3*fixMe[i]+2, 3*fixMe[i]+2) = 1000000000000;
 
-	//set vels to 0
-	v_old.segment<3>(3*fixMe)*=0;
+		//set vels to 0
+		v_old.segment<3>(3*fixMe[i])*=0;
+	}
+
 }
 
 void IntegratorAbstract::createXFromTet(){

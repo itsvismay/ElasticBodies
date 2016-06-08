@@ -1,7 +1,7 @@
-1e-5
+1e-4
 t
 n
-10
+10000
 0.00
 -9.0
 1
@@ -13,3 +13,4 @@ n
 #5 rayleigh
 #6 gravity
 #7 object
+#8 shared path to folders
