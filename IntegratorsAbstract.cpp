@@ -164,6 +164,8 @@ void IntegratorAbstract::initMassMatrices(){
 	// cout<<InvMass<<endl;
 	// cout<<"Reg Mass"<<endl;
 	// cout<<RegMass<<endl;
+	cout<<"MASS ENTRY"<<endl;
+	cout<<massVector(4)<<endl;
 }
 
 void IntegratorAbstract::fixVertices(vector<int> fixMe){

@@ -1,10 +1,10 @@
-1e-5
-h
-n
-10000
+1e-3
+t
+i
+10
 0.00
 -9.0
-2
+1
 
 #1 timestep
 #2 headless t/f

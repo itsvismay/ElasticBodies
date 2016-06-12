@@ -40,10 +40,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
-	cout<<"Fix Verts"<<endl;
-	for(int i=0; i<fixVertices.size(); i++){
-		cout<<fixVertices[i]<<endl;
-	}
 
 	// reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
 	// reIndexClampedVertices(moveVertices, TV, TT);
