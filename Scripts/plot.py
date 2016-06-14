@@ -48,20 +48,20 @@ gravity, = plt.plot(t, g, "go", label = "gravity")
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0.)
 plt.show()
 
-# xMo=[]
-# yMo=[]
-# zMo=[]
-# t=[]
-# m = open("momentum.txt", 'r')
-# for line in m:
-# 	step = line.strip("\n").split(",")
-# 	t.append(step[0])
-# 	xMo.append(step[1])
-# 	yMo.append(step[2])
-# 	zMo.append(step[3])
-# m.close()
-# plt.plot(t, xMo, "bo", label="xMo")
-# plt.plot(t, yMo, "ro", label="yMo")
-# plt.plot(t, zMo, "go", label="zMo")
-# plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0.)
-# plt.show()
+xMo=[]
+yMo=[]
+zMo=[]
+t=[]
+m = open("momentum.txt", 'r')
+for line in m:
+	step = line.strip("\n").split(",")
+	t.append(step[0])
+	xMo.append(step[1])
+	yMo.append(step[2])
+	zMo.append(step[3])
+m.close()
+plt.plot(t, xMo, "bo", label="xMo")
+plt.plot(t, yMo, "ro", label="yMo")
+plt.plot(t, zMo, "go", label="zMo")
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0.)
+plt.show()

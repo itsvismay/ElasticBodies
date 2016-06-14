@@ -224,14 +224,15 @@ void ImplicitEuler::renderNewtonsMethod(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 
-		// VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
-		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
+		VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
+		grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
 		// cout<<"Forces"<<endl;
 		// cout<<f<<endl;
 		// exit(0);
-		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
-		grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
+		
+		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
+		// grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
 	
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
@@ -250,13 +251,13 @@ void ImplicitEuler::renderNewtonsMethod(){
 		// VectorXd deltaX = -1* llt.solve(g);
 
 		//Sparse QR 
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		// sqr.compute(grad_g);
-		// VectorXd deltaX = -1*sqr.solve(g);
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(grad_g);
+		VectorXd deltaX = -1*sqr.solve(g);
 
-		CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		cholmodllt.compute(grad_g);
-		VectorXd deltaX = -cholmodllt.solve(g);
+		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
+		// cholmodllt.compute(grad_g);
+		// VectorXd deltaX = -cholmodllt.solve(g);
 		
 
 		x_k+=deltaX;

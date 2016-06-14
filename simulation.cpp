@@ -41,16 +41,59 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
-	// reIndexFixedVertices(fixVertices, TV, TT, moveVertices.size());
-	// reIndexClampedVertices(moveVertices, TV, TT);
+	//TODO: Make this shit more efficient
+	//Hash maps or something
+	vector<int> vertexNewIndices;
+	for(int i=0; i<TV.rows(); i++){
+		bool flag =false;
+		for(int j=0; j<fixVertices.size(); j++){
+			if(i==fixVertices[j]){
+				flag = true;
+			}
+		}
+		for(int j=0; j<moveVertices.size(); j++){
+			if(i==moveVertices[j]){
+				flag = true;
+			}
+		}
+		if(!flag){
+			vertexNewIndices.push_back(i);
+		}
+	}
+	for(int j=0; j<fixVertices.size(); j++){
+		vertexNewIndices.push_back(fixVertices[j]);
+	}
+	for(int j=0; j<moveVertices.size(); j++){
+		vertexNewIndices.push_back(moveVertices[j]);
+	}
 
+	vector<int> newfixIndices;
+	for(int i= vertexNewIndices.size() - (moveVertices.size() + fixVertices.size()); i<(vertexNewIndices.size()-moveVertices.size()); i++){
+		newfixIndices.push_back(i);
+	}
+	vector<int> newMoveIndices;
+	for(int i= vertexNewIndices.size() - moveVertices.size(); i<vertexNewIndices.size(); i++){
+		newMoveIndices.push_back(i);
+	}
+	for(int i=0; i<vertexNewIndices.size(); i++){
+		// cout<<vertexNewIndices[i]<<endl;
+	}
+
+	// cout<<"Before"<<endl;
+	// cout<<TV<<endl;
+	// cout<<TT<<endl;
+
+	// reIndexTV(vertexNewIndices, TV, TT);
+	// cout<<"After"<<endl;
+	// cout<<TV<<endl;
+	// cout<<TT<<endl;
 	//Initialize Solid Mesh
 	M.initializeMesh(TT, TV);
 	
 	// setInitPosition(moveVertices, TV, TT, fixVertices.size());
 
 	integrator->initializeIntegrator(deltaT, M, TV, TT);
-
+	integrator->fixVertices(fixVertices);
 	return 1;
 }
 
@@ -68,57 +111,47 @@ void Simulation::render(){
 	integrator->render();
 }
 
-//Logic errors here if fixVertices size is large or TV.rows() is small
-int Simulation::reIndexFixedVertices(vector<int>& fixVertices, MatrixXd& TV, MatrixXi& TT, int mv){
-	//Re-index fixed verts
-	for(int i=0; i<fixVertices.size(); i++){
-		int ind1 = fixVertices[i];
-		int ind2r = TV.rows() - fixVertices.size() - mv + i;
-		Vector3d ro2 = TV.row(ind2r);
-		TV.row(ind2r) = TV.row(ind1);
-		TV.row(ind1) = ro2;
-
-		//re-index all the tet pointers
-		for(int k=0; k< TT.rows(); k++){
-			for(int j=0; j<4; j++){
-				if (TT.row(k)[j]== ind1){
-					TT.row(k)[j] = ind2r;
-				}else if(TT.row(k)[j]==ind2r){
-					TT.row(k)[j] = ind1;
-				}
-			}
+void Simulation::reIndexTV(vector<int> newVertsIndices, MatrixXd& TV, MatrixXi& TT){
+	MatrixXd newTV = TV;
+	for(int i=0; i<newVertsIndices.size(); i++){
+		newTV.row(i) = TV.row(newVertsIndices[i]);
+	}
+	TV = newTV;
+	for(int k=0; k<TT.rows(); k++){
+		for(int j=0; j<4; j++){
+			int ind = TT.row(k)[j];
+			TT.row(k)[j] = newVertsIndices[ind];
 		}
 	}
-
 }
 
-int Simulation::reIndexClampedVertices(vector<int>& moveVertices, MatrixXd& TV, MatrixXi& TT){
-	//Re-index clamped vertices
-	for(int i=0; i<moveVertices.size(); i++){
-		//re-index vertices
-		//take TV row at index moveVertices(i)
-		//replace with TV row at index TV.rows - (moveVertices.size() -i)
-		//Vector3d ro1 = TV.row(moveVertices(i));
-		Vector3d ro2 = TV.row(TV.rows() - moveVertices.size()+ i);
-		TV.row(TV.rows() - moveVertices.size()+ i) = TV.row(moveVertices[i]);
-		TV.row(moveVertices[i]) = ro2;
+// int Simulation::reIndexClampedVertices(vector<int>& moveVertices, MatrixXd& TV, MatrixXi& TT){
+// 	//Re-index clamped vertices
+// 	for(int i=0; i<moveVertices.size(); i++){
+// 		//re-index vertices
+// 		//take TV row at index moveVertices(i)
+// 		//replace with TV row at index TV.rows - (moveVertices.size() -i)
+// 		//Vector3d ro1 = TV.row(moveVertices(i));
+// 		Vector3d ro2 = TV.row(TV.rows() - moveVertices.size()+ i);
+// 		TV.row(TV.rows() - moveVertices.size()+ i) = TV.row(moveVertices[i]);
+// 		TV.row(moveVertices[i]) = ro2;
 
-		//re-index all the tet pointers
-		int v1 = moveVertices[i];
-		int v2 = TV.rows() - moveVertices.size() +i;
-		for(int k=0; k< TT.rows(); k++){
-			for(int j=0; j<4; j++){
-				if (TT.row(k)[j]== v1){
-					TT.row(k)[j] = v2;
-				}else if(TT.row(k)[j]==v2){
-					TT.row(k)[j] = v1;
-				}
-			}
-		}
-	}
+// 		//re-index all the tet pointers
+// 		int v1 = moveVertices[i];
+// 		int v2 = TV.rows() - moveVertices.size() +i;
+// 		for(int k=0; k< TT.rows(); k++){
+// 			for(int j=0; j<4; j++){
+// 				if (TT.row(k)[j]== v1){
+// 					TT.row(k)[j] = v2;
+// 				}else if(TT.row(k)[j]==v2){
+// 					TT.row(k)[j] = v1;
+// 				}
+// 			}
+// 		}
+// 	}
 
-	return 1;
-}
+// 	return 1;
+// }
 
 void Simulation::setTVtoX(VectorXd &x, MatrixXd &TV){
 	//TV to X

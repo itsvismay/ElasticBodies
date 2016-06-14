@@ -196,11 +196,11 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	//move vertices
-	moveVertices.push_back(0);
+	// moveVertices.push_back(0);
 
 	//fix vertices
 	// fixedVertices.push_back(1);
-	fixedVertices.push_back(3);
+	// fixedVertices.push_back(1);
 
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices);
