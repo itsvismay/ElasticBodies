@@ -8,3 +8,6 @@ extern double rayleighCoeff;
 extern double gravity;
 
 extern bool headless;
+
+extern double youngs;
+extern double poisson;

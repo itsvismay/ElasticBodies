@@ -8,7 +8,6 @@
 #
 
 if(NOT NANOGUI_FOUND)
-
 FIND_PATH(NANOGUI_INCLUDE_DIR nanogui/nanogui.h
   PATHS
     $ENV{LIBIGL}/external/nanogui/include

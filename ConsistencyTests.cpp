@@ -3,6 +3,7 @@
 #include <igl/barycenter.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 
+#include <sys/wait.h>
 #include <ctime>
 #include "ConsistencyTests.h"
 #include <fstream>
@@ -11,117 +12,153 @@ using namespace std;
 
 ConsistencyTest::ConsistencyTest(void){
 	printThisOften = 0.1;
-	printForThisManySeconds = 100;
+	printForThisManySeconds = 10;
+	spaceIterations = 1;
+	timeIterations = 1;
 }
 
-void ConsistencyTest::runSpaceTests(Simulation& sim){
-	double explicitTimestep = 1e-5;
+bool ConsistencyTest::checkAllAccuracy(){
+	MatrixXd TV;
+	MatrixXi TT;
+	MatrixXd B;
+
+	TT.resize(2, 4);
+	TT<<  0, 1, 2, 3,
+				4, 0, 2, 3;
+
+	TV.resize(5, 3);
+	TV << 10, 0, 0, //affect
+			0, 10, 0,
+			0, 0, 10,
+			0, 0, 0,
+			0, -10, 0;
+
+	int timestep =0.01;
+	// return 	checkVerletAccuracy(timestep, 1, 'e', TT, TV, B)
+	// 		&&
+			// checkNewmarkAccuracy(timestep, 1, 'n', TT, TV, B)
+			// &&
+		return	checkEulerAccuracy(timestep, 1, 'i', TT, TV, B);
+}
+
+bool ConsistencyTest::checkVerletAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
+	Simulation vSim;
+	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices);
+	vSim.render();
+	cout<<"Verlet"<<endl<<vSim.integrator->TV<<endl;
+	return 1;
+}
+bool ConsistencyTest::checkEulerAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
+	Simulation vSim;
+	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices);
+	vSim.render();
+	cout<<"Euler"<<endl<<vSim.integrator->TV<<endl;
+	return 1;
+}
+bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
+	Simulation vSim;
+	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices);
+	vSim.render();
+	cout<<"Newmark"<<endl<<vSim.integrator->TV<<endl;
+	return 1;
+}
+
+void ConsistencyTest::runAllTests(){
+	// checkAllAccuracy();
+	// exit(0);
+	//Time stuff------
+	time_t now = time(0);
+	string dt = ctime(&now);//local time, replace all spaces and new lines
+	dt.erase('\n');
+	replace(dt.begin(), dt.end(), ' ', '-');
+	//-----------------
+	int spaceStep = 40;
+
+	MatrixXd V;
+	MatrixXi F;
+	MatrixXd B;
+	MatrixXd TV;
+	MatrixXi TT;
+	MatrixXi TF;
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
+	
+	pid_t pids[spaceIterations];
+
+	igl::copyleft::tetgen::tetrahedralize(V,F,("-pqa"+to_string(spaceStep)).c_str(), TV, TT, TF);
+	igl::barycenter(TV, TT, B);
+	runTestRow(spaceStep, TV, B, TT, dt);
+
+	// for(int i=0; i<spaceIterations; i++){
+	// 	if((pids[i] = fork())<0){
+	// 		cout<< "Fork error"<<endl;
+	// 		abort();
+	// 	}else if(pids[i] == 0){
+	// 		igl::copyleft::tetgen::tetrahedralize(V,F,("-pqa"+to_string(spaceStep)).c_str(), TV, TT, TF);
+	// 		igl::barycenter(TV, TT, B);
+	// 		runTestRow(spaceStep, TV, B, TT, dt);
+	// 		exit(0);
+	// 	}
+	// 		spaceStep*=.5;
+	// }
+
+	// //wait for children to exit
+	// int status;
+	// pid_t pid;
+	// while(spaceIterations>0){
+	// 	pid = wait(&status);
+	// 	cout<<"Exited --"<<pid<<" "<<status<<endl;
+	// 	spaceIterations--;
+	// }
+	cout<<"------------------------"<<endl;
+	cout<<"ALL EXITED"<<endl;
+}
+
+void ConsistencyTest::runTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
+
+	runVerletTestRow(spaceStep, TV, B, TT, dt);
+	runImpEulerTestRow(spaceStep, TV, B , TT, dt);
+	runNewmarkTestRow(spaceStep, TV, B, TT, dt);
+}
+
+void ConsistencyTest::runVerletTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
+	double verletTimestep = 1e-5;
+	for(int i=0; i<timeIterations; i++){
+		cout<<"verlet" +to_string(spaceStep)+"time"+to_string(verletTimestep)<<endl;
+		// test(verletTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space"+to_string(spaceStep)+"/timestep:"+to_string(verletTimestep)+"/", TT, TV, B);
+		verletTimestep*=.1;
+	}
+}
+void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
 	double implicitTimestep = 1e-3;
-	double newmarkTimestep = 1e-5;
-	cSim = sim;
-
-	//Time stuff------
-	time_t now = time(0);
-	string dt = ctime(&now);//local time, replace all spaces and new lines
-	dt.erase('\n');
-	replace(dt.begin(), dt.end(), ' ', '-');
-	//-----------------
-
-	MatrixXd V;
-	MatrixXi F;
-	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
-
-	int retT = -1;
-	
-	//SPACE TESTS Coarse
-	retT= igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/coarse"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/coarse"+to_string(implicitTimestep)+"/");
-		//Newmark
-		test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/coarse"+to_string(newmarkTimestep)+"/");
-	}
-
-	// // SPACE TESTS Middle
-	// retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa300", cTV, cTT, cTF);
-	// igl::barycenter(cTV, cTT, cB);
-	// if(retT ==0){
-	// 	//Explicit
-	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/middle:"+to_string(explicitTimestep)+"/");
-	// 	//Implicit
-	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/middle"+to_string(implicitTimestep)+"/");
-	// 	//Newmark
-	// 	test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/middle"+to_string(newmarkTimestep)+"/");
-	// }
-	
-	// //SPACE TESTS Fine
-	retT = igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa200", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-	if(retT ==0){
-		//Explicit
-		test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/space/fine:"+to_string(explicitTimestep)+"/");
-		//Implicit
-		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space/fine"+to_string(implicitTimestep)+"/");
-		//Newmark
-		test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space/fine"+to_string(newmarkTimestep)+"/");
-	}
-	return;
-}
-
-void ConsistencyTest::runTimeTests(Simulation& sim){
-	cSim = sim;
-	//Time stuff------
-	time_t now = time(0);
-	string dt = ctime(&now);//local time, replace all spaces and new lines
-	dt.erase('\n');
-	replace(dt.begin(), dt.end(), ' ', '-');
-	//-----------------
-
-	MatrixXd V;
-	MatrixXi F;
-	MatrixXd B;
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pq", cTV, cTT, cTF);
-	igl::barycenter(cTV, cTT, cB);
-
-
-	//EXPLICIT TIME TESTS
-	// double explicitTimestep = 1e-5;
-	// for(int i=0; i<8; i++){
-	// 	test(explicitTimestep, 'e', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/explicit/time/timestep:"+to_string(explicitTimestep)+"/");
-	// 	explicitTimestep*=.1;
-	// }
-
-	// //IMPLICIT TIME TESTS
-	// double implicitTimestep = 1e-1;
-	// for(int i=0; i<8; i++){
-	// 	test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/time/timestep:"+to_string(implicitTimestep)+"/");
-	// 	implicitTimestep*=.1;
-	// }
-
-	// Newmark Time Tests
-	double implicitTimestep = 1e-5;
-	for(int i=0; i<8; i++){
-		test(implicitTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/time/timestep:"+to_string(implicitTimestep)+"/");
+	for(int i=0; i<timeIterations; i++){
+		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
+		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);
 		implicitTimestep*=.1;
 	}
-
-	
-
-	return;
+}
+void ConsistencyTest::runNewmarkTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
+	double newmarkTimestep = 1e-1;
+	for(int i=0; i<timeIterations; i++){
+		cout<<"newmark" +to_string(spaceStep)+"time"+to_string(newmarkTimestep)<<endl;
+		// test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space"+to_string(spaceStep)+"/timestep:"+to_string(newmarkTimestep)+"/", TT, TV, B);
+		newmarkTimestep*=.1;
+	}
 }
 
-void ConsistencyTest::test(double timestep, char method, string printToHere){
+void ConsistencyTest::test(double timestep, char method, string printToHere, MatrixXi cTT, MatrixXd cTV, MatrixXd cB){
 	double seconds =0;
 	int iters =0;
 	int numberOfPrints =0;
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
+	Simulation cSim;
 	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices);
 	
 	//fix vertices
@@ -138,15 +175,14 @@ void ConsistencyTest::test(double timestep, char method, string printToHere){
 		if(iters*timestep>=printThisOften){
 			seconds+=printThisOften;
 			iters =0;
-			printOBJ(numberOfPrints, printToHere);
+			printOBJ(numberOfPrints, printToHere, cB, cSim, cTT);
 			numberOfPrints+=1;
 		}
 	}
 	return;
-
 }
 
-void ConsistencyTest::printOBJ(int numberOfPrints, string printToHere){
+void ConsistencyTest::printOBJ(int numberOfPrints, string printToHere, MatrixXd& cB, Simulation& cSim, MatrixXi& cTT){
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;

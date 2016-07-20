@@ -71,30 +71,30 @@ void IntegratorAbstract::printInfo(){
 	////////////////////////////////////
 	
 	// //////Momentum Code////////////
-	if(momentumFile.is_open()){
-		double xp=0;
-		double yp=0;
-		double zp=0;
-		cout<<"-----------"<<endl;
-		for(int i=0; i<v_old.rows(); ){
-			xp += v_old(i)*massVector(i);
-			cout<<"x"<<endl;
-			cout<<v_old(i)<<endl;
-			i++;
-			yp += v_old(i)*massVector(i);
-			cout<<"y"<<endl;
-			cout<<v_old(i)<<endl;
-			i++;
-			zp += v_old(i)*massVector(i);
-			cout<<"z"<<endl;
-			cout<<v_old(i)<<endl;
-			i++;
-		}
-		cout<<"- - - - -- "<<endl;
-		momentumFile<<simTime<<","<<xp<<","<<yp<<","<<zp<<"\n";
-	}else{
-		cout<<"no open file"<<endl;
-	}
+	// if(momentumFile.is_open()){
+	// 	double xp=0;
+	// 	double yp=0;
+	// 	double zp=0;
+	// 	cout<<"-----------"<<endl;
+	// 	for(int i=0; i<v_old.rows(); ){
+	// 		xp += v_old(i)*massVector(i);
+	// 		cout<<"x"<<endl;
+	// 		cout<<v_old(i)<<endl;
+	// 		i++;
+	// 		yp += v_old(i)*massVector(i);
+	// 		cout<<"y"<<endl;
+	// 		cout<<v_old(i)<<endl;
+	// 		i++;
+	// 		zp += v_old(i)*massVector(i);
+	// 		cout<<"z"<<endl;
+	// 		cout<<v_old(i)<<endl;
+	// 		i++;
+	// 	}
+	// 	cout<<"- - - - -- "<<endl;
+	// 	momentumFile<<simTime<<","<<xp<<","<<yp<<","<<zp<<"\n";
+	// }else{
+	// 	cout<<"no open file"<<endl;
+	// }
 	/////////////////
 }
 
@@ -164,8 +164,8 @@ void IntegratorAbstract::initMassMatrices(){
 	// cout<<InvMass<<endl;
 	// cout<<"Reg Mass"<<endl;
 	// cout<<RegMass<<endl;
-	cout<<"MASS ENTRY"<<endl;
-	cout<<massVector(4)<<endl;
+	// cout<<"MASS ENTRY"<<endl;
+	// cout<<massVector(4)<<endl;
 }
 
 void IntegratorAbstract::fixVertices(vector<int> fixMe){

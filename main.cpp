@@ -71,7 +71,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	// // for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
 	// // 	V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
@@ -114,9 +114,9 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 	
-	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
-	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
-	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(33,0,0), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,33,0), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,33), RowVector3d(1,1,1));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -124,13 +124,13 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-		// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
 
 
 	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
@@ -143,13 +143,12 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// fixedVertices.push_back(3);
 
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
-	// //fix vertices
-	// for(int i=0; i<Sim.integrator->vertsNum; i++){
-	// 	cout<<i<<endl;
-	// 	if(Sim.integrator->TV.row(i)[0]<=-50){
-	// 		fixedVertices.push_back(i);
-	// 	}
-	// }
+	
+	for(int i=0; i<Sim.integrator->vertsNum; i++){
+		if(Sim.integrator->TV.row(i)[0]<=-50){
+			fixedVertices.push_back(i);
+		}
+	}
 	Sim.integrator->fixVertices(fixedVertices);
 	
 	// // Compute barycenters
@@ -191,7 +190,6 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	// 			3, 0, 0,
 	// 			4, -10, 0;
 
-
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
@@ -209,6 +207,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 		Sim.headless();
 	}else{
 		igl::viewer::Viewer viewer;
+		viewer.core.is_animating = true;
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
 	}
@@ -219,7 +218,7 @@ void consistencyTests( double timestep, int iterations, char method){
 
 	ConsistencyTest c;
 	// c.runTimeTests(Sim);
-	c.runSpaceTests(Sim);
+	c.runAllTests();
 	
 }
 

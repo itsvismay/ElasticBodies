@@ -1,10 +1,13 @@
-1e-2
+0.1
 f
 i
-10
+1
 0.00
--0.0
-0
+-10
+2
+27000
+.35
+
 
 #1 timestep
 #2 headless t/f
@@ -13,4 +16,5 @@ i
 #5 rayleigh
 #6 gravity
 #7 object
-#8 shared path to folders
+#8 youngs
+#9 poisson
