@@ -41,6 +41,16 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
+	// cout<< "Prev TV"<<endl;
+	// cout<< TV<<endl;
+	// cout<< "Prev TT"<<endl;
+	// cout<<TT<<endl;
+	MatrixXd newTV;
+	newTV.resize(TV.rows(), TV.cols());
+	MatrixXi newTT;
+	newTT.resize(TT.rows(), TT.cols());
+	
+
 	//TODO: Make this shit more efficient
 	//Hash maps or something
 	vector<int> vertexNewIndices;

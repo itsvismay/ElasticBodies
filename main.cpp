@@ -125,12 +125,13 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springFrom3D.obj", V, F);
 
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
@@ -193,24 +194,24 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
-	//move vertices
-	// moveVertices.push_back(0);
+	// move vertices
+	moveVertices.push_back(0);
 
-	//fix vertices
-	// fixedVertices.push_back(1);
+	// fix vertices
+	fixedVertices.push_back(1);
 	// fixedVertices.push_back(1);
 
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices);
 	
-	if(headless){
-		Sim.headless();
-	}else{
-		igl::viewer::Viewer viewer;
-		viewer.core.is_animating = true;
-		viewer.callback_pre_draw = &drawLoopTest;
-		viewer.launch();
-	}
+	// if(headless){
+	// 	Sim.headless();
+	// }else{
+	// 	igl::viewer::Viewer viewer;
+	// 	viewer.core.is_animating = true;
+	// 	viewer.callback_pre_draw = &drawLoopTest;
+	// 	viewer.launch();
+	// }
 		
 }
 
@@ -259,6 +260,14 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		object = atoi(line.c_str());
 		cout<<object<<endl;
+
+		getline(configFile, line);
+		youngs = stod(line.c_str());
+		cout<<youngs<<endl;
+
+		getline(configFile, line);
+		poissons = stod(line.c_str());
+		cout<<poissons<<endl;
 	}else{
 		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;

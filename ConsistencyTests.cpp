@@ -78,7 +78,7 @@ void ConsistencyTest::runAllTests(){
 	dt.erase('\n');
 	replace(dt.begin(), dt.end(), ' ', '-');
 	//-----------------
-	int spaceStep = 40;
+	int spaceStep = 20;
 
 	MatrixXd V;
 	MatrixXi F;
@@ -135,7 +135,7 @@ void ConsistencyTest::runVerletTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B,
 	}
 }
 void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
-	double implicitTimestep = 1e-3;
+	double implicitTimestep = 1e-2;
 	for(int i=0; i<timeIterations; i++){
 		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
 		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);
