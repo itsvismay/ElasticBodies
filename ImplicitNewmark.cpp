@@ -6,8 +6,8 @@
 #include <fstream>
 #include <math.h>
 #include <lbfgs.h>
-#include "Eigen/SPQRSupport"
-#include <Eigen/CholmodSupport>
+// #include "Eigen/SPQRSupport"
+// #include <Eigen/CholmodSupport>
 
 #include "ImplicitNewmark.h"
 #include "globals.h"

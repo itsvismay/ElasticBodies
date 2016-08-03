@@ -40,4 +40,4 @@ Scripts/BeamTestOpenCV/*.jpg
 WolframAndProfilerandHoudini/HoudiniRender/*
 TestsResults/*
 3dUnion/build/*
-
+local_temp/*

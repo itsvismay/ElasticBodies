@@ -71,7 +71,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	Sim.render();
+	// Sim.render();
 
 	// // for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
 	// // 	V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
@@ -126,7 +126,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springFrom3D.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion.obj", V, F);
 
 
 	// Tetrahedralize the interior

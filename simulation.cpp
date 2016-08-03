@@ -7,8 +7,6 @@
 #include <lbfgs.h>
 #include <set>
 #include <ctime>
-#include "Eigen/SPQRSupport"
-#include <Eigen/CholmodSupport>
 
 #include "simulation.h"
 #include "globals.h"
