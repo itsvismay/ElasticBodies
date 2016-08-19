@@ -12,7 +12,7 @@ using namespace Eigen;
 using namespace std;
 // double mu = 10000.0;
 // double lambda = 10000.0;
-double youngs = 27000;
+double youngs = 2900000;
 double poissons = 0.35;
 double mu = youngs/(2+ 2*poissons);
 double lambda = youngs*poissons/((1+poissons)*(1-2*poissons));

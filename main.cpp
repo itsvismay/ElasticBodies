@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "ConsistencyTests.h"
 
+
 ofstream momentumFile;
 ofstream energyFile;
 ofstream strainEnergyFile;
@@ -64,14 +65,14 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 
 
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(0,0,0));
 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
 	
 	return false;
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	// // for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
 	// // 	V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
@@ -114,9 +115,9 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 	
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(33,0,0), RowVector3d(1,1,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,33,0), RowVector3d(1,1,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,33), RowVector3d(1,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(33,0,0), RowVector3d(1,1,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,33,0), RowVector3d(1,0,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,33), RowVector3d(0,1,1));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -125,35 +126,36 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion-fix.obj", V, F);
 
 
 	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
-	igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a0.1", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500000", TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
 	//move vertices
-	// moveVertices.push_back(0);
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[0]>=180){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// }
 
 	//fix vertices
-	// fixedVertices.push_back(1);
-	// fixedVertices.push_back(3);
-
-	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
-	
-	for(int i=0; i<Sim.integrator->vertsNum; i++){
-		if(Sim.integrator->TV.row(i)[0]<=-50){
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0]<=30){
 			fixedVertices.push_back(i);
 		}
 	}
-	Sim.integrator->fixVertices(fixedVertices);
-	
 	// // Compute barycenters
-	igl::barycenter(Sim.integrator->TV, Sim.integrator->TT, B);
+	igl::barycenter(TV, TT, B);
+	cout<<"Barycenters"<<endl;
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
+	
+	
 	
 	if(headless){
 		Sim.headless();
@@ -185,6 +187,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				0, 0, 10,
 				0, 0, 0,
 				0, -10, 0;
+				
 	// TV_One_G << 0, 0, 0, //affect
 	// 			1, 10, 0,
 	// 			2, 0, 10,
@@ -195,7 +198,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	// move vertices
-	moveVertices.push_back(0);
+	// moveVertices.push_back(0);
 
 	// fix vertices
 	fixedVertices.push_back(1);
@@ -204,14 +207,14 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices);
 	
-	// if(headless){
-	// 	Sim.headless();
-	// }else{
-	// 	igl::viewer::Viewer viewer;
-	// 	viewer.core.is_animating = true;
-	// 	viewer.callback_pre_draw = &drawLoopTest;
-	// 	viewer.launch();
-	// }
+	if(headless){
+		Sim.headless();
+	}else{
+		igl::viewer::Viewer viewer;
+		viewer.core.is_animating = true;
+		viewer.callback_pre_draw = &drawLoopTest;
+		viewer.launch();
+	}
 		
 }
 

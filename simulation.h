@@ -25,14 +25,21 @@ public:
 	IntegratorAbstract* integrator;
 	vector<int> mapV2TV;
 	int iters;
-	MatrixXd B;
+	MatrixXd sB;
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices);
 	
-	void reIndexTV(vector<int> newVertsIndices, MatrixXd& TV, MatrixXi& TT);
+	void reIndexTVandTT(vector<int> newVertsIndices, 
+						int sizeFixed, 
+						int sizeMove,
+						MatrixXd& TV, 
+						MatrixXi& TT, 
+						MatrixXd& newTV, 
+						MatrixXi& newTT);
+	
 	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv);
-
+	void printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
 	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
 	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);

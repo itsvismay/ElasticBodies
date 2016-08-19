@@ -7,6 +7,9 @@
 #include <lbfgs.h>
 #include <set>
 #include <ctime>
+#include <fstream>
+#include <igl/writeOBJ.h>
+#include <igl/barycenter.h>
 
 #include "simulation.h"
 #include "globals.h"
@@ -22,7 +25,8 @@ Simulation::Simulation(void){}
 
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices){
 	iters = iterations;
-	B = B;
+	// sB = B;
+
 	if (method =='e'){
 		integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;	
@@ -39,14 +43,27 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
+	if(moveVertices.size()==0){
+		M.initializeMesh(TT, TV);
+		integrator->initializeIntegrator(deltaT, M, TV, TT);
+		integrator->fixVertices(fixVertices);
+		cout<<"here"<<endl;
+		return 1;
+	}
+	//TODO: Clean this up - separate function for the static solve setup
+
+
 	// cout<< "Prev TV"<<endl;
 	// cout<< TV<<endl;
 	// cout<< "Prev TT"<<endl;
 	// cout<<TT<<endl;
+
 	MatrixXd newTV;
 	newTV.resize(TV.rows(), TV.cols());
+	newTV.setZero();
 	MatrixXi newTT;
 	newTT.resize(TT.rows(), TT.cols());
+	newTT.setZero();
 	
 
 	//TODO: Make this shit more efficient
@@ -64,44 +81,59 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 				flag = true;
 			}
 		}
+		// if vertex not fixed or moved, re-index to front
+		//[v, v, v, v...., f, f, f...., m, m, m...,m]
 		if(!flag){
 			vertexNewIndices.push_back(i);
 		}
 	}
+	//re-index fixed verts
 	for(int j=0; j<fixVertices.size(); j++){
 		vertexNewIndices.push_back(fixVertices[j]);
 	}
+	//re-index move verts
 	for(int j=0; j<moveVertices.size(); j++){
 		vertexNewIndices.push_back(moveVertices[j]);
 	}
 
+	//these are the new indices for the fixed verts
 	vector<int> newfixIndices;
+	// cout<<"new fix"<<endl;
 	for(int i= vertexNewIndices.size() - (moveVertices.size() + fixVertices.size()); i<(vertexNewIndices.size()-moveVertices.size()); i++){
 		newfixIndices.push_back(i);
+		// cout<<i<<endl;
 	}
+
+	//new indices for the moving verts
 	vector<int> newMoveIndices;
+	//cout<<"new move"<<endl;
 	for(int i= vertexNewIndices.size() - moveVertices.size(); i<vertexNewIndices.size(); i++){
 		newMoveIndices.push_back(i);
+		// cout<<i<<endl;
 	}
-	for(int i=0; i<vertexNewIndices.size(); i++){
-		// cout<<vertexNewIndices[i]<<endl;
-	}
+	// cout<<"new all"<<endl;
+	// for(int i=0; i<vertexNewIndices.size(); i++){
+	// 	cout<<vertexNewIndices[i]<<endl;
+	// }
 
 	// cout<<"Before"<<endl;
-	// cout<<TV<<endl;
-	// cout<<TT<<endl;
+	// cout<<newTV<<endl<<endl;
+	// cout<<newTT<<endl;
 
-	// reIndexTV(vertexNewIndices, TV, TT);
+	reIndexTVandTT(vertexNewIndices, fixVertices.size(), moveVertices.size(), TV, TT, newTV, newTT);
+
 	// cout<<"After"<<endl;
-	// cout<<TV<<endl;
-	// cout<<TT<<endl;
-	//Initialize Solid Mesh
-	M.initializeMesh(TT, TV);
-	
-	// setInitPosition(moveVertices, TV, TT, fixVertices.size());
+	// cout<<newTV<<endl<<endl;
+	// cout<<newTT<<endl;
 
-	integrator->initializeIntegrator(deltaT, M, TV, TT);
-	integrator->fixVertices(fixVertices);
+	igl::barycenter(newTV, newTT, sB);
+
+	//Initialize Solid Mesh
+	M.initializeMesh(newTT, newTV);
+	setInitPosition(newMoveIndices, newTV, newTT, fixVertices.size());
+
+	integrator->initializeIntegrator(deltaT, M, newTV, newTT);
+	integrator->fixVertices(newfixIndices);
 	return 1;
 }
 
@@ -119,47 +151,39 @@ void Simulation::render(){
 	integrator->render();
 }
 
-void Simulation::reIndexTV(vector<int> newVertsIndices, MatrixXd& TV, MatrixXi& TT){
-	MatrixXd newTV = TV;
+//TODO: Clean up function params size Fixed and size Move are not needed
+void Simulation::reIndexTVandTT(vector<int> newVertsIndices, int sizeFixed, int sizeMove, MatrixXd& TV, MatrixXi& TT, MatrixXd& newTV, MatrixXi& newTT){
+	//apply re-index to TV
 	for(int i=0; i<newVertsIndices.size(); i++){
 		newTV.row(i) = TV.row(newVertsIndices[i]);
 	}
-	TV = newTV;
-	for(int k=0; k<TT.rows(); k++){
+
+	//create map out of newVertsIndex
+	//map keys = newVertsIndex values = old indices in TV
+	//map vals = newVertsIndex index = new indices in TV
+	map<int, int> oldToNewmap;
+	pair<map<int, int>::iterator, bool> err;
+	for(int i=0; i<newVertsIndices.size(); i++){
+		err = oldToNewmap.insert(pair<int, int>(newVertsIndices[i], i));
+		if(err.second==false){
+			cout<<"ERROR::Simulation.cpp::reIndexTVandTT::>>Map already contains this value(";
+			cout<< err.first->second <<". Indices should not be repeated"<<endl;
+		}
+	}
+
+	//Check map, see if its working
+	// map<int,int>::iterator it = oldToNewmap.begin();
+	// for (it=oldToNewmap.begin(); it!=oldToNewmap.end(); ++it)
+	// 	cout << it->first << " => " << it->second << '\n';
+
+
+	//apply re-index to TT
+	for(int i=0; i< TT.rows(); i++){
 		for(int j=0; j<4; j++){
-			int ind = TT.row(k)[j];
-			TT.row(k)[j] = newVertsIndices[ind];
+			newTT.row(i)[j] = oldToNewmap.find(TT.row(i)[j])->second;
 		}
 	}
 }
-
-// int Simulation::reIndexClampedVertices(vector<int>& moveVertices, MatrixXd& TV, MatrixXi& TT){
-// 	//Re-index clamped vertices
-// 	for(int i=0; i<moveVertices.size(); i++){
-// 		//re-index vertices
-// 		//take TV row at index moveVertices(i)
-// 		//replace with TV row at index TV.rows - (moveVertices.size() -i)
-// 		//Vector3d ro1 = TV.row(moveVertices(i));
-// 		Vector3d ro2 = TV.row(TV.rows() - moveVertices.size()+ i);
-// 		TV.row(TV.rows() - moveVertices.size()+ i) = TV.row(moveVertices[i]);
-// 		TV.row(moveVertices[i]) = ro2;
-
-// 		//re-index all the tet pointers
-// 		int v1 = moveVertices[i];
-// 		int v2 = TV.rows() - moveVertices.size() +i;
-// 		for(int k=0; k< TT.rows(); k++){
-// 			for(int j=0; j<4; j++){
-// 				if (TT.row(k)[j]== v1){
-// 					TT.row(k)[j] = v2;
-// 				}else if(TT.row(k)[j]==v2){
-// 					TT.row(k)[j] = v1;
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return 1;
-// }
 
 void Simulation::setTVtoX(VectorXd &x, MatrixXd &TV){
 	//TV to X
@@ -203,7 +227,7 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	forceGradient.setZero();
 	
 	vector<Trip> triplets1;
-	triplets1.reserve(3*TVk.rows()*3*TVk.rows());	
+	triplets1.reserve(12*12*M.tets.size());	
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -232,7 +256,7 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], dForces(0,3)));
 			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, dForces(1,3)));
 			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, dForces(2,3)));
-			dx(j) = 0; //ASK check is this efficient?
+			dx(j) = 0;
 		}
 	}
 	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
@@ -240,13 +264,19 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 }
 
 void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv){	
+	ofstream distvLoadFile;
+	distvLoadFile.open("../Scripts/distvLoad.txt");
 	//size of move
-	double move_amount = 1;
-	int number_of_moves = 10;
+	double move_amount = 3;
+	int number_of_moves = 1000;
+
+	int count=0;
 	for(int j=0; j<number_of_moves; j++){
-		//Move vertices slightly
+		MatrixXd oldTV = TV;
+		//Move vertices slightly in x,y,z direction
+		// [v, v, v..., f, f, ...(m), (m), (m)...]
 		for(int i=0; i<moveVertices.size(); i++){
-			TV.row(TV.rows()-i-1)[1]+= move_amount/number_of_moves;
+			TV.row(TV.rows()-i-1)[0]+= move_amount/number_of_moves;
 		}
 		
 		//Newtons method static solve for minimum Strain E
@@ -262,9 +292,8 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 		x.resize(3*TV.rows());
 		x.setZero();
 		setTVtoX(x, TV);
-		cout<<TV<<endl;
-		cout<<(ignorePastIndex)<<endl;
-		cout<<"-----"<<endl;
+		// cout<<TV<<endl;
+		cout<<"--Move-"<<j<<"--"<<endl;
 		// exit(0);
 		int NEWTON_MAX = 100, k=0;
 		for(k=0; k<NEWTON_MAX; k++){
@@ -287,21 +316,28 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 			// cout<<"FG Block"<<endl;
 			// cout<<forceGradientStaticBlock<<endlIn
 			VectorXd fblock = f.head(ignorePastIndex*3);
+
 			//Sparse QR 
 			SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 			sqr.compute(forceGradientStaticBlock);
 			VectorXd deltaX = -1*sqr.solve(fblock);
 
 			x.segment(0,3*(ignorePastIndex))+=deltaX;
-			cout<<"X"<<k<<endl;
+			cout<<"Newton Iter "<<k<<endl;
 			if(x != x){
 				cout<<"NAN"<<endl;
 				exit(0);
 			}
-			if (fblock.squaredNorm() < 0.00001){
+			cout<<"fblock"<<endl;
+			cout<<fblock.squaredNorm()<<endl;
+			if (fblock.squaredNorm()/fblock.size() < 0.00001){
 				break;
 			}
+
+			// printObj(count, TV, TT);
+			// count++;
 		}
+
 		if(k== NEWTON_MAX){
 			cout<<"ERROR Static Solve: Newton max reached"<<endl;
 			cout<<k<<endl;
@@ -310,12 +346,76 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 		for(unsigned int i=0; i<M.tets.size(); i++){
 			strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
 		}
-		cout<<"Forces"<<endl;
-		cout<<f<<endl;
-		cout<<"Strain E"<<endl;
-		cout<<strainE<<endl;
-		cout<<"New pos"<<endl;
-		cout<<TV<<endl;
+
+		//Calculate Load on moving verts
+		Vector3d load(0,0,0);
+		for(int i=f.size() - 3*moveVertices.size(); i<f.size(); i++){
+			load+=f.segment<3>(i);
+			i++;
+			i++;
+		}
+
+		cout<<"Load"<<endl;
+		cout<<load<<endl;
+		//WRITE TO distvLoad FILE
+		distvLoadFile<<j*move_amount/number_of_moves<<", "<<abs(load(0)/1000)<<endl;
+
+		// cout<<"Forces"<<endl;
+		// cout<<f<<endl;
+		// cout<<"Total Strain E"<<endl;
+		// cout<<strainE<<endl;
+		// cout<<"New pos"<<endl;
+		// cout<<TV<<endl;
+
+		//PRINT OBJ EACH STEP
+		// printObj(j, TV, TT);
+		printObj(count, TV, TT);
+		count++;
+
+		//PRINT X DISPLACEMENTS
+		// cout<<"x DISPLACEMENTS"<<endl;
+		// for(int i=0; i<TV.rows(); i++){
+		// 	cout<<oldTV.row(i)[0] - TV.row(i)[0]<<endl;
+		// }
+
 	}
+
+	distvLoadFile.close();
 	
+}
+
+void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT){
+
+	double refinement = 9;
+	double t = ((refinement - 1)+1) / 9.0;
+
+	VectorXd v = sB.col(2).array() - sB.col(2).minCoeff();
+	v /= v.col(0).maxCoeff();
+
+	vector<int> s;
+	for (unsigned i=0; i<v.size();++i){
+		if (v(i) < t){
+			s.push_back(i);
+		}
+	}
+
+	MatrixXd V_temp(s.size()*4,3);
+	MatrixXi F_temp(s.size()*4,3);
+
+	for (unsigned i=0; i<s.size();++i)
+	{
+		V_temp.row(i*4+0) = TV.row(TT(s[i],0));
+		V_temp.row(i*4+1) = TV.row(TT(s[i],1));
+		V_temp.row(i*4+2) = TV.row(TT(s[i],2));
+		V_temp.row(i*4+3) = TV.row(TT(s[i],3));
+		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
+		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
+		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
+		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
+	}
+
+	system("mkdir -p ../TestsResults/NMTests/");
+	igl::writeOBJ("../TestsResults/NMTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+
+	return;
 }

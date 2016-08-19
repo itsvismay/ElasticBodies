@@ -41,3 +41,4 @@ WolframAndProfilerandHoudini/HoudiniRender/*
 TestsResults/*
 3dUnion/build/*
 local_temp/*
+*.hipnc

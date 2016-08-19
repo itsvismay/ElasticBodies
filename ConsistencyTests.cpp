@@ -92,6 +92,7 @@ void ConsistencyTest::runAllTests(){
 
 	igl::copyleft::tetgen::tetrahedralize(V,F,("-pqa"+to_string(spaceStep)).c_str(), TV, TT, TF);
 	igl::barycenter(TV, TT, B);
+
 	runTestRow(spaceStep, TV, B, TT, dt);
 
 	// for(int i=0; i<spaceIterations; i++){
