@@ -10,6 +10,6 @@ class SolidMesh
     public:
         vector<Tetrahedron> tets;
         SolidMesh();
-        SolidMesh(MatrixXi& TT, MatrixXd& TV);
-        void initializeMesh(MatrixXi& TT, MatrixXd& TV);
+        SolidMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double poissons);
+        void initializeMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double poissons);
 };

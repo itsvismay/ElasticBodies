@@ -28,8 +28,9 @@ public:
 	MatrixXd sB;
 
 	Simulation(void);
-	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices);
+	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
 	
+	void staticSolve();
 	void reIndexTVandTT(vector<int> newVertsIndices, 
 						int sizeFixed, 
 						int sizeMove,
@@ -38,8 +39,8 @@ public:
 						MatrixXd& newTV, 
 						MatrixXi& newTT);
 	
-	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv);
-	void printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT);
+	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
+	void printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
 	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
 	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);

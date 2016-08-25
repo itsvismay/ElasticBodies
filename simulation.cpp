@@ -23,9 +23,8 @@ typedef Matrix<double, 12, 1> Vector12d;
 
 Simulation::Simulation(void){}
 
-int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices){
+int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
-	// sB = B;
 
 	if (method =='e'){
 		integrator = new Verlet();
@@ -43,99 +42,79 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
-	if(moveVertices.size()==0){
-		M.initializeMesh(TT, TV);
+	if(moveVertices.size()!=0){
+		MatrixXd newTV;
+		newTV.resize(TV.rows(), TV.cols());
+		newTV.setZero();
+		MatrixXi newTT;
+		newTT.resize(TT.rows(), TT.cols());
+		newTT.setZero();
+
+		//TODO: Make this shit more efficient
+		//Hash maps or something
+		vector<int> vertexNewIndices;
+		for(int i=0; i<TV.rows(); i++){
+			bool flag =false;
+			for(unsigned int j=0; j<fixVertices.size(); j++){
+				if(i==fixVertices[j]){
+					flag = true;
+				}
+			}
+			for(unsigned int j=0; j<moveVertices.size(); j++){
+				if(i==moveVertices[j]){
+					flag = true;
+				}
+			}
+			// if vertex not fixed or moved, re-index to front
+			//[v, v, v, v...., f, f, f...., m, m, m...,m]
+			if(!flag){
+				vertexNewIndices.push_back(i);
+			}
+		}
+		//re-index fixed verts
+		for(unsigned int j=0; j<fixVertices.size(); j++){
+			vertexNewIndices.push_back(fixVertices[j]);
+		}
+		//re-index move verts
+		for(unsigned int j=0; j<moveVertices.size(); j++){
+			vertexNewIndices.push_back(moveVertices[j]);
+		}
+
+		//these are the new indices for the fixed verts
+		vector<int> newfixIndices;
+		for(unsigned int i= vertexNewIndices.size() - (moveVertices.size() + fixVertices.size()); i<(vertexNewIndices.size()-moveVertices.size()); i++){
+			newfixIndices.push_back(i);
+		}
+
+		//new indices for the moving verts
+		vector<int> newMoveIndices;
+		for(unsigned int i= vertexNewIndices.size() - moveVertices.size(); i<vertexNewIndices.size(); i++){
+			newMoveIndices.push_back(i);
+		}
+
+
+		reIndexTVandTT(vertexNewIndices, fixVertices.size(), moveVertices.size(), TV, TT, newTV, newTT);
+
+
+		igl::barycenter(newTV, newTT, B);
+		//Initialize Solid Mesh
+		M.initializeMesh(newTT, newTV, youngs, poissons);
+		setInitPosition(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+
+		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
+		integrator->fixVertices(newfixIndices);
+
+	}else{
+		igl::barycenter(TV, TT, B);
+		M.initializeMesh(TT, TV, youngs, poissons);
 		integrator->initializeIntegrator(deltaT, M, TV, TT);
 		integrator->fixVertices(fixVertices);
-		cout<<"here"<<endl;
-		return 1;
 	}
-	//TODO: Clean this up - separate function for the static solve setup
 
-
-	// cout<< "Prev TV"<<endl;
-	// cout<< TV<<endl;
-	// cout<< "Prev TT"<<endl;
-	// cout<<TT<<endl;
-
-	MatrixXd newTV;
-	newTV.resize(TV.rows(), TV.cols());
-	newTV.setZero();
-	MatrixXi newTT;
-	newTT.resize(TT.rows(), TT.cols());
-	newTT.setZero();
 	
-
-	//TODO: Make this shit more efficient
-	//Hash maps or something
-	vector<int> vertexNewIndices;
-	for(int i=0; i<TV.rows(); i++){
-		bool flag =false;
-		for(int j=0; j<fixVertices.size(); j++){
-			if(i==fixVertices[j]){
-				flag = true;
-			}
-		}
-		for(int j=0; j<moveVertices.size(); j++){
-			if(i==moveVertices[j]){
-				flag = true;
-			}
-		}
-		// if vertex not fixed or moved, re-index to front
-		//[v, v, v, v...., f, f, f...., m, m, m...,m]
-		if(!flag){
-			vertexNewIndices.push_back(i);
-		}
-	}
-	//re-index fixed verts
-	for(int j=0; j<fixVertices.size(); j++){
-		vertexNewIndices.push_back(fixVertices[j]);
-	}
-	//re-index move verts
-	for(int j=0; j<moveVertices.size(); j++){
-		vertexNewIndices.push_back(moveVertices[j]);
-	}
-
-	//these are the new indices for the fixed verts
-	vector<int> newfixIndices;
-	// cout<<"new fix"<<endl;
-	for(int i= vertexNewIndices.size() - (moveVertices.size() + fixVertices.size()); i<(vertexNewIndices.size()-moveVertices.size()); i++){
-		newfixIndices.push_back(i);
-		// cout<<i<<endl;
-	}
-
-	//new indices for the moving verts
-	vector<int> newMoveIndices;
-	//cout<<"new move"<<endl;
-	for(int i= vertexNewIndices.size() - moveVertices.size(); i<vertexNewIndices.size(); i++){
-		newMoveIndices.push_back(i);
-		// cout<<i<<endl;
-	}
-	// cout<<"new all"<<endl;
-	// for(int i=0; i<vertexNewIndices.size(); i++){
-	// 	cout<<vertexNewIndices[i]<<endl;
-	// }
-
-	// cout<<"Before"<<endl;
-	// cout<<newTV<<endl<<endl;
-	// cout<<newTT<<endl;
-
-	reIndexTVandTT(vertexNewIndices, fixVertices.size(), moveVertices.size(), TV, TT, newTV, newTT);
-
-	// cout<<"After"<<endl;
-	// cout<<newTV<<endl<<endl;
-	// cout<<newTT<<endl;
-
-	igl::barycenter(newTV, newTT, sB);
-
-	//Initialize Solid Mesh
-	M.initializeMesh(newTT, newTV);
-	setInitPosition(newMoveIndices, newTV, newTT, fixVertices.size());
-
-	integrator->initializeIntegrator(deltaT, M, newTV, newTT);
-	integrator->fixVertices(newfixIndices);
 	return 1;
 }
+
 
 void Simulation::headless(){
 	clock_t begin = clock();
@@ -147,6 +126,7 @@ void Simulation::headless(){
 	clock_t end = clock();
 	cout<<"Seconds Elapsed: "<<double(end-begin)/CLOCKS_PER_SEC<<endl;
 }
+
 void Simulation::render(){
 	integrator->render();
 }
@@ -154,7 +134,7 @@ void Simulation::render(){
 //TODO: Clean up function params size Fixed and size Move are not needed
 void Simulation::reIndexTVandTT(vector<int> newVertsIndices, int sizeFixed, int sizeMove, MatrixXd& TV, MatrixXi& TT, MatrixXd& newTV, MatrixXi& newTT){
 	//apply re-index to TV
-	for(int i=0; i<newVertsIndices.size(); i++){
+	for(unsigned int i=0; i<newVertsIndices.size(); i++){
 		newTV.row(i) = TV.row(newVertsIndices[i]);
 	}
 
@@ -163,7 +143,7 @@ void Simulation::reIndexTVandTT(vector<int> newVertsIndices, int sizeFixed, int 
 	//map vals = newVertsIndex index = new indices in TV
 	map<int, int> oldToNewmap;
 	pair<map<int, int>::iterator, bool> err;
-	for(int i=0; i<newVertsIndices.size(); i++){
+	for(unsigned int i=0; i<newVertsIndices.size(); i++){
 		err = oldToNewmap.insert(pair<int, int>(newVertsIndices[i], i));
 		if(err.second==false){
 			cout<<"ERROR::Simulation.cpp::reIndexTVandTT::>>Map already contains this value(";
@@ -263,19 +243,22 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	return;
 }
 
-void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv){	
+void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){	
 	ofstream distvLoadFile;
 	distvLoadFile.open("../Scripts/distvLoad.txt");
+
+	//REAL VALUES FROM EXPERIMENT
+
 	//size of move
-	double move_amount = 3;
-	int number_of_moves = 1000;
+	double move_amount = .15;
+	int number_of_moves = 5;
 
 	int count=0;
 	for(int j=0; j<number_of_moves; j++){
 		MatrixXd oldTV = TV;
 		//Move vertices slightly in x,y,z direction
 		// [v, v, v..., f, f, ...(m), (m), (m)...]
-		for(int i=0; i<moveVertices.size(); i++){
+		for(unsigned int i=0; i<moveVertices.size(); i++){
 			TV.row(TV.rows()-i-1)[0]+= move_amount/number_of_moves;
 		}
 		
@@ -334,8 +317,6 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 				break;
 			}
 
-			// printObj(count, TV, TT);
-			// count++;
 		}
 
 		if(k== NEWTON_MAX){
@@ -349,7 +330,7 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 
 		//Calculate Load on moving verts
 		Vector3d load(0,0,0);
-		for(int i=f.size() - 3*moveVertices.size(); i<f.size(); i++){
+		for(unsigned int i=f.size() - 3*moveVertices.size(); i<f.size(); i++){
 			load+=f.segment<3>(i);
 			i++;
 			i++;
@@ -358,7 +339,7 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 		cout<<"Load"<<endl;
 		cout<<load<<endl;
 		//WRITE TO distvLoad FILE
-		distvLoadFile<<j*move_amount/number_of_moves<<", "<<abs(load(0)/1000)<<endl;
+		distvLoadFile<<j*move_amount/number_of_moves<<", "<<abs(load(0)/1000)<<endl; //UNITS: Divide by 1000 for plotting purposes. Real data measured in N, I use milimeters for lengths.
 
 		// cout<<"Forces"<<endl;
 		// cout<<f<<endl;
@@ -369,7 +350,7 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 
 		//PRINT OBJ EACH STEP
 		// printObj(j, TV, TT);
-		printObj(count, TV, TT);
+		printObj(count, TV, TT, B);
 		count++;
 
 		//PRINT X DISPLACEMENTS
@@ -384,12 +365,12 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 	
 }
 
-void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT){
+void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B){
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
 
-	VectorXd v = sB.col(2).array() - sB.col(2).minCoeff();
+	VectorXd v = B.col(2).array() - B.col(2).minCoeff();
 	v /= v.col(0).maxCoeff();
 
 	vector<int> s;
@@ -414,8 +395,8 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT){
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	system("mkdir -p ../TestsResults/NMTests/");
-	igl::writeOBJ("../TestsResults/NMTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	int q = system("mkdir -p ../TestsResults/NMTests/");
+	igl::writeOBJ("../TestsResults/LoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
 	return;
 }

@@ -20,6 +20,8 @@ ofstream gravityEnergyFile;
 double rayleighCoeff;
 double gravity;
 bool headless;
+double youngs;
+double poissons;
 
 
 // Input polygon
@@ -37,6 +39,7 @@ MatrixXi TT_One_G;
 MatrixXd TV_One_G;
 
 Simulation Sim;
+
 
 bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
@@ -73,18 +76,6 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 
 bool drawLoop(igl::viewer::Viewer& viewer){
 	Sim.render();
-
-	// // for(unsigned int i=0; i<Sim.mapV2TV.size(); i++){
-	// // 	V.row(i) = Sim.integrator->TV.row(Sim.mapV2TV[i]);
-	// // }
-
-	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
-	// viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(1,1,1));
-	// //viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
-	
-	// viewer.data.clear();
-	// viewer.data.set_mesh(V, F);
-	// viewer.data.set_face_based(false);
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -126,23 +117,23 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion-fix.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion-fix.obj", V, F);
 
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500000", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa15000", TV,TT,TF);
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
 	//move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[0]>=180){
-	// 		moveVertices.push_back(i);
-	// 	}
-	// }
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0]>=180){
+			moveVertices.push_back(i);
+		}
+	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -150,10 +141,8 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 			fixedVertices.push_back(i);
 		}
 	}
-	// // Compute barycenters
-	igl::barycenter(TV, TT, B);
-	cout<<"Barycenters"<<endl;
-	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices);
+
+	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	
 	
 	
@@ -205,7 +194,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	// fixedVertices.push_back(1);
 
 				
-	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices);
+	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices, youngs, poissons);
 	
 	if(headless){
 		Sim.headless();
