@@ -12,4 +12,6 @@ class SolidMesh
         SolidMesh();
         SolidMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double poissons);
         void initializeMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double poissons);
+
+        void setNewYoungsPoissons(double youngs, double poissons);
 };

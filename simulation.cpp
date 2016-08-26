@@ -248,6 +248,22 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 	distvLoadFile.open("../Scripts/distvLoad.txt");
 
 	//REAL VALUES FROM EXPERIMENT
+	//dist, load
+	vector<pair<double, double>> realLoads = 
+	{
+		{0.20064, 226.74218},
+		{0.39975, 395.96558},
+		{0.59996, 556.20089},
+		{0.80035, 712.96558},
+		{1.00022, 863.39355},
+		{1.19933, 1004.94318},
+		{1.40039, 1137.45287},
+		{1.60052, 1259.40174},
+		{1.79946, 1366.0726},
+		{2.2004, 1500.43219},
+		{2.39993, 1486.33704},
+		{2.59955, 1434.53971}
+	};
 
 	//size of move
 	double move_amount = .15;

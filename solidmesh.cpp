@@ -36,3 +36,12 @@ void SolidMesh::initializeMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double
     	this->tets.push_back(t);
     }
 }
+
+void SolidMesh::setNewYoungsPoissons(double youngs, double poissons){
+    double mu = youngs/(2+ 2*poissons);
+    double lambda = youngs*poissons/((1+poissons)*(1-2*poissons));
+    for(int i=0; i<tets.size(); i++){
+        tets[i].mu = mu;
+        tets[i].lambda = lambda;
+    }
+}

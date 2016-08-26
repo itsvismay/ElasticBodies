@@ -187,7 +187,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	// move vertices
-	// moveVertices.push_back(0);
+	moveVertices.push_back(0);
 
 	// fix vertices
 	fixedVertices.push_back(1);
@@ -196,14 +196,14 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices, youngs, poissons);
 	
-	if(headless){
-		Sim.headless();
-	}else{
-		igl::viewer::Viewer viewer;
-		viewer.core.is_animating = true;
-		viewer.callback_pre_draw = &drawLoopTest;
-		viewer.launch();
-	}
+	// if(headless){
+	// 	Sim.headless();
+	// }else{
+	// 	igl::viewer::Viewer viewer;
+	// 	viewer.core.is_animating = true;
+	// 	viewer.callback_pre_draw = &drawLoopTest;
+	// 	viewer.launch();
+	// }
 		
 }
 
