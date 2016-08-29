@@ -122,18 +122,18 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa15000", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa15", TV,TT,TF);
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
 	//move vertices
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0]>=180){
-			moveVertices.push_back(i);
-		}
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[0]>=180){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// }
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -146,13 +146,13 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	
 	
 	
-	if(headless){
-		Sim.headless();
-	}else{
-		igl::viewer::Viewer viewer;
-		viewer.callback_pre_draw = &drawLoop;
-		viewer.launch();
-	}
+	// if(headless){
+	// 	Sim.headless();
+	// }else{
+	// 	igl::viewer::Viewer viewer;
+	// 	viewer.callback_pre_draw = &drawLoop;
+	// 	viewer.launch();
+	// }
 
 }
 
@@ -165,7 +165,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	// 			10, 0, 0,
 	// 			0, 10, 0,
 	// 			0, 0, 0;
-
+	
 	TT_One_G.resize(2, 4);
 	TT_One_G<<  0, 1, 2, 3,
 				4, 0, 2, 3;
@@ -187,7 +187,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	// move vertices
-	moveVertices.push_back(0);
+	// moveVertices.push_back(0);
 
 	// fix vertices
 	fixedVertices.push_back(1);

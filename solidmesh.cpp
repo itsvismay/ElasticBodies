@@ -29,6 +29,9 @@ void SolidMesh::initializeMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double
     // double poissons = 0.35;
     double mu = youngs/(2+ 2*poissons);
     double lambda = youngs*poissons/((1+poissons)*(1-2*poissons));
+    cout<<"Setting Mu and Lambda from Youngs and Poissons"<<endl;
+    cout<<"Solidmesh init Youngs, poissons ="<<youngs<<", "<<poissons<<endl;
+    cout<<"Solidmesh init Mu, Lambda ="<<mu<<", "<<lambda<<endl<<endl;
 	for(int i=0; i<TT.rows(); i++){
     	//based on Tet indexes, get the vertices of the tet from TV
     	Tetrahedron t(TT.row(i), mu, lambda);
@@ -40,6 +43,9 @@ void SolidMesh::initializeMesh(MatrixXi& TT, MatrixXd& TV, double youngs, double
 void SolidMesh::setNewYoungsPoissons(double youngs, double poissons){
     double mu = youngs/(2+ 2*poissons);
     double lambda = youngs*poissons/((1+poissons)*(1-2*poissons));
+    cout<<"NEW** Mu and Lambda from Youngs and Poissons"<<endl;
+    cout<<"Solidmesh Youngs, poissons ="<<youngs<<", "<<poissons<<endl;
+    cout<<"Solidmesh Mu, Lambda ="<<mu<<", "<<lambda<<endl<<endl;
     for(int i=0; i<tets.size(); i++){
         tets[i].mu = mu;
         tets[i].lambda = lambda;

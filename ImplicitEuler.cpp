@@ -208,6 +208,10 @@ void ImplicitEuler::renderNewtonsMethod(){
 	x_k = x_old;
 	v_k = v_old;
 
+	int ignorePastIndex = TV.rows() - fixedVerts.size();
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
+
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;

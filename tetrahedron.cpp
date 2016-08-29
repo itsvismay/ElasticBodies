@@ -211,7 +211,6 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
 	// this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
 
-
     //Neo
 	Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
     this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
