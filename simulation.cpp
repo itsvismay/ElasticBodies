@@ -102,11 +102,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			setInitPosition(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 		}
-		cout<<"New move indices"<<endl;
-		cout<<newMoveIndices.size()<<endl;
-		cout<<newfixIndices.size()<<endl;
-		exit(0);
-
+		
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		integrator->fixVertices(newfixIndices);
 
@@ -262,17 +258,31 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 	//dist, load
 	vector<pair<double, double>> realLoads = 
 	{
+		{0.10058, 137.37688},
 		{0.20064, 226.74218},
+		{0.30028, 312.74922},
 		{0.39975, 395.96558},
+		{0.49947, 476.31368},
 		{0.59996, 556.20089},
+		{0.70037, 635.27435},
 		{0.80035, 712.96558},
+		{0.9005, 788.87},
 		{1.00022, 863.39355},
+		{1.0997, 935.25},
 		{1.19933, 1004.94318},
+		{1.29982, 1072.37},
 		{1.40039, 1137.45287},
+		{1.50063, 1200.1016},
 		{1.60052, 1259.40174},
+		{1.6999, 1314.902},
 		{1.79946, 1366.0726},
+		{1.89978, 1412.04},
+		{2.00027, 1452.18},
+		{2.10042, 1483.09},
 		{2.2004, 1500.43219},
+		{2.30046, 1501.043},
 		{2.39993, 1486.33704},
+		{2.49931, 1460.93},
 		{2.59955, 1434.53971}
 	};
 	vector<double> derivedYoungs;
@@ -288,7 +298,7 @@ void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixX
 	for(int j=0; j<realLoads.size(); j++){
 		dist_moved = 0;
 		double min_youngs = 600000;
-		double max_youngs = 3600000;
+		double max_youngs = 4000000;
 		double load_scalar = 0;
 
 		//Binary Search Code below

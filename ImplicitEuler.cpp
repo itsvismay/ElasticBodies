@@ -211,6 +211,10 @@ void ImplicitEuler::renderNewtonsMethod(){
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
+	
+	SparseMatrix<double> RegMassBlock;
+	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
 
 	forceGradient.setZero();
 	bool Nan=false;
@@ -228,16 +232,18 @@ void ImplicitEuler::renderNewtonsMethod(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 
-		VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
-		grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
+		// VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
+		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
 		// cout<<"Forces"<<endl;
 		// cout<<f<<endl;
 		// exit(0);
-		
-		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
-		// grad_g = RegMass - h*h*forceGradient - h*rayleighCoeff*forceGradient;
-	
+
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
+		VectorXd g_block = g.head(ignorePastIndex*3);
+		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 		// cout<<"G"<<t<<endl;
 		// cout<<g<<endl<<endl;
 		// cout<<"G Gradient"<<t<<endl;
@@ -250,14 +256,14 @@ void ImplicitEuler::renderNewtonsMethod(){
 		// VectorXd deltaX = -1*cg.solve(g);
 
 		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaX = -1* llt.solve(g);
+		SimplicialLLT<SparseMatrix<double>> llt;
+		llt.compute(grad_g);
+		VectorXd deltaX = -1* llt.solve(g);
 
 		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g);
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(grad_g);
+		// VectorXd deltaX = -1*sqr.solve(g);
 
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);

@@ -1,4 +1,4 @@
-#include <igl/viewer/Viewer.h>
+include <igl/viewer/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
@@ -122,18 +122,18 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa15", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a1", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
-	//move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[0]>=180){
-	// 		moveVertices.push_back(i);
-	// 	}
-	// }
+	// move vertices
+	for(int i=0; i<TV.rows(); i++){
+	 	if(TV.row(i)[0]>=180){
+	 		moveVertices.push_back(i);
+	 	}
+	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -196,14 +196,14 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices, youngs, poissons);
 	
-	// if(headless){
-	// 	Sim.headless();
-	// }else{
-	// 	igl::viewer::Viewer viewer;
-	// 	viewer.core.is_animating = true;
-	// 	viewer.callback_pre_draw = &drawLoopTest;
-	// 	viewer.launch();
-	// }
+	if(headless){
+		Sim.headless();
+	}else{
+		igl::viewer::Viewer viewer;
+		viewer.core.is_animating = true;
+		viewer.callback_pre_draw = &drawLoopTest;
+		viewer.launch();
+	}
 		
 }
 
