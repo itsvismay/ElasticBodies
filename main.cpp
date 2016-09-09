@@ -1,4 +1,4 @@
-include <igl/viewer/Viewer.h>
+#include <igl/viewer/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
@@ -129,11 +129,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 	
 	// move vertices
-	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[0]>=180){
-	 		moveVertices.push_back(i);
-	 	}
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	//  	if(TV.row(i)[0]>=180){
+	//  		moveVertices.push_back(i);
+	//  	}
+	// }
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -187,7 +187,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	// move vertices
-	// moveVertices.push_back(0);
+	//moveVertices.push_back(0);
 
 	// fix vertices
 	fixedVertices.push_back(1);

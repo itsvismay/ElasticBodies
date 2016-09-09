@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 dist = []
 load = []
-f= open('youngs.txt', 'r')
+f= open('youngsnew.txt', 'r')
 
 for line in f:
 	step = line.strip("\n").split(",")

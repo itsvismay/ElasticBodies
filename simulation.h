@@ -30,6 +30,7 @@ public:
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
 	
+	void binarySearch();
 	void staticSolve();
 	void reIndexTVandTT(vector<int> newVertsIndices, 
 						int sizeFixed, 

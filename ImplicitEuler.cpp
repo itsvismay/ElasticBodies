@@ -218,7 +218,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 
 	forceGradient.setZero();
 	bool Nan=false;
-	int NEWTON_MAX = 100, i =0;
+	int NEWTON_MAX = 10, i =0;
 	// cout<<"--------"<<simTime<<"-------"<<endl;
 	// cout<<"x_k"<<endl;
 	// cout<<x_k<<endl<<endl;
@@ -232,7 +232,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 
-		// VectorXd g = x_k - x_old -h*v_old -h*h*InvMass*f;
+		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
 		// cout<<"Forces"<<endl;
@@ -244,10 +244,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
-		// cout<<"G"<<t<<endl;
-		// cout<<g<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
+		
 
 		//solve for delta x
 		// Conj Grad
@@ -258,24 +255,25 @@ void ImplicitEuler::renderNewtonsMethod(){
 		// Sparse Cholesky LL^T
 		SimplicialLLT<SparseMatrix<double>> llt;
 		llt.compute(grad_g);
-		VectorXd deltaX = -1* llt.solve(g);
+		VectorXd deltaX = -1* llt.solve(g_block);
+		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 
 		//Sparse QR 
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
-		// VectorXd deltaX = -1*sqr.solve(g);
+		// VectorXd deltaX = -1*sqr.solve(g_block);
+		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g);
+		// VectorXd deltaX = -cholmodllt.solve(g_block);
 		
 
-		x_k+=deltaX;
 		if(x_k != x_k){
 			Nan = true;
 			break;
 		}
-		if(g.squaredNorm()<.00000001){
+		if(g_block.squaredNorm()<.00000001){
 			break;
 		}
 	}
