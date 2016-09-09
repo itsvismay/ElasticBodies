@@ -129,11 +129,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 	
 	// move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	//  	if(TV.row(i)[0]>=180){
-	//  		moveVertices.push_back(i);
-	//  	}
-	// }
+	for(int i=0; i<TV.rows(); i++){
+	 	if(TV.row(i)[0]>=180){
+	 		moveVertices.push_back(i);
+	 	}
+	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -146,13 +146,13 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	
 	
 	
-	// if(headless){
-	// 	Sim.headless();
-	// }else{
-	// 	igl::viewer::Viewer viewer;
-	// 	viewer.callback_pre_draw = &drawLoop;
-	// 	viewer.launch();
-	// }
+	if(headless){
+		Sim.headless();
+	}else{
+		igl::viewer::Viewer viewer;
+		viewer.callback_pre_draw = &drawLoop;
+		viewer.launch();
+	}
 
 }
 

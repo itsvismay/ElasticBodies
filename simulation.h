@@ -30,8 +30,9 @@ public:
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
 	
-	void binarySearch();
-	void staticSolve();
+	void binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
+	void staticSolveStep(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
+	void syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
 	void reIndexTVandTT(vector<int> newVertsIndices, 
 						int sizeFixed, 
 						int sizeMove,
