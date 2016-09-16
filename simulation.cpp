@@ -100,8 +100,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		//Initialize Solid Mesh
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
-			binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
-			// syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			// binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+		
 		}
 		
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
@@ -247,7 +248,6 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 }
 
 void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
-
 }
 
 void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
@@ -287,13 +287,28 @@ void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<i
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
 
+		// cout<<TV.rows()<<endl;
+		// cout<<ignorePastIndex<<endl;
+		// cout<<forceGradientStaticBlock.rows()<<endl;
+		// cout<<forceGradientStaticBlock.cols()<<endl;
+		// SparseMatrix<double> forceGradientStaticBlockTranspose = forceGradientStaticBlock.transpose();
+		// cout<<(forceGradientStaticBlockTranspose - forceGradientStaticBlock).norm()<<endl;
+
 		//Sparse QR 
 		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		sqr.compute(forceGradientStaticBlock);
 		VectorXd deltaX = -1*sqr.solve(fblock);
 
+		// // Sparse Cholesky LL^T
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*llt.solve(fblock);
+
+		cout<< (fblock - forceGradientStaticBlock*deltaX).squaredNorm()<<endl;
+
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
+
 		if(x != x){
 			cout<<"NAN"<<endl;
 			exit(0);
@@ -461,8 +476,8 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	M.setNewYoungsPoissons(setYoungs, 0.35);
 
 	double dist_moved = 0;
-	double move_amount = 6;
-	double number_of_moves = 100;
+	double move_amount = 10;
+	double number_of_moves = 200;
 	double load_scalar =0;
 	double number_of_data_points =10;
 
@@ -472,10 +487,13 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 		double move_step = move_amount/number_of_moves;
 		int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
 		dist_moved += move_step;
+
 		staticSolveStep(move_step, ignorePastIndex, moveVertices, TV, TT);
 
 		if(count%10 == 0){
 			cout<<"	print dist/load to file"<<endl;
+			printObj(count/10, TV, TT, B);
+
 			VectorXd f;
 			f.resize(3*TV.rows());
 			calculateElasticForces(f, TV);
@@ -528,8 +546,8 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, Matrix
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	int q = system("mkdir -p ../TestsResults/NMTests/");
-	igl::writeOBJ("../TestsResults/LoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	int q = system("mkdir -p ../TestsResults/SpringLoadTests/");
+	igl::writeOBJ("../TestsResults/SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
 	return;
 }

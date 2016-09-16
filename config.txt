@@ -5,7 +5,7 @@ i
 0.00
 -10
 1
-12
+1200000
 .35
 -pR2/0
 
@@ -19,3 +19,4 @@ i
 #7 object
 #8 youngs
 #9 poissons
+#10 tetgen code -pR2/0
