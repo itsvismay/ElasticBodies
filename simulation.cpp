@@ -100,8 +100,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		//Initialize Solid Mesh
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
-			// binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
-			syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			// syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 		
 		}
 		
@@ -295,16 +295,29 @@ void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<i
 		// cout<<(forceGradientStaticBlockTranspose - forceGradientStaticBlock).norm()<<endl;
 
 		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(forceGradientStaticBlock);
-		VectorXd deltaX = -1*sqr.solve(fblock);
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*sqr.solve(fblock);
+
+		// Conj Grad
+		ConjugateGradient<SparseMatrix<double>> cg;
+		cg.compute(forceGradientStaticBlock);
+		if(cg.info() == Eigen::NumericalIssue){
+			cout<<"ConjugateGradient numerical issue"<<endl;
+			exit(0);
+		}
+		VectorXd deltaX = -1*cg.solve(fblock);
 
 		// // Sparse Cholesky LL^T
 		// SimplicialLLT<SparseMatrix<double>> llt;
 		// llt.compute(forceGradientStaticBlock);
+		// if(llt.info() == Eigen::NumericalIssue){
+		// 	cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+		// 	exit(0);
+		// }
 		// VectorXd deltaX = -1*llt.solve(fblock);
 
-		cout<< (fblock - forceGradientStaticBlock*deltaX).squaredNorm()<<endl;
+		// cout<< (fblock - forceGradientStaticBlock*deltaX).squaredNorm()<<endl;
 
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
@@ -371,27 +384,41 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	// 	{3.000338,	1393.765691}
 	// };
 	
-	vector<pair<double, double>> realLoads = 
+	// vector<pair<double, double>> realLoads = 
+	// {
+	// 	{0.06, 37.0006},
+	// 	{0.66, 405.748},
+	// 	{1.26, 772.218},
+	// 	{1.86, 1136.43},
+	// 	{2.46, 1498.42},
+	// 	{3.06, 1858.2},
+	// 	{3.66, 2215.81},
+	// 	{4.26, 2571.27},
+	// 	{4.86, 2924.6},
+	// 	{5.46, 3275.83},
+	// 	{6.06, 3625}
+
+	// };
+
+	//############Spring synth test
+	vector<pair<double, double>> realLoads =
 	{
-		{0.06, 37.0006},
-		{0.66, 405.748},
-		{1.26, 772.218},
-		{1.86, 1136.43},
-		{2.46, 1498.42},
-		{3.06, 1858.2},
-		{3.66, 2215.81},
-		{4.26, 2571.27},
-		{4.86, 2924.6},
-		{5.46, 3275.83},
-		{6.06, 3625}
+		{0.5, 5.56078},
+		{1, 11.1308},
+		{1.5, 16.7229},
+		{2, 22.3498},
+		{2.5, 28.024},
+		{3, 33.7579},
+		{3.5, 39.5637}
 
 	};
+	//#############################
 
 	vector<double> derivedYoungs;
 
 	//size of move
-	double move_amount = 6;
-	int number_of_moves = 100;
+	double move_amount = 3.5;
+	int number_of_moves = 70;
 	double dist_moved = 0;
 	double curr_youngs = 1;
 	double load_scalar = 0;
@@ -509,6 +536,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 
 			generateLoadsFile<<dist_moved<<", "<<load_scalar<<endl;
 		}
+		cout<<count<<endl;
 		count++;
 	}
 
@@ -546,7 +574,7 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, Matrix
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	int q = system("mkdir -p ../TestsResults/SpringLoadTests/");
+	system("mkdir -p ../TestsResults/SpringLoadTests/");
 	igl::writeOBJ("../TestsResults/SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
 	return;

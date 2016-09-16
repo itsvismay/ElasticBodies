@@ -244,7 +244,12 @@ void ImplicitEuler::renderNewtonsMethod(){
 		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
-		
+		SimplicialLLT<SparseMatrix<double>> temp;
+		temp.compute(forceGradientStaticBlock);
+		if(temp.info() == Eigen::NumericalIssue){
+			cout<<"Oh shit!"<<endl;
+			exit(0);
+		}
 
 		//solve for delta x
 		// Conj Grad
@@ -255,6 +260,10 @@ void ImplicitEuler::renderNewtonsMethod(){
 		// Sparse Cholesky LL^T
 		SimplicialLLT<SparseMatrix<double>> llt;
 		llt.compute(grad_g);
+		if(llt.info() == Eigen::NumericalIssue){
+			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+			exit(0);
+		}
 		VectorXd deltaX = -1* llt.solve(g_block);
 		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 

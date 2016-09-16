@@ -4,8 +4,9 @@ For a clean install, I need:
  1. git clone ElasticBodies
  2. git clone PyMesh
  3. git clone libigl
-	3.1 make ext/nanogui separately
+	3.1  - make ext/nanogui separately
  4. git clone cgal
+ 	4.1 - needs to be installed from source (not apt-get)
  5. Eigen
  6. Houdini
  7. Mathematica

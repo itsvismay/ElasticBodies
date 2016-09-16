@@ -2,8 +2,6 @@
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
-#include <igl/writeOBJ.h>
-#include <igl/barycenter.h>
 #include <fstream>
 
 #include "simulation.h"
@@ -120,8 +118,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 
 
 	// Tetrahedralize the interior
@@ -129,53 +127,53 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a10", TV,TT,TF);
 	
 	//*********BEAM******************
-	vector<int> moveVertices;
-	vector<int> fixedVertices;
-	// move vertices
-	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[0]>=180){
-	 		moveVertices.push_back(i);
-	 	}
-	}
-
-	//fix vertices
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0]<=30){
-			fixedVertices.push_back(i);
-		}
-	}
-	//***************************
-
-	//********SPRING*******************
 	// vector<int> moveVertices;
 	// vector<int> fixedVertices;
-	
 	// // move vertices
 	// for(int i=0; i<TV.rows(); i++){
-	//  	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
+	//  	if(TV.row(i)[0]>=180){
 	//  		moveVertices.push_back(i);
 	//  	}
 	// }
 
 	// //fix vertices
 	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[1]<=41 && TV.row(i)[1]>39){
+	// 	if(TV.row(i)[0]<=30){
 	// 		fixedVertices.push_back(i);
 	// 	}
 	// }
 	//***************************
+
+	//********SPRING*******************
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
 	
+	// move vertices
+	for(int i=0; i<TV.rows(); i++){
+	 	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
+	 		moveVertices.push_back(i);
+	 	}
+	}
+
+	//fix vertices
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[1]<=41 && TV.row(i)[1]>39){
+			fixedVertices.push_back(i);
+		}
+	}
+	//***************************
+
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	
 	
 	
-	// if(headless){
-	// 	Sim.headless();
-	// }else{
-	// 	igl::viewer::Viewer viewer;
-	// 	viewer.callback_pre_draw = &drawLoop;
-	// 	viewer.launch();
-	// }
+	if(headless){
+		Sim.headless();
+	}else{
+		igl::viewer::Viewer viewer;
+		viewer.callback_pre_draw = &drawLoop;
+		viewer.launch();
+	}
 
 }
 
