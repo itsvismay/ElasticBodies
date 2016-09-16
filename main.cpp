@@ -22,6 +22,7 @@ double gravity;
 bool headless;
 double youngs;
 double poissons;
+string tetgen_code;
 
 
 // Input polygon
@@ -106,9 +107,11 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 	
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(33,0,0), RowVector3d(1,1,0));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,33,0), RowVector3d(1,0,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,33), RowVector3d(0,1,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,1,0));
+	viewer.data.add_edges(RowVector3d(0,39,0), RowVector3d(0,40,0), RowVector3d(1,0,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,20), RowVector3d(0,1,1));
+	viewer.data.add_edges(RowVector3d(0,-1,0), RowVector3d(0,-2,0), RowVector3d(1,0,1));
+
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -117,27 +120,27 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/SpringsUnion-fix.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 
 
 	// Tetrahedralize the interior
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pqa1500", TV,TT,TF);
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a1", TV,TT,TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
+	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a10", TV,TT,TF);
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
 	// move vertices
 	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[0]>=180){
+	 	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
 	 		moveVertices.push_back(i);
 	 	}
 	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0]<=30){
+		if(TV.row(i)[1]<=41 && TV.row(i)[1]>39){
 			fixedVertices.push_back(i);
 		}
 	}
@@ -260,6 +263,10 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		poissons = stod(line.c_str());
 		cout<<poissons<<endl;
+
+		getline(configFile, line);
+		tetgen_code = line.c_str();
+		cout<<tetgen_code<<endl;
 	}else{
 		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;
@@ -296,13 +303,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-// - do consistency test with/without damping
-// - - find size of timestep, so as I decrease timestep, trajectory
-// - see if I need to use implicit midpoint newmark
-
-// test damping
-// - find real damping parameters for spring
-
-// fix mapping  from tetmesh to rendered surface faces
-// redo implicit methods fixVertices method (fix velocites every time step)

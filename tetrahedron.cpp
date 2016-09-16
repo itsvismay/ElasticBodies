@@ -156,7 +156,7 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
     // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
     // Matrix3d dP = dF*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
     // dP+= F*(2*mu*(0.5*((dF.transpose()*F + F.transpose()*dF) - MatrixXd::Identity(3,3))));
-    // dP+= F*(lambda*(s0.5*((dF.transpose()*F + F.transpose()*dF)-MatrixXd::Identity(3,3))).trace());
+    // dP+= F*(lambda*(0.5*((dF.transpose()*F + F.transpose()*dF)-MatrixXd::Identity(3,3))).trace());
 
     ////////////////////TEST dP correctness///////////
  //    cout<<"test dP"<<endl;

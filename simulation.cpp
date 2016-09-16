@@ -312,6 +312,8 @@ void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<i
 }
 
 void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
+	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
+
 	ofstream distvLoadFile;
 	distvLoadFile.open("../Scripts/distvLoad.txt");
 
@@ -322,53 +324,58 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	//dist, load
 	// vector<pair<double, double>> realLoads = 
 	// {
-	// 	{0.10058, 137.37688},
-	// 	{0.20064, 226.74218},
-	// 	{0.30028, 312.74922},
-	// 	{0.39975, 395.96558},
-	// 	{0.49947, 476.31368},
-	// 	{0.59996, 556.20089},
-	// 	{0.70037, 635.27435},
-	// 	{0.80035, 712.96558},
-	// 	{0.9005, 788.87},
-	// 	{1.00022, 863.39355},
-	// 	{1.0997, 935.25},
-	// 	{1.19933, 1004.94318},
-	// 	{1.29982, 1072.37},
-	// 	{1.40039, 1137.45287},
-	// 	{1.50063, 1200.1016},
-	// 	{1.60052, 1259.40174},
-	// 	{1.6999, 1314.902},
-	// 	{1.79946, 1366.0726},
-	// 	{1.89978, 1412.04},
-	// 	{2.00027, 1452.18},
-	// 	{2.10042, 1483.09},
-	// 	{2.2004, 1500.43219},
-	// 	{2.30046, 1501.043},
-	// 	{2.39993, 1486.33704},
-	// 	{2.49931, 1460.93},
-	// 	{2.59955, 1434.53971}
+	// 	{0.100244,	101.073609},
+	// 	{0.20048,	184.592875},
+	// 	{0.300347,	265.06366},
+	// 	{0.399884,	342.551726},
+	// 	{0.499522,	417.940362},
+	// 	{0.599679,	492.371951},
+	// 	{0.700077,	565.750461},
+	// 	{0.800373,	638.291505},
+	// 	{0.900439,	709.507457},
+	// 	{1.000194,	779.029706},
+	// 	{1.099773,	846.406884},
+	// 	{1.199565,	911.991954},
+	// 	{1.299774,	975.713439},
+	// 	{1.400103,	1037.549957},
+	// 	{1.500424,	1097.35856},
+	// 	{1.600455,	1154.854633},
+	// 	{1.700085,	1209.47858},
+	// 	{1.799595,	1260.718421},
+	// 	{1.8996,	1308.14702},
+	// 	{1.999928,	1351.454444},
+	// 	{2.100283,	1389.728216},
+	// 	{2.200424,	1421.50609},
+	// 	{2.300369,	1444.923954},
+	// 	{2.39994,	1458.153129},
+	// 	{2.499569,	1460.703522},
+	// 	{2.599659,	1453.403456},
+	// 	{2.699964,	1438.137844},
+	// 	{2.800305,	1427.789346},
+	// 	{2.900472,	1412.155562},
+	// 	{3.000338,	1393.765691}
 	// };
+	
 	vector<pair<double, double>> realLoads = 
 	{
-		{0.026, 16.0364},
-		{0.286, 176.164},
-		{0.546, 335.862},
-		{0.806, 495.131},
-		{1.066, 653.974},
-		{1.326, 812.392},
-		{1.586, 970.387},
-		{1.846, 1127.96},
-		{2.106, 1285.12},
-		{2.366, 1441.86},
-		{2.626, 1598.18}
+		{0.06, 37.0006},
+		{0.66, 405.748},
+		{1.26, 772.218},
+		{1.86, 1136.43},
+		{2.46, 1498.42},
+		{3.06, 1858.2},
+		{3.66, 2215.81},
+		{4.26, 2571.27},
+		{4.86, 2924.6},
+		{5.46, 3275.83},
+		{6.06, 3625}
 
 	};
 
 	vector<double> derivedYoungs;
 
 	//size of move
-	double move_amount = 2.6;
+	double move_amount = 6;
 	int number_of_moves = 100;
 	double dist_moved = 0;
 	double curr_youngs = 1;
@@ -384,16 +391,17 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		M.setNewYoungsPoissons(1000000, 0.35);
 
 		//Newton Solve for positions
-		while(reals_index<realLoads.size() && dist_moved<realLoads[reals_index].first){
+		while(reals_index<realLoads.size() && (dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5))){
 			cout<<"	Move next step"<<endl;
 			dist_moved += move_amount/number_of_moves;//move step
-			
+			cout<<"distance moved"<<dist_moved<<endl;
+			cout<<(dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
 			staticSolveStep(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
 			
 		}
 
 		//binary search for youngs
-		double min_youngs = 600000;
+		double min_youngs = 800000;
 		double max_youngs = 5000000;
 		load_scalar = 0;
 		while(abs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
@@ -439,6 +447,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 
 	distvLoadFile.close();
+	youngsFile.close();
 	//system("( speaker-test -t sine -f 1000 )& pid=$! ; sleep 5s ; kill -9 $pid");
 }
 
@@ -452,12 +461,12 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	M.setNewYoungsPoissons(setYoungs, 0.35);
 
 	double dist_moved = 0;
-	double move_amount = 2.6;
+	double move_amount = 6;
 	double number_of_moves = 100;
 	double load_scalar =0;
 	double number_of_data_points =10;
 
-	int count =0;
+	int count = 1;
 
 	while(dist_moved<move_amount){
 		double move_step = move_amount/number_of_moves;
