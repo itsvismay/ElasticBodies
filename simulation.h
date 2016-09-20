@@ -27,20 +27,20 @@ public:
 	int iters;
 	MatrixXd sB;
 
+	//TODO: cleanup this code (its so terrible)
+	MatrixXd thisTV;
+	MatrixXd thisx;
+
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
 	
 	void binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
-	void staticSolveStep(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
+	void staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 	void syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
-	void reIndexTVandTT(vector<int> newVertsIndices, 
-						int sizeFixed, 
-						int sizeMove,
-						MatrixXd& TV, 
-						MatrixXi& TT, 
-						MatrixXd& newTV, 
-						MatrixXi& newTT);
+	void reIndexTVandTT(vector<int> newVertsIndices, int sizeFixed, int sizeMove,MatrixXd& TV, MatrixXi& TT, MatrixXd& newTV, MatrixXi& newTT);
 	
+	void staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
+
 	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
 	void printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);

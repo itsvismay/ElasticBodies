@@ -1,6 +1,12 @@
 # Elastic Bodies Project
 
 For a clean install, I need:
+
+OpenGL (+ dependencies)
+PyMesh (Anaconda, Swig, Eigen, CGAL (GMP, MPFR, BOOST), all 3rd parties )
+
+
+
  1. git clone ElasticBodies
  2. git clone PyMesh
  3. git clone libigl

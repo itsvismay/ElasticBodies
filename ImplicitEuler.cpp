@@ -315,7 +315,6 @@ void ImplicitEuler::renderLBFGS(){
     /* Initialize the variables. */
     x_k.setZero();
     for (i = 0;i < N; i++) {
-       
        x[i] = x_old(i);
     }
     x_k = x_old;

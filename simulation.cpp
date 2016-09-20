@@ -248,9 +248,96 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 }
 
 void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
+	//TODO: implement this
 }
 
-void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
+
+// static lbfgsfloatval_t evaluateStaticSolveLBFGS(void *s, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+// 	Simulation* sim = (Simulation*) s;
+
+// 	//from x to x_k
+// 	for(int i=0; i< n; i++){
+// 		sim->thisx(i) = x[i];
+// 	}
+	
+
+// 	//TVk value changed in function
+// 	// X to TV
+// 	sim->thisTV.setZero();
+// 	for(unsigned int i=0; i < M.tets.size(); i++){
+// 		Vector4i indices = sim->M.tets[i].verticesIndex;
+// 		sim->thisTV.row(indices(0)) = Vector3d(sim->thisx(3*indices(0)), sim->thisx(3*indices(0)+1), sim->thisx(3*indices(0) +2));
+// 		sim->thisTV.row(indices(1)) = Vector3d(sim->thisx(3*indices(1)), sim->thisx(3*indices(1)+1), sim->thisx(3*indices(1) +2));
+// 		sim->thisTV.row(indices(2)) = Vector3d(sim->thisx(3*indices(2)), sim->thisx(3*indices(2)+1), sim->thisx(3*indices(2) +2));
+// 		sim->thisTV.row(indices(3)) = Vector3d(sim->thisx(3*indices(3)), sim->thisx(3*indices(3)+1), sim->thisx(3*indices(3) +2)); 
+// 	}
+
+// 	VectorXd f;
+// 	f.resize(3*TV.rows());
+// 	f.setZero();
+// 	SparseMatrix<double> forceGradient;
+// 	forceGradient.resize(3*sim->TV.rows(), 3*sim->TV.rows());
+
+// 	sim->calculateForceGradient(sim->TV, forceGradient);
+// 	sim->calculateElasticForces(f, sim->TV);
+
+// 	lbfgsfloatval_t fx = 0.0;
+
+// 	//force anti-derivative
+// 	double strainE=0;
+// 	for(unsigned int i=0; i<in->M.tets.size(); i++){
+// 		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
+// 	}
+
+// 	//gradient of energies
+// 	for(int i=0; i<n; i++){
+// 		g[i] = in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i) - in->massVector(i)*in->h*in->v_old(i) - in->h*in->h*in->f(i);
+// 	}
+	
+
+// 	// ////////////////
+// 	// double gnorm =0;
+// 	// for(int i=0; i<n; i++){
+// 	// 	gnorm+=g[i]*g[i];
+// 	// }
+// 	// // cout<<"Gnorm "<<sqrt(gnorm)<<endl;
+// 	// // double xnorm =0;
+// 	// // for(int i=0; i<n; i++){
+// 	// // 	xnorm+=x[i]*x[i];
+// 	// // }
+// 	// // cout<<"xnorm "<<sqrt(xnorm)<<endl;
+
+// 	// // for(int i=0; i<n; i++){
+// 	// // 	xnorm+=x[i]*x[i];
+// 	// // }
+// 	// ////////////////
+
+// 	fx+= in->h*in->h*(strainE);
+// 	//damping anti-derivative
+// 	fx += in->h*rayleighCoeff*((in->x_k.dot(in->f) - strainE) - in->f.dot(in->x_old));
+// 	// cout<<"energy "<<fx<<endl;
+// 	return fx;
+// }
+
+// static int progressStaticSolveLBFGS(void *instance,
+// 	    const lbfgsfloatval_t *x,
+// 	    const lbfgsfloatval_t *g,
+// 	    const lbfgsfloatval_t fx,
+// 	    const lbfgsfloatval_t xnorm,
+// 	    const lbfgsfloatval_t gnorm,
+// 	    const lbfgsfloatval_t step,
+// 	    int n,
+// 	    int k,
+// 	    int ls){	
+
+// 	printf("Iteration %d:\n", k);
+//     printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
+//     printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
+//     printf("\n");
+//     return 0;	
+// }
+
+void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
 	//Move vertices slightly in x,y,z direction
 	// [v, v, v..., f, f, ...(m), (m), (m)...]
 	for(unsigned int i=0; i<moveVertices.size(); i++){
@@ -339,6 +426,53 @@ void Simulation::staticSolveStep(double move_step, int ignorePastIndex, vector<i
 	}				
 }
 
+// void Simulation::staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
+
+// 	int N = 3*TV.rows();
+// 	int i, ret =0;
+// 	lbfgsfloatval_t fx;
+// 	lbfgsfloatval_t *x = lbfgs_malloc(N);
+
+// 	lbfgs_parameter_t param;
+
+// 	if(x ==NULL){
+// 		printf("ERROR: Failed to allocate a memory block for variables.\n");
+// 	}
+
+// 	//Initialize variables
+// 	VectorXd x_k;
+// 	x_k.resize(N);
+// 	x_k.setZero();
+// 	setTVtoX(x_k, TV);
+// 	for(i=0; i<N; i++){
+// 		x[i] = x_k(i);
+// 	}
+
+// 	//TODO: cleanup this code. maybe have a nested class or something
+// 	thisTV = TV; //set global
+// 	thisx = x_k;
+
+// 	lbfgs_parameter_init(&param);
+
+// 	ret = lbfgs(N, x, &fx, evaluateStaticSolveLBFGS, progressStaticSolveLBFGS, this, &param);
+// 	if(ret<0){
+// 		cout<<"ERROR: liblbfgs did not converge in static solve -- code: "<<ret<<endl;
+// 		exit(0);
+// 	}
+
+// 	// X to TV
+// 	TV.setZero();
+// 	for(unsigned int i=0; i < M.tets.size(); i++){
+// 		Vector4i indices = M.tets[i].verticesIndex;
+// 		TV.row(indices(0)) = Vector3d(x_k(3*indices(0)), x_k(3*indices(0)+1), x_k(3*indices(0) +2));
+// 		TV.row(indices(1)) = Vector3d(x_k(3*indices(1)), x_k(3*indices(1)+1), x_k(3*indices(1) +2));
+// 		TV.row(indices(2)) = Vector3d(x_k(3*indices(2)), x_k(3*indices(2)+1), x_k(3*indices(2) +2));
+// 		TV.row(indices(3)) = Vector3d(x_k(3*indices(3)), x_k(3*indices(3)+1), x_k(3*indices(3) +2)); 
+// 	}
+
+// 	lbfgs_free(x);
+// }
+
 void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
 
@@ -346,7 +480,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	distvLoadFile.open("../Scripts/distvLoad.txt");
 
 	ofstream youngsFile;
-	youngsFile.open("../Scripts/youngsnew.txt");
+	youngsFile.open("../Scripts/youngssvk.txt");
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
@@ -384,41 +518,41 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	// 	{3.000338,	1393.765691}
 	// };
 	
-	// vector<pair<double, double>> realLoads = 
-	// {
-	// 	{0.06, 37.0006},
-	// 	{0.66, 405.748},
-	// 	{1.26, 772.218},
-	// 	{1.86, 1136.43},
-	// 	{2.46, 1498.42},
-	// 	{3.06, 1858.2},
-	// 	{3.66, 2215.81},
-	// 	{4.26, 2571.27},
-	// 	{4.86, 2924.6},
-	// 	{5.46, 3275.83},
-	// 	{6.06, 3625}
-
-	// };
-
-	//############Spring synth test
-	vector<pair<double, double>> realLoads =
+	vector<pair<double, double>> realLoads = 
 	{
-		{0.5, 5.56078},
-		{1, 11.1308},
-		{1.5, 16.7229},
-		{2, 22.3498},
-		{2.5, 28.024},
-		{3, 33.7579},
-		{3.5, 39.5637}
+		{0.06, 37.0006},
+		{0.66, 405.748},
+		{1.26, 772.218},
+		{1.86, 1136.43},
+		{2.46, 1498.42},
+		{3.06, 1858.2},
+		{3.66, 2215.81},
+		{4.26, 2571.27},
+		{4.86, 2924.6},
+		{5.46, 3275.83},
+		{6.06, 3625}
 
 	};
+
+	//############Spring synth test
+	// vector<pair<double, double>> realLoads =
+	// {
+	// 	{0.5, 5.56078},
+	// 	{1, 11.1308},
+	// 	{1.5, 16.7229},
+	// 	{2, 22.3498},
+	// 	{2.5, 28.024},
+	// 	{3, 33.7579},
+	// 	{3.5, 39.5637}
+
+	// };
 	//#############################
 
 	vector<double> derivedYoungs;
 
 	//size of move
-	double move_amount = 3.5;
-	int number_of_moves = 70;
+	double move_amount = 6;
+	int number_of_moves = 100;
 	double dist_moved = 0;
 	double curr_youngs = 1;
 	double load_scalar = 0;
@@ -438,8 +572,8 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			dist_moved += move_amount/number_of_moves;//move step
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<(dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
-			staticSolveStep(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
-			
+			staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
+			// staticSolveStepLBFGS(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 		}
 
 		//binary search for youngs
@@ -494,6 +628,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 }
 
 void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
+	//TODO: move this into the tests section
 	cout<<"############Starting Synthetic Load Generation######################"<<endl;
 
 	ofstream generateLoadsFile;
@@ -515,7 +650,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 		int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
 		dist_moved += move_step;
 
-		staticSolveStep(move_step, ignorePastIndex, moveVertices, TV, TT);
+		staticSolveStepNewtonsMethod(move_step, ignorePastIndex, moveVertices, TV, TT);
 
 		if(count%10 == 0){
 			cout<<"	print dist/load to file"<<endl;
