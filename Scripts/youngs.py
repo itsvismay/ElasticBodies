@@ -3,7 +3,7 @@ dist = []
 load = []
 #f= open('syntheticGeneratedLoads.txt', 'r')
 #f = open('youngsnew.txt', 'r')
-f = open('youngssvk.txt', 'r')
+f = open('youngsspringsvk.txt', 'r')
 
 for line in f:
 	step = line.strip("\n").split(",")
