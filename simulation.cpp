@@ -477,10 +477,10 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
 
 	ofstream distvLoadFile;
-	distvLoadFile.open("../Scripts/distvLoad.txt");
+	distvLoadFile.open("../Condor/Scripts/distvLoad.txt");
 
 	ofstream youngsFile;
-	youngsFile.open("../Scripts/youngsspringsvk.txt");
+	youngsFile.open("../Condor/Scripts/youngsspringsvk.txt");
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
@@ -679,7 +679,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	cout<<"############Starting Synthetic Load Generation######################"<<endl;
 
 	ofstream generateLoadsFile;
-	generateLoadsFile.open("../Scripts/syntheticGeneratedLoads.txt");
+	generateLoadsFile.open("../Condor/Scripts/syntheticGeneratedLoads.txt");
 	
 	int setYoungs = 2e6;
 	M.setNewYoungsPoissons(setYoungs, 0.35);
@@ -756,8 +756,8 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, Matrix
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	system("mkdir -p ../TestsResults/SpringLoadTests/");
-	igl::writeOBJ("../TestsResults/SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	system("mkdir -p ../Condor/TestsResults/SpringLoadTests/");
+	igl::writeOBJ("../Condor/TestsResults/SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
 	return;
 }
