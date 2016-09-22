@@ -480,7 +480,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	distvLoadFile.open("../Condor/Scripts/distvLoad.txt");
 
 	ofstream youngsFile;
-	youngsFile.open("../Condor/Scripts/youngsspringsvk.txt");
+	youngsFile.open("../Condor/Scripts/youngsspringneo.txt");
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
