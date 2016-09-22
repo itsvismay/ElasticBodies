@@ -24,10 +24,10 @@ include_directories( ${GLFW_INCLUDE_DIR})
 find_package(TETGEN REQUIRED)
 include_directories( ${TETGEN_INCLUDE_DIR})
 
-find_package(SUITESPARSE REQUIRED)
+find_package(SUITESPARSE QUIET)
 include_directories(${SUITESPARSE_INCLUDE_DIRS})
 
-find_package(LIBLBFGS REQUIRED)
+find_package(LIBLBFGS QUIET)
 include_directories(${LIBLBFGS_INCLUDE_DIRS})
 
 

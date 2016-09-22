@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 #include <math.h>
-#include <lbfgs.h>
+//#include <lbfgs.h>
 #include <set>
 #include <ctime>
 #include <fstream>
@@ -599,7 +599,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 	//size of move
 	double move_amount = 4.4;
-	int number_of_moves = 1000;
+	int number_of_moves = 100;
 	double dist_moved = 0;
 	double curr_youngs = 1;
 	double load_scalar = 0;
