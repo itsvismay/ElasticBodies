@@ -10,8 +10,8 @@
 using namespace Eigen;
 using namespace std;
 
-#define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies"
-#define CONSISTENCY_TEST_SAVE_PATH "/u/vismay/ElasticBodies" 
+#define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
+#define CONSISTENCY_TEST_SAVE_PATH "/u/vismay/ElasticBodies/" 
 
 class ConsistencyTest{
 

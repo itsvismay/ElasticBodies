@@ -477,10 +477,10 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
 
 	ofstream distvLoadFile;
-	distvLoadFile.open(HOME_SAVED_PATH"Condor/Scripts/distvLoad.txt");
+	distvLoadFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/distvLoad.txt");
 
 	ofstream youngsFile;
-	youngsFile.open(HOME_SAVED_PATH"Condor/Scripts/youngsspringsvk.txt");
+	youngsFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/youngsspringsvk.txt");
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
