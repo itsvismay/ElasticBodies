@@ -664,7 +664,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<"----------------"<<endl;
 		}
-		youngsFile<<dist_moved<<", "<<curr_youngs<<endl;
+		youngsFile<<dist_moved<<", "<<curr_youngs<<", "<<min_youngs<<", "<<max_youngs <<endl;
 		reals_index+=1;
 	}
 
@@ -685,8 +685,8 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	M.setNewYoungsPoissons(setYoungs, 0.35);
 
 	double dist_moved = 0;
-	double move_amount = 10;
-	double number_of_moves = 200;
+	double move_amount = 5;
+	double number_of_moves = 100;
 	double load_scalar =0;
 	double number_of_data_points =10;
 
@@ -699,7 +699,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 
 		staticSolveStepNewtonsMethod(move_step, ignorePastIndex, moveVertices, TV, TT);
 
-		if(count%10 == 0){
+		if(true /*count%10==0*/){
 			cout<<"	print dist/load to file"<<endl;
 			printObj(count/10, TV, TT, B);
 

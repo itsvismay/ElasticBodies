@@ -72,21 +72,21 @@ bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char
 void ConsistencyTest::runAllTests(){
 // 	// checkAllAccuracy();
 // 	// exit(0);
-// 	//Time stuff------
-// 	time_t now = time(0);
-// 	string dt = ctime(&now);//local time, replace all spaces and new lines
-// 	dt.erase('\n');
-// 	replace(dt.begin(), dt.end(), ' ', '-');
-// 	//-----------------
-// 	int spaceStep = 20;
+ 	//Time stuff------
+ 	time_t now = time(0);
+ 	string dt = ctime(&now);//local time, replace all spaces and new lines
+ 	dt.erase('\n');
+ 	replace(dt.begin(), dt.end(), ' ', '-');
+ 	//-----------------
+ 	int spaceStep = 20;
 
-// 	MatrixXd V;
-// 	MatrixXi F;
-// 	MatrixXd B;
-// 	MatrixXd TV;
-// 	MatrixXi TT;
-// 	MatrixXi TF;
-// 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/beam.obj", V, F);
+ 	MatrixXd V;
+ 	MatrixXi F;
+ 	MatrixXd B;
+ 	MatrixXd TV;
+ 	MatrixXi TT;
+ 	MatrixXi TF;
+ 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/pringTruncd.obj", V, F);
 	
 // 	pid_t pids[spaceIterations];
 
