@@ -477,10 +477,10 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
 
 	ofstream distvLoadFile;
-	distvLoadFile.open("../Condor/Scripts/distvLoad.txt");
+	distvLoadFile.open(HOME_SAVED_PATH"Condor/Scripts/distvLoad.txt");
 
 	ofstream youngsFile;
-	youngsFile.open("../Condor/Scripts/youngsspringneo.txt");
+	youngsFile.open(HOME_SAVED_PATH"Condor/Scripts/youngsspringsvk.txt");
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
@@ -679,7 +679,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	cout<<"############Starting Synthetic Load Generation######################"<<endl;
 
 	ofstream generateLoadsFile;
-	generateLoadsFile.open("../Condor/Scripts/syntheticGeneratedLoads.txt");
+	generateLoadsFile.open(HOME_SAVED_PATH"Condor/Scripts/syntheticGeneratedLoads.txt");
 	
 	int setYoungs = 2e6;
 	M.setNewYoungsPoissons(setYoungs, 0.35);
