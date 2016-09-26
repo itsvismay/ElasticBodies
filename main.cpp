@@ -244,9 +244,8 @@ int main(int argc, char *argv[])
 	char runHeadless;
 	int iterations;
 	string line;
-	system("pwd");
-	system("ls /u/vismay/ElasticBodies");
-	ifstream configFile ("/u/vismay/ElasticBodies/config.txt");
+	
+	ifstream configFile (HOME_SAVED_PATH "config.txt");
 	if(configFile.is_open()){
 		getline(configFile, line);
 		timestep = stod(line.c_str());
