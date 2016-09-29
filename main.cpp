@@ -1,7 +1,7 @@
 #include <igl/viewer/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
-#include <igl/readOFF.h>
-#include <igl/readOBJ.h>
+// #include <igl/readOFF.h>
+// #include <igl/readOBJ.h>
 #include <fstream>
 
 #include "simulation.h"
@@ -148,12 +148,12 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
-	// move vertices
-	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
-	 		moveVertices.push_back(i);
-	 	}
-	}
+	// // move vertices
+	// for(int i=0; i<TV.rows(); i++){
+	//  	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
+	//  		moveVertices.push_back(i);
+	//  	}
+	// }
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 	char runHeadless;
 	int iterations;
 	string line;
-	
+
 	ifstream configFile (HOME_SAVED_PATH "config.txt");
 	if(configFile.is_open()){
 		getline(configFile, line);

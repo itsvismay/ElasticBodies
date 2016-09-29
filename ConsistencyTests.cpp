@@ -11,10 +11,10 @@ using namespace Eigen;
 using namespace std; 
 
 ConsistencyTest::ConsistencyTest(void){
-// 	printThisOften = 0.1;
-// 	printForThisManySeconds = 10;
-// 	spaceIterations = 1;
-// 	timeIterations = 1;
+	printThisOften = 0.1;
+	printForThisManySeconds = 10;
+	// spaceIterations = 1;
+	timeIterations = 1;
 }
 
 bool ConsistencyTest::checkAllAccuracy(){
@@ -72,13 +72,14 @@ bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char
 void ConsistencyTest::runAllTests(){
 // 	// checkAllAccuracy();
 // 	// exit(0);
+
  	//Time stuff------
  	time_t now = time(0);
  	string dt = ctime(&now);//local time, replace all spaces and new lines
  	dt.erase('\n');
  	replace(dt.begin(), dt.end(), ' ', '-');
  	//-----------------
- 	int spaceStep = 20;
+ 	int spaceStep = 47422;
 
  	MatrixXd V;
  	MatrixXi F;
@@ -86,14 +87,14 @@ void ConsistencyTest::runAllTests(){
  	MatrixXd TV;
  	MatrixXi TT;
  	MatrixXi TF;
- 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/pringTruncd.obj", V, F);
+ 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 	
 // 	pid_t pids[spaceIterations];
 
-// 	igl::copyleft::tetgen::tetrahedralize(V,F,("-pqa"+to_string(spaceStep)).c_str(), TV, TT, TF);
-// 	igl::barycenter(TV, TT, B);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pR2/0", TV, TT, TF);
+	igl::barycenter(TV, TT, B);
 
-// 	runTestRow(spaceStep, TV, B, TT, dt);
+	runTestRow(spaceStep, TV, B, TT, dt);
 
 // 	// for(int i=0; i<spaceIterations; i++){
 // 	// 	if((pids[i] = fork())<0){
@@ -118,14 +119,13 @@ void ConsistencyTest::runAllTests(){
 // 	// }
 // 	cout<<"------------------------"<<endl;
 // 	cout<<"ALL EXITED"<<endl;
-// }
+}
 
-// void ConsistencyTest::runTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
-
-// 	runVerletTestRow(spaceStep, TV, B, TT, dt);
-// 	runImpEulerTestRow(spaceStep, TV, B , TT, dt);
-// 	runNewmarkTestRow(spaceStep, TV, B, TT, dt);
-// }
+void ConsistencyTest::runTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
+	// runVerletTestRow(spaceStep, TV, B, TT, dt);
+	runImpEulerTestRow(spaceStep, TV, B , TT, dt);
+	// runNewmarkTestRow(spaceStep, TV, B, TT, dt);
+}
 
 // void ConsistencyTest::runVerletTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
 // 	double verletTimestep = 1e-5;
@@ -135,14 +135,16 @@ void ConsistencyTest::runAllTests(){
 // 		verletTimestep*=.1;
 // 	}
 // }
-// void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
-// 	double implicitTimestep = 1e-2;
-// 	for(int i=0; i<timeIterations; i++){
-// 		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
-// 		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);
-// 		implicitTimestep*=.1;
-// 	}
-// }
+
+void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
+	double implicitTimestep = 1e-1;
+	for(int i=0; i<timeIterations; i++){
+		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
+		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/svk/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);
+		implicitTimestep*=.1;
+	}
+}
+
 // void ConsistencyTest::runNewmarkTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
 // 	double newmarkTimestep = 1e-1;
 // 	for(int i=0; i<timeIterations; i++){
@@ -150,73 +152,72 @@ void ConsistencyTest::runAllTests(){
 // 		// test(newmarkTimestep, 'n', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/newmark/space"+to_string(spaceStep)+"/timestep:"+to_string(newmarkTimestep)+"/", TT, TV, B);
 // 		newmarkTimestep*=.1;
 // 	}
-}
+// }
 
 void ConsistencyTest::test(double timestep, char method, string printToHere, MatrixXi cTT, MatrixXd cTV, MatrixXd cB){
-// 	double seconds =0;
-// 	int iters =0;
-// 	int numberOfPrints =0;
-// 	vector<int> moveVertices;
-// 	vector<int> fixedVertices;
+	double seconds =0;
+	int iters =0;
+	int numberOfPrints =0;
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
 
-// 	Simulation cSim;
-// 	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices);
-	
-// 	//fix vertices
-// 	for(int i=0; i<cSim.integrator->vertsNum; i++){
-// 		if(cSim.integrator->TV.row(i)[0]<=-50){
-// 			fixedVertices.push_back(i);
-// 		}
-// 	}
-// 	cSim.integrator->fixVertices(fixedVertices);
+	Simulation cSim;
 
-// 	while(seconds<printForThisManySeconds){
-// 		iters+=1;
-// 		cSim.render();
-// 		if(iters*timestep>=printThisOften){
-// 			seconds+=printThisOften;
-// 			iters =0;
-// 			printOBJ(numberOfPrints, printToHere, cB, cSim, cTT);
-// 			numberOfPrints+=1;
-// 		}
-// 	}
-// 	return;
+	//fix vertices
+	for(int i=0; i<cTV.rows(); i++){
+		if(cTV.row(i)[1]<=41 && cTV.row(i)[1]>39){
+			fixedVertices.push_back(i);
+		}
+	}
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices, 1.2e6, 0.35);
+
+	while(seconds<printForThisManySeconds){
+		iters+=1;
+		cSim.render();
+		if(iters*timestep>=printThisOften){
+			seconds+=printThisOften;
+			iters =0;
+			printOBJ(numberOfPrints, printToHere, cB, cSim, cTT);
+			numberOfPrints+=1;
+		}
+	}
+	return;
 }
 
-// void ConsistencyTest::printOBJ(int numberOfPrints, string printToHere, MatrixXd& cB, Simulation& cSim, MatrixXi& cTT){
+void ConsistencyTest::printOBJ(int numberOfPrints, string printToHere, MatrixXd& cB, Simulation& cSim, MatrixXi& cTT){
 
-// 	double refinement = 9;
-// 	double t = ((refinement - 1)+1) / 9.0;
+	double refinement = 9;
+	double t = ((refinement - 1)+1) / 9.0;
 
 
-// 	VectorXd v = cB.col(2).array() - cB.col(2).minCoeff();
-// 	v /= v.col(0).maxCoeff();
+	VectorXd v = cB.col(2).array() - cB.col(2).minCoeff();
+	v /= v.col(0).maxCoeff();
 
-// 	vector<int> s;
-// 	for (unsigned i=0; i<v.size();++i){
-// 		if (v(i) < t){
-// 			s.push_back(i);
-// 		}
-// 	}
+	vector<int> s;
+	for (unsigned i=0; i<v.size();++i){
+		if (v(i) < t){
+			s.push_back(i);
+		}
+	}
 
-// 	MatrixXd V_temp(s.size()*4,3);
-// 	MatrixXi F_temp(s.size()*4,3);
+	MatrixXd V_temp(s.size()*4,3);
+	MatrixXi F_temp(s.size()*4,3);
 
-// 	for (unsigned i=0; i<s.size();++i)
-// 	{
-// 		V_temp.row(i*4+0) = cSim.integrator->TV.row(cTT(s[i],0));
-// 		V_temp.row(i*4+1) = cSim.integrator->TV.row(cTT(s[i],1));
-// 		V_temp.row(i*4+2) = cSim.integrator->TV.row(cTT(s[i],2));
-// 		V_temp.row(i*4+3) = cSim.integrator->TV.row(cTT(s[i],3));
-// 		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
-// 		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
-// 		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
-// 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
-// 	}
+	for (unsigned i=0; i<s.size();++i)
+	{
+		V_temp.row(i*4+0) = cSim.integrator->TV.row(cSim.integrator->TT(s[i],0));
+		V_temp.row(i*4+1) = cSim.integrator->TV.row(cSim.integrator->TT(s[i],1));
+		V_temp.row(i*4+2) = cSim.integrator->TV.row(cSim.integrator->TT(s[i],2));
+		V_temp.row(i*4+3) = cSim.integrator->TV.row(cSim.integrator->TT(s[i],3));
+		F_temp.row(i*4+0) << (i*4)+0, (i*4)+1, (i*4)+3;
+		F_temp.row(i*4+1) << (i*4)+0, (i*4)+2, (i*4)+1;
+		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
+		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
+	}
 
-// 	cout<<printToHere + to_string(numberOfPrints)<<endl;
-// 	system(("mkdir -p "+printToHere).c_str());
-// 	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	cout<<printToHere + to_string(numberOfPrints)<<endl;
+	system(("mkdir -p "+printToHere).c_str());
+	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 
-// 	return;
-// }
+	return;
+}

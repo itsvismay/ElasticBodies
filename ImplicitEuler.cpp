@@ -140,10 +140,10 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
-		f(3*indices(0)+1) += vertex_mass*gravity;
-		f(3*indices(1)+1) += vertex_mass*gravity; 
-		f(3*indices(2)+1) += vertex_mass*gravity;
-		f(3*indices(3)+1) += vertex_mass*gravity;
+		f(3*indices(0)+0) += vertex_mass*gravity;
+		f(3*indices(1)+0) += vertex_mass*gravity; 
+		f(3*indices(2)+0) += vertex_mass*gravity;
+		f(3*indices(3)+0) += vertex_mass*gravity;
 	}
 
 	//elastic
@@ -244,13 +244,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
-		SimplicialLLT<SparseMatrix<double>> temp;
-		temp.compute(forceGradientStaticBlock);
-		if(temp.info() == Eigen::NumericalIssue){
-			cout<<"Oh shit!"<<endl;
-			exit(0);
-		}
-
+		
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
