@@ -162,7 +162,6 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		}
 	}
 	//***************************
-
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	
 	
@@ -290,8 +289,8 @@ int main(int argc, char *argv[])
 		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;
 	}
-	
-    ///////////////////
+    
+	///////////////////
 	cout<<"###########################My Code ###################"<<endl;
 	headless = false;
 	if(runHeadless=='t'){
