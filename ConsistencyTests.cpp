@@ -12,7 +12,7 @@ using namespace std;
 
 ConsistencyTest::ConsistencyTest(void){
 	printThisOften = 0.1;
-	printForThisManySeconds = 10;
+	printForThisManySeconds = 5;
 	// spaceIterations = 1;
 	timeIterations = 1;
 }
@@ -137,7 +137,7 @@ void ConsistencyTest::runTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, Matri
 // }
 
 void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
-	double implicitTimestep = 1e-1;
+	double implicitTimestep = 1e-3;
 	for(int i=0; i<timeIterations; i++){
 		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
 		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/svk/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);

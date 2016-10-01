@@ -18,11 +18,11 @@
 using namespace Eigen;
 using namespace std;
 
-// #define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
-// #define OUTPUT_SAVED_PATH "/u/vismay/ElasticBodies/"
+#define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
+#define OUTPUT_SAVED_PATH "/u/vismay/ElasticBodies/"
 
-#define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
-#define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"
+// #define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
+// #define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"
 
 class Simulation{
 
