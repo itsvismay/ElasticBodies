@@ -149,11 +149,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 	
 	// // move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	//  	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
-	//  		moveVertices.push_back(i);
-	//  	}
-	// }
+	for(int i=0; i<TV.rows(); i++){
+	 	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
+	 		moveVertices.push_back(i);
+	 	}
+	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){

@@ -4,9 +4,9 @@ load = []
 lowerbd = []
 upperbd = []
 #f= open('syntheticGeneratedLoads.txt', 'r')
-#f = open('youngsnew.txt', 'r')
-f = open('youngsspringsvkhalfpoints.txt', 'r')
-f2 = open('youngsspringsvk.txt', 'r')
+f = open('youngsspringneo.txt', 'r')
+#f = open('youngsspringsvkhalfpoints.txt', 'r')
+#f2 = open('youngsspringsvk.txt', 'r')
 
 for line in f:
 	step = line.strip("\n").split(",")
@@ -15,21 +15,21 @@ for line in f:
 	lowerbd.append(step[2])
 	upperbd.append(step[3])
 
-dist2 = []
-load2 = []
-lowerbd2 = []
-upperbd2 = []
-for line in f2:
-	step = line.strip("\n").split(",")
-	dist2.append(step[0])
-	load2.append(step[1])
-	lowerbd2.append(step[2])
-	upperbd2.append(step[3])
+# dist2 = []
+# load2 = []
+# lowerbd2 = []
+# upperbd2 = []
+# for line in f2:
+# 	step = line.strip("\n").split(",")
+# 	dist2.append(step[0])
+# 	load2.append(step[1])
+# 	lowerbd2.append(step[2])
+# 	upperbd2.append(step[3])
 
 
-curve = plt.plot(dist2, load2, "ro", label="total")
-curve = plt.plot(dist2, lowerbd2, "--", label="total")
-curve = plt.plot(dist2, upperbd2, "--", label="total")
+# curve = plt.plot(dist2, load2, "ro", label="total")
+# curve = plt.plot(dist2, lowerbd2, "--", label="total")
+# curve = plt.plot(dist2, upperbd2, "--", label="total")
 
 curve = plt.plot(dist, load,  "go", label="total")
 curve = plt.plot(dist, lowerbd,  "-", label="total")

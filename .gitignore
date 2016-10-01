@@ -40,3 +40,4 @@ WolframAndProfilerandHoudini/HoudiniRender/*
 TestsResults/*
 3dUnion/build/*
 local_temp/*
+Condor/TestsResults/*
