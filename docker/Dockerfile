@@ -25,17 +25,23 @@ RUN apt install libxrandr-dev
 RUN apt install libcgal-dev
 RUN apt purge libcgal-dev
 RUN apt install libeigen3-dev
+RUN apt install openscad openscad-dbg
+RUN apt install slic3r
 
-# required downloads - not sure how to download
+# required downloads - use wget
 # Anaconda
 # CGAL
 # liblbfgs-1.10
 
 # required git repositories and building them
 # git clone https://github.com/qnzhou/PyMesh.git
+# to be done
 # git clone https://github.com/jluttine/suitespares.git
+# to be done
 # git clone --recursive https://github.com/libigl/libigl.git
+# to be done
 # git clone https://github.com/itsvismay/ElasticBodies.git
+# to be done
 
 ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
 
