@@ -135,7 +135,7 @@ DataNP = np.array(Data)
 runLayers = range(numLayers+1)
 for layer in runLayers:
   layerData = DataNP[indices == layer]
-  filename = "CCgcode_layer" + str(layer) + ".scad"
+  filename = vName[:5]+"_layer" + str(layer) + ".scad"
   file_write = open(filename, "w")
   file_write.write('points' + str(layer) + ' = [\n')
   for row in layerData:
@@ -163,3 +163,5 @@ file_write = open(filename, "w")
 for layer in runLayers:
   file_write.write("include <gcode_layer%d.scad>;\n" % (layer))
 file_write.close()
+
+sys.exit(numLayers)
