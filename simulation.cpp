@@ -341,7 +341,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	//Move vertices slightly in x,y,z direction
 	// [v, v, v..., f, f, ...(m), (m), (m)...]
 	for(unsigned int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[0]+= move_step;//move step
+		TV.row(TV.rows()-i-1)[1]-= move_step;//move step
 	}
 	
 	//Newtons method static solve for minimum Strain E

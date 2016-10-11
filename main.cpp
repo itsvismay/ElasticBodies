@@ -163,9 +163,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	}
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
-	
-	
-	
+		
 	if(headless){
 		Sim.headless();
 	}else{

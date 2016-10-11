@@ -79,7 +79,7 @@ void ConsistencyTest::runAllTests(){
  	dt.erase('\n');
  	replace(dt.begin(), dt.end(), ' ', '-');
  	//-----------------
- 	int spaceStep = 47422;
+ 	int spaceStep = 84355;
 
  	MatrixXd V;
  	MatrixXi F;
@@ -91,7 +91,7 @@ void ConsistencyTest::runAllTests(){
 	
 // 	pid_t pids[spaceIterations];
 
-	igl::copyleft::tetgen::tetrahedralize(V,F,"-pR2/0", TV, TT, TF);
+	igl::copyleft::tetgen::tetrahedralize(V,F,"-pRq10", TV, TT, TF);
 	igl::barycenter(TV, TT, B);
 
 	runTestRow(spaceStep, TV, B, TT, dt);
@@ -137,7 +137,7 @@ void ConsistencyTest::runTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, Matri
 // }
 
 void ConsistencyTest::runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt){
-	double implicitTimestep = 1e-3;
+	double implicitTimestep = 1e-1;
 	for(int i=0; i<timeIterations; i++){
 		cout<<"euler" +to_string(spaceStep)+"time"+to_string(implicitTimestep)<<endl;
 		test(implicitTimestep, 'i', CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/"+dt+"/implicit/svk/space"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);
