@@ -226,12 +226,14 @@ void ImplicitEuler::renderNewtonsMethod(){
 	// cout<<v_k<<endl<<endl;
 	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
+		cout<<"Implicit Euler NM iteration "<<i<<endl;
 		grad_g.setZero();
-	
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-
+		cout<<"TVk \n"<<TVk<<endl;
+		cout<<"fgrad \n"<<forceGradient<<endl;
+	
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
@@ -244,13 +246,19 @@ void ImplicitEuler::renderNewtonsMethod(){
 		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
-		
+		cout<<"f \n"<<f<<endl;
+		cout<<"g \n"<<g<<endl;
+		cout<<"x old \n"<<x_old<<endl;
+		cout<<"v_old \n"<<v_old<<endl;
+		cout<<"RegMass \n"<<RegMass<<endl;
+
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
 		// cg.compute(grad_g);
 		// VectorXd deltaX = -1*cg.solve(g);
 
+		cout<<"x_k \n"<<x_k<<endl;
 		// Sparse Cholesky LL^T
 		SimplicialLLT<SparseMatrix<double>> llt;
 		llt.compute(grad_g);
@@ -270,7 +278,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);
 		// VectorXd deltaX = -cholmodllt.solve(g_block);
-		
+		cout<<"grad_g \n"<<grad_g<<endl;
 
 		if(x_k != x_k){
 			Nan = true;

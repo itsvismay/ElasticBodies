@@ -4,7 +4,7 @@ load = []
 lowerbd = []
 upperbd = []
 #f= open('syntheticGeneratedLoads.txt', 'r')
-f = open('youngsspringneo.txt', 'r')
+f = open('youngsSpringNeo47ktets4.4mmStep0.01mm.txt', 'r')
 #f = open('youngsspringsvkhalfpoints.txt', 'r')
 #f2 = open('youngsspringsvk.txt', 'r')
 

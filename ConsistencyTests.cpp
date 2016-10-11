@@ -18,27 +18,27 @@ ConsistencyTest::ConsistencyTest(void){
 }
 
 bool ConsistencyTest::checkAllAccuracy(){
-// 	MatrixXd TV;
-// 	MatrixXi TT;
-// 	MatrixXd B;
+	MatrixXd TV;
+	MatrixXi TT;
+	MatrixXd B;
 
-// 	TT.resize(2, 4);
-// 	TT<<  0, 1, 2, 3,
-// 				4, 0, 2, 3;
+	TT.resize(2, 4);
+	TT<<  0, 1, 2, 3,
+			4, 0, 2, 3;
 
-// 	TV.resize(5, 3);
-// 	TV << 10, 0, 0, //affect
-// 			0, 10, 0,
-// 			0, 0, 10,
-// 			0, 0, 0,
-// 			0, -10, 0;
+	TV.resize(5, 3);
+	TV << 10, 0, 0, //affect
+			0, 10, 0,
+			0, 0, 10,
+			0, 0, 0,
+			0, -10, 0;
 
-// 	int timestep =0.01;
-// 	// return 	checkVerletAccuracy(timestep, 1, 'e', TT, TV, B)
-// 	// 		&&
-// 			// checkNewmarkAccuracy(timestep, 1, 'n', TT, TV, B)
-// 			// &&
-// 		return	checkEulerAccuracy(timestep, 1, 'i', TT, TV, B);
+	int timestep =0.01;
+	// return 	checkVerletAccuracy(timestep, 1, 'e', TT, TV, B)
+	// 		&&
+			// checkNewmarkAccuracy(timestep, 1, 'n', TT, TV, B)
+			// &&
+		return	checkEulerAccuracy(timestep, 1, 'i', TT, TV, B);
 }
 
 bool ConsistencyTest::checkVerletAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
@@ -51,13 +51,16 @@ bool ConsistencyTest::checkVerletAccuracy(double timestep, int iterations, char 
 // 	return 1;
 }
 bool ConsistencyTest::checkEulerAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
-// 	vector<int> moveVertices;
-// 	vector<int> fixedVertices;
-// 	Simulation vSim;
-// 	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices);
-// 	vSim.render();
-// 	cout<<"Euler"<<endl<<vSim.integrator->TV<<endl;
-// 	return 1;
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
+	gravity = 10;
+	Simulation vSim;
+	cout<<TV<<endl;
+	cout<<TT<<endl;
+	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices, 2e6, 0.35);
+	vSim.render();
+	cout<<"Euler"<<endl<<vSim.integrator->TV<<endl;
+	return 1;
 }
 bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
 // 	vector<int> moveVertices;
@@ -70,8 +73,8 @@ bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char
 }
 
 void ConsistencyTest::runAllTests(){
-// 	// checkAllAccuracy();
-// 	// exit(0);
+	checkAllAccuracy();
+	exit(0);
 
  	//Time stuff------
  	time_t now = time(0);

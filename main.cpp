@@ -143,7 +143,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// 	}
 	// }
 	//***************************
-
+	exit(0);
 	//********SPRING*******************
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
@@ -208,7 +208,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	//moveVertices.push_back(0);
 
 	// fix vertices
-	fixedVertices.push_back(1);
+	//fixedVertices.push_back(1);
 	// fixedVertices.push_back(1);
 
 				
