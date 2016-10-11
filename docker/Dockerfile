@@ -1,5 +1,48 @@
 
 FROM scratch
+
+# required libraries
+RUN apt install aptitude
+RUN apt install vim
+RUN apt install git
+RUN apt install build-essentials
+RUN apt install libgl1-mesa-dev
+RUN apt install freeglut3-dev
+RUN apt install cmake
+RUN apt install libblas-dev
+RUN apt install libboost-dev
+RUN apt install llibmpfr4 libmpfr4-dbg
+RUN apt install libopenblas-dev
+RUN apt install libpng12-dev
+RUN apt install python-matplotlib
+RUN apt install python-scipy
+RUN apt install swig
+RUN apt install zlib1g-dev
+RUN apt install libxcursor-dev
+RUN apt install libxi-dev
+RUN apt install libxinerama-dev
+RUN apt install libxrandr-dev
+RUN apt install libcgal-dev
+RUN apt purge libcgal-dev
+RUN apt install libeigen3-dev
+RUN apt install openscad openscad-dbg
+RUN apt install slic3r
+
+# required downloads - use wget
+# Anaconda
+# CGAL
+# liblbfgs-1.10
+
+# required git repositories and building them
+# git clone https://github.com/qnzhou/PyMesh.git
+# to be done
+# git clone https://github.com/jluttine/suitespares.git
+# to be done
+# git clone --recursive https://github.com/libigl/libigl.git
+# to be done
+# git clone https://github.com/itsvismay/ElasticBodies.git
+# to be done
+
 ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
 
 # a few minor docker-specific tweaks
