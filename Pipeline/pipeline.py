@@ -9,7 +9,7 @@
 # --name + "name"            -> indicates specific name for non-batch input file
 # --ind + #                  -> indicates individual number
 # --gen + #                  -> indicates generation number
-# -c                         -> indicates that this script should delete intermediate files as it runs
+# -c                         -> indicates that this script should delete intermediate files after it runs
 
 # if both file and batch are defined the results are undefined
 # name, ind, gen are completely optional
@@ -66,45 +66,28 @@ if isBatch == True:
   # generate all of the scad files based on the template
   num = 0
 else:
-  #initialScadFiles.append(name+"_"+str(generation)+"_"+str(individual))
   initialScadFiles.append(name)
-
-#print 'INITIAL SCAD FILES LEN: ', len(initialScadFiles), '\n'
 
 for i in range(len(initialScadFiles)):
   # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
   
   print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
   try:
-    #ls_output = subprocess.check_output(['ls'])
-    #print ls_output
-    #call(['/bin/base', '-i', '-c' 'ls'])
-    #print 'called ls\n'
-    #retcode = call(['/bin/base', '-i', '-c', 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]])
     result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
-    #if retcode < 0:
-    #  print 'OpenScad Error\n'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
   # add generated stl file to list for next step
   initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
-
-#sys.exit(1)
 
 for i in range(len(initialSTLFiles)):
   # run slic3r initialSTLFiles[i]
   print 'slic3r', initialSTLFiles[i]
   try:
     result = subprocess.check_output(['slic3r', initialSTLFiles[i]])
-    #retcode = call(['/bin/base', '-i', '-c', 'slic3r ' + initialSTLFiles[i]])
-    #if retcode < 0:
-    #  print 'Slic3r Error\n'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
   # add generated gcode file to list for next step
   initialGCodeFiles.append(initialSTLFiles[i][:-4]+".gcode")
-
-#sys.exit(1)
 
 for i in range(len(initialGCodeFiles)):
   # run python gcode2layers.py --name initialGCodeFiles[i]
@@ -112,12 +95,7 @@ for i in range(len(initialGCodeFiles)):
   # get number of layers and append it to layers
   numberOfLayers = 0
   try:
-    numberOfLayers = int(subprocess.check_output(['python', 'gcode2layers.py', '--name', initialGCodeFiles[i]]))
-    #retcode = call(['/bin/base', '-i', '-c', 'python gcode2layers.py --name ' + initialGCodeFiles[i]])
-    #if retcode < 0:
-    #  print 'Gcode2Layers Error\n'
-    #else:
-    #  numberOfLayers = retcode # bad design but whatever
+    numberOfLayers = int(subprocess.check_output(['python', 'gcode2layers.py', '--name', initialGCodeFiles[i]])) + 1
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
@@ -128,30 +106,30 @@ for i in range(len(initialGCodeFiles)):
     # add generated layer files to list of layers
     layerScadFiles.append(initialGCodeFiles[i][:-6]+"_layer_"+str(j)+".scad")
 
-#sys.exit(1)
-
 for i in range(len(layerScadFiles)):
   # run openscad -o layerScadFiles[i][:-5]+".stl" layerScadFiles[i]
   print 'openscad -o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]
   try:
     result = subprocess.check_output(['openscad', '-o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]])
-    #retcode = call(['/bin/base', '-i', '-c', 'openscad -o ' + layerScadFiles[i][:-5] + '.stl ' + layerScadFiles[i]])
-    #if retcode < 0:
-    #  print 'OpenScad Error 2\n'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
   # add generated file to layerSTLFiles
   layerSTLFiles.append(layerScadFiles[i][:-5] + '.stl')
 
-print 'Done Up to Combine Step'
-
-sys.exit(3)
-
 # convert stl layer files to obj files
+for i in range(len(layerSTLFiles)):
+  #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
+  print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'
+  try:
+    result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'])
+  except OSError as e:
+    print 'There was a System Error: ', e, '\n'
+
+  layerObjFiles.append(layerSTLFiles[i][:-4]+'.obj')
+
 # combine obj files into one file
 # save it and call simulation
-
 # still a work in progress
 
 # lists to clean
@@ -164,14 +142,21 @@ sys.exit(3)
 
 if cleanAll == True:
   for i in range(len(initialScadFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + initialScadFiles[i]])
+    if isBatch == True:
+      print 'rm', initialScadFiles[i]
+      result = subprocess.check_output(['rm', initialScadFiles[i]])
   for i in range(len(initialSTLFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + initialSTLFiles[i]])
+    print 'rm', initialSTLFiles[i]
+    result = subprocess.check_output(['rm', initialSTLFiles[i]])
   for i in range(len(initialGCodeFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + initialGCodeFiles[i]])
+    print 'rm', initialGCodeFiles[i]
+    result = subprocess.check_output(['rm', initialGCodeFiles[i]])
   for i in range(len(layerScadFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + layerScadFiles[i]])
+    print 'rm', layerScadFiles[i]
+    result = subprocess.check_output(['rm', layerScadFiles[i]])
   for i in range(len(layerSTLFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + layerSTLFiles[i]])
+    print 'rm', layerSTLFiles[i]
+    result = subprocess.check_output(['rm', layerSTLFiles[i]])
   for i in range(len(layerObjFiles)):
-    call(['/bin/base', '-i', '-c', 'rm ' + layerObjFiles[i]])
+    print 'rm', layerObjFiles[i]
+    result = subprocess.check_output(['rm', layerObjFiles[i]])

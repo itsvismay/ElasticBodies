@@ -137,6 +137,32 @@ for layer in runLayers:
   layerData = DataNP[indices == layer]
   filename = vName[:-6]+"_layer_" + str(layer) + ".scad"
   file_write = open(filename, "w")
+  # write needed modules
+  file_write.write("module drawBasicShape(x1, y1, x2, y2, width)\n")
+  file_write.write("{\n")
+  file_write.write("\tlength = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));\n")
+  file_write.write("\tif (width!=0.0) {\n")
+  file_write.write("\t\tsquare(size = [width, length], center = false);\n")
+  file_write.write("\t\ttranslate([width/2, 0, 0]) circle(d=width);\n")
+  file_write.write("\t\ttranslate([width/2, length, 0]) circle(d=width);\n")
+  file_write.write("\t}\n")
+  file_write.write("}\n")
+  file_write.write("\n")
+  file_write.write("module translateAndRotate(x1, y1, x2, y2, width)\n")
+  file_write.write("{\n")
+  file_write.write("\tif (width != 0.0) {\n")
+  file_write.write("\t\tangle = atan((y2-y1)/(x2-x1)) +270;\n")
+  file_write.write("\t\tif (x2>=x1) {\n")
+  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  file_write.write("\t\t}\n")
+  file_write.write("\t\telse {\n")
+  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
+  file_write.write("\t\t}\n")
+  file_write.write("\t}\n")
+  file_write.write("}\n")
+  file_write.write("\n")
+
+  # write actual data
   file_write.write('points' + str(layer) + ' = [\n')
   for row in layerData:
     file_write.write("[%7.3f, %8.3f, %2.6f],\n" % (row[1], row[2], row[3]))
