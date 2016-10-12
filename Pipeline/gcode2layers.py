@@ -11,7 +11,7 @@ layerHeight = 0.4
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'f', ["name="])
 except getopt.GetoptError:
-  print 'Error Bad Input'
+  #print 'Error Bad Input'
   sys.exit(-2)
 for opt, arg in opts:
   if opt == "--name":
@@ -46,8 +46,8 @@ class Extrusion:
 
   def calculateWidth(self, x, y, f, e, pE):
     deltaE = self.startE - self.endE
-    if deltaE < -1.0:
-      print 'ERROR ' + str(deltaE) + '\n'
+    #if deltaE < -1.0:
+    #  print 'ERROR ' + str(deltaE) + '\n'
     deltaD = np.sqrt((self.endX - self.startX)**2.0 + (self.endY - self.startY)**2)
     if deltaD == 0.0:
       return 0.0
@@ -120,10 +120,10 @@ def cleanData(rawData, numLines):
 
   return newData, extrusions, count, layer
 
-print vName
-Data_old, numLines_old = loadData(vName); print numLines_old
+#print vName
+Data_old, numLines_old = loadData(vName); #print numLines_old
 Data, extrusions, numLines, numLayers = cleanData(Data_old, numLines_old)
-print numLines, numLayers
+#print numLines, numLayers
 
 #-------------------------------------------------
 # Code for writing the layer files into scad
@@ -135,7 +135,7 @@ DataNP = np.array(Data)
 runLayers = range(numLayers+1)
 for layer in runLayers:
   layerData = DataNP[indices == layer]
-  filename = vName[:5]+"_layer" + str(layer) + ".scad"
+  filename = vName[:-6]+"_layer_" + str(layer) + ".scad"
   file_write = open(filename, "w")
   file_write.write('points' + str(layer) + ' = [\n')
   for row in layerData:
@@ -164,4 +164,6 @@ for layer in runLayers:
   file_write.write("include <gcode_layer%d.scad>;\n" % (layer))
 file_write.close()
 
-sys.exit(numLayers)
+print numLayers
+
+#sys.exit(numLayers)

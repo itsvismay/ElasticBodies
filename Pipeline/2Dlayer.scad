@@ -2,8 +2,8 @@ module drawBasicShape(x1, y1, x2, y2, width)
 {
     // width: width of extrude
     length = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
-    if (length == 0)
-        echo(5);
+    //if (length == 0)
+    //    echo(5);
     if (width!=0.0) {
         square(size = [width, length], center = false);
         translate([width/2, 0, 0]) circle(d=width);
