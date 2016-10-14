@@ -1,6 +1,10 @@
 from scipy.optimize import fmin_cobyla
+import sys, os, subprocess
 
 P, E, L, w = 1000.0, 69e9, 0.5, 0.1 # N, Pa, m, m
+
+fileName = 'optimize.txt'
+resultName = 'optimizeResult.txt'
 
 def objective(x):
     height = x #units in m
@@ -9,6 +13,13 @@ def objective(x):
 
 def g0(x):
     height = x
+    # write data to file to be used in pipeline
+    file_write = open(fileName, 'w')
+    file_write.write(fileName + ".scad 500 100 "+str(x))
+    file_write.close()
+    print subprocess.check_output(['python', 'pipeline', '--template', 'templateBeam.py', '--batch', fileName, '-c'])
+    # read results from file and return those
+    # to be implemented
     # Displacement constraint
     I = w * height**3 / 12 # m^4
     tip_disp = (P * L**3)/(3*E*I)

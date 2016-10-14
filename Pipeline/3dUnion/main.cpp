@@ -8,7 +8,7 @@
 
 #include "tutorial_shared_path.h"
 
-#define PATH_TO_OBJ_FILES "/home/vismay/ElasticBodies/3dUnion/SpringLayers/"
+#define PATH_TO_OBJ_FILES "/home/firal/Documents/Research/ElasticBodies/Pipeline/"
 
 using namespace Eigen;
 using namespace igl::copyleft::cgal;
@@ -49,16 +49,20 @@ CSGTree binaryMergeTreeCreation(vector<MatrixXd>& Vs, vector<MatrixXi>& Fs){
 
 int main(int argc, char * argv[])
 {
-
-
   vector<MatrixXi> Fs;
   vector<MatrixXd> Vs;
+  // TODO :: Read in number of layers as input
+  // TODO :: Read in input name as input
+  // TODO :: Read in output name as input
   int num_of_layers = 11;
   // Read in inputs as double precision floating point meshes
+  cout << "WHY IS THIS NOT BEING DISPLAYED" << endl;
   for(int i=0; i<num_of_layers; i++){
     MatrixXi F;
     MatrixXd V;
-    read_triangle_mesh(PATH_TO_OBJ_FILES "layer"+to_string(i)+".stl.obj",V,F);
+    //cout << PATH_TO_OBJ_FILES << endl;
+    //read_triangle_mesh(PATH_TO_OBJ_FILES "layer"+to_string(i)+".stl.obj",V,F);
+    read_triangle_mesh(PATH_TO_OBJ_FILES "test_layer_" + to_string(i)+".obj",V,F);
     Fs.push_back(F);
     Vs.push_back(V);  
   }
@@ -75,7 +79,7 @@ int main(int argc, char * argv[])
 
   M = binaryMergeTreeCreation( Vs, Fs);
   
-  writeOBJ(PATH_TO_OBJ_FILES"../unioned.obj", M.cast_V<MatrixXd>(), M.F());
+  writeOBJ(PATH_TO_OBJ_FILES"unioned.obj", M.cast_V<MatrixXd>(), M.F());
 
   cout<<"Done"<<endl;
 }

@@ -64,7 +64,14 @@ meshedFile = ''
 
 if isBatch == True:
   # generate all of the scad files based on the template
-  num = 0
+  batchData = open(name)
+  for line in batchData.readlines():
+    curLine = line.strip().split(' ')
+    command = ['python', template, '-a']
+    for obj in curLine:
+      command.append(obj)
+    result = subprocess.check_output(command)
+    initialScadFiles.append(result.strip())
 else:
   initialScadFiles.append(name)
 
@@ -84,6 +91,7 @@ for i in range(len(initialSTLFiles)):
   print 'slic3r', initialSTLFiles[i]
   try:
     result = subprocess.check_output(['slic3r', initialSTLFiles[i]])
+    print 'Finished Slic3r'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
   # add generated gcode file to list for next step
@@ -95,6 +103,7 @@ for i in range(len(initialGCodeFiles)):
   # get number of layers and append it to layers
   numberOfLayers = 0
   try:
+    print 'Running gcode2layers.py'
     numberOfLayers = int(subprocess.check_output(['python', 'gcode2layers.py', '--name', initialGCodeFiles[i]])) + 1
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
@@ -129,6 +138,8 @@ for i in range(len(layerSTLFiles)):
   layerObjFiles.append(layerSTLFiles[i][:-4]+'.obj')
 
 # combine obj files into one file
+blah = 5
+
 # save it and call simulation
 # still a work in progress
 
