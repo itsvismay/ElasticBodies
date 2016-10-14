@@ -18,19 +18,19 @@ using namespace igl;
 // Hella memory inefficient, 
 // make this better in the future
 // use pointer or some shit to keep track of splits
-CSGTree binaryMergeTreeCreation(vector<MatrixXd>& Vs, vector<MatrixXi>& Fs){
+CSGTree* binaryMergeTreeCreation(vector<MatrixXd>& Vs, vector<MatrixXi>& Fs){
   cout << Vs.size() << " " << Fs.size() << endl;
 
   if(Vs.size()==2 && Fs.size()==2){
-    CSGTree M;
+    CSGTree* M;
     cout << "Creating M" << endl;
-    M = {{Vs[0], Fs[0]},{Vs[1], Fs[1]}, "u"};
+    M = new CSGTree(CSGTree(Vs[0], Fs[0]),CSGTree(Vs[1], Fs[1]), "u");
     cout << "Returning" << endl;
     return M;
   }
   else if(Vs.size() ==1 && Fs.size()==1){
-    CSGTree M;
-    M = {Vs[0], Fs[0]};
+    CSGTree* M;
+    M = new CSGTree(Vs[0], Fs[0]);
     cout << "Returning" << endl;
     return M;
   }
@@ -42,11 +42,13 @@ CSGTree binaryMergeTreeCreation(vector<MatrixXd>& Vs, vector<MatrixXi>& Fs){
     vector<MatrixXi> Fs2(make_move_iterator(Fs.begin() + Fs.size()/2),make_move_iterator(Fs.end()));
     Fs.erase(Fs.begin() + Fs.size()/2, Fs.end());
     cout << "two" << endl;
-    CSGTree M;
-    CSGTree M1 = binaryMergeTreeCreation(Vs, Fs);
-    CSGTree M2 = binaryMergeTreeCreation(Vs2, Fs2);
+    CSGTree* M;
+    CSGTree* M1 = binaryMergeTreeCreation(Vs, Fs);
+    CSGTree* M2 = binaryMergeTreeCreation(Vs2, Fs2);
     cout << "combining" << endl;
-    M = {{M1.V(), M1.F()},{M2.V(), M2.F()}, "u"};
+    M = new CSGTree(CSGTree(M1->V(), M1->F()),CSGTree(M2->V(), M2->F()), "u");
+    delete M1;
+    delete M2;
     return M;
   }
 }
@@ -77,14 +79,14 @@ int main(int argc, char * argv[])
   cout<<Fs.size()<<endl;
   cout<<Vs.size()<<endl;
   
-  CSGTree M;
+  CSGTree* M;
 
   cout << "starting binary merge" << endl;
   M = binaryMergeTreeCreation( Vs, Fs);
   cout << "finished binary merge" << endl;
   
   cout << "writing unioned obj" << endl;
-  writeOBJ(PATH_TO_OBJ_FILES"unioned.obj", M.cast_V<MatrixXd>(), M.F());
+  writeOBJ(PATH_TO_OBJ_FILES"unioned.obj", M->cast_V<MatrixXd>(), M->F());
   cout << "wrote unioned obj" << endl;
 
   cout<<"Done"<<endl;
