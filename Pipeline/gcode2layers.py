@@ -154,7 +154,7 @@ for layer in runLayers:
   file_write.write("\tif (width != 0.0) {\n")
   file_write.write("\t\tangle = atan((y2-y1)/(x2-x1)) +270;\n")
   file_write.write("\t\tif (x2>=x1) {\n")
-  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
   file_write.write("\t\t}\n")
   file_write.write("\t\telse {\n")
   file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
@@ -168,6 +168,7 @@ for layer in runLayers:
   for row in layerData:
     file_write.write("[%7.3f, %8.3f, %2.6f],\n" % (row[1], row[2], row[3]))
   file_write.write("];\n")
+  file_write.write("\n")
   z += layerThk
   file_write.write("translate([0.0, 0.0, %6.3f]) {\n" % (z))
   file_write.write("\tlinear_extrude(height = %6.3f, center = false, convexity = 10, twist = 0) {\n" % (layerThk))
