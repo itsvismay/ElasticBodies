@@ -1,1 +1,1 @@
-beam_test.scad 50 10 45
+beam_test.scad 10 2 4

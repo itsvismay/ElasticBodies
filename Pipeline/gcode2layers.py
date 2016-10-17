@@ -45,6 +45,7 @@ class Extrusion:
     self.endW = self.calculateWidth(eX, eY, eF, sE, eE)
 
   def calculateWidth(self, x, y, f, e, pE):
+    #return 0.5
     deltaE = self.startE - self.endE
     #if deltaE < -1.0:
     #  print 'ERROR ' + str(deltaE) + '\n'
@@ -187,7 +188,7 @@ for layer in runLayers:
 filename = "CCgcode_for_loop.scad"
 file_write = open(filename, "w")
 for layer in runLayers:
-  file_write.write("include <gcode_layer%d.scad>;\n" % (layer))
+  file_write.write("include <"+vName[:-6]+"_layer_%d.scad>;\n" % (layer))
 file_write.close()
 
 print numLayers

@@ -142,8 +142,8 @@ for i in range(len(initialGCodeFiles)):
   # run ./3dUnion_bin initialGCodeFiles[i][:-6] initialLayerSizes[i]
   print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i]
   try:
-    #temp = 0
-    result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
+    temp = 0
+    #result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
     #result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(3)])
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
