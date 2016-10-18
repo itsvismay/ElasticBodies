@@ -154,10 +154,16 @@ for layer in runLayers:
   file_write.write("\tif (width != 0.0) {\n")
   file_write.write("\t\tangle = atan((y2-y1)/(x2-x1)) +270;\n")
   file_write.write("\t\tif (x2>=x1) {\n")
-  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  if layer == 0:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  else:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);\n")
   file_write.write("\t\t}\n")
   file_write.write("\t\telse {\n")
-  file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
+  if layer == 0:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
+  else:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);")
   file_write.write("\t\t}\n")
   file_write.write("\t}\n")
   file_write.write("}\n")

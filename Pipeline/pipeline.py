@@ -87,10 +87,10 @@ for i in range(len(initialScadFiles)):
   initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
 for i in range(len(initialSTLFiles)):
-  # run slic3r initialSTLFiles[i]
-  print 'slic3r', initialSTLFiles[i]
+  # run slic3r initialSTLFiles[i] --load slic3rConfig.ini
+  print 'slic3r', initialSTLFiles[i], '--load slic3rConfig.ini'
   try:
-    result = subprocess.check_output(['slic3r', initialSTLFiles[i]])
+    result = subprocess.check_output(['slic3r', initialSTLFiles[i], '--load', 'slic3rConfig.ini'])
     print 'Finished Slic3r'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
@@ -143,7 +143,7 @@ for i in range(len(initialGCodeFiles)):
   print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i]
   try:
     temp = 0
-    #result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
+    result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
     #result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(3)])
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
