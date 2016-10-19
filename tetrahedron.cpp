@@ -1,11 +1,3 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <Eigen/LU>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
 #include "tetrahedron.h"
 
 using namespace Eigen;

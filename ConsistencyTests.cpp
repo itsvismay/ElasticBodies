@@ -1,14 +1,4 @@
-#include <igl/readOFF.h>
-#include <igl/readOBJ.h>
-#include <igl/barycenter.h>
-#include <igl/copyleft/tetgen/tetrahedralize.h>
-
-#include <sys/wait.h>
-#include <ctime>
 #include "ConsistencyTests.h"
-#include <fstream>
-using namespace Eigen;
-using namespace std; 
 
 ConsistencyTest::ConsistencyTest(void){
 	printThisOften = 0.1;
@@ -27,18 +17,18 @@ bool ConsistencyTest::checkAllAccuracy(){
 			4, 0, 2, 3;
 
 	TV.resize(5, 3);
-	TV << 10, 0, 0, //affect
+	TV << 10, 10, 0, //affect
+			0, 20, 0,
+			0, 10, 10,
 			0, 10, 0,
-			0, 0, 10,
-			0, 0, 0,
-			0, -10, 0;
+			0, 0, 0;
 
-	int timestep =0.01;
+	double timestep =0.01;
 	// return 	checkVerletAccuracy(timestep, 1, 'e', TT, TV, B)
 	// 		&&
-			// checkNewmarkAccuracy(timestep, 1, 'n', TT, TV, B)
+	return checkNewmarkAccuracy(timestep, 1, 'n', TT, TV, B);
 			// &&
-		return	checkEulerAccuracy(timestep, 1, 'i', TT, TV, B);
+		//return	checkEulerAccuracy(timestep, 1, 'i', TT, TV, B);
 }
 
 bool ConsistencyTest::checkVerletAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
@@ -53,27 +43,55 @@ bool ConsistencyTest::checkVerletAccuracy(double timestep, int iterations, char 
 bool ConsistencyTest::checkEulerAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
-	gravity = 10;
+	gravity = -0;
+	rayleighCoeff =0;
 	Simulation vSim;
-	cout<<TV<<endl;
-	cout<<TT<<endl;
+
+	cout<<"timestep \n"<<timestep<<endl;
 	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices, 2e6, 0.35);
-	vSim.render();
-	cout<<"Euler"<<endl<<vSim.integrator->TV<<endl;
-	return 1;
+	vSim.integrator->v_old(0)+=1;
+	for(int i=0; i<10; i++)
+		vSim.render();
+
+	VectorXd realXfromMathematica(15);
+	realXfromMathematica<< 10.0292,
+					          10,
+					    0.012497,
+					   0.0291688,
+					          20,
+					 -0.00416129,
+					   0.0125097,
+					          10,
+					     9.99583,
+					   0.0291678,
+					          10,
+					 -0.00416102,
+					   0.0291688,
+					-7.95354e-08,
+					 -0.00416129;
+
+	bool q = (vSim.integrator->x_old - realXfromMathematica).norm()<0.0001;
+	return q;
 }
 bool ConsistencyTest::checkNewmarkAccuracy(double timestep, int iterations, char method, MatrixXi TT, MatrixXd TV, MatrixXd B ){
-// 	vector<int> moveVertices;
-// 	vector<int> fixedVertices;
-// 	Simulation vSim;
-// 	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices);
-// 	vSim.render();
-// 	cout<<"Newmark"<<endl<<vSim.integrator->TV<<endl;
-// 	return 1;
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
+	gravity = -0;
+	rayleighCoeff =0;
+	Simulation vSim;
+
+	vSim.integrator->v_old(0)+=1;
+	vSim.initializeSimulation(timestep, iterations, method, TT, TV, B, moveVertices, fixedVertices, 2e6, 0.35);
+	vSim.render();
+
+	cout<<"Newmark"<<endl<<vSim.integrator->x_old<<endl;
+	return 1;
 }
 
 void ConsistencyTest::runAllTests(){
-	checkAllAccuracy();
+	if(checkAllAccuracy()){
+		cout<<"Accuracy Tests Passed"<<endl;
+	}
 	exit(0);
 
  	//Time stuff------
@@ -172,7 +190,7 @@ void ConsistencyTest::test(double timestep, char method, string printToHere, Mat
 			fixedVertices.push_back(i);
 		}
 	}
-	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices, 1.2e6, 0.35);
+	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices, 2e6, 0.35);
 
 	while(seconds<printForThisManySeconds){
 		iters+=1;

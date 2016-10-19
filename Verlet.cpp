@@ -1,16 +1,5 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
-
 #include "Verlet.h"
-#include "globals.h"
 
-using namespace Eigen;
-using namespace std;
 
 void Verlet::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
 	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);

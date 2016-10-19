@@ -1,25 +1,16 @@
-#ifndef CONSISTENCY__H
-#define CONSISTENCY__H
-
-#include <igl/writeOBJ.h>
+#ifndef consistency_tests_h
+#define consistency_tests_h
 
 #include "simulation.h"
-#include "globals.h"
-
-
-using namespace Eigen;
-using namespace std;
-
-#define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
-#define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
-
-// #define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
-// #define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/" 
+#include <igl/copyleft/tetgen/tetrahedralize.h>
+#include <igl/writeOBJ.h>
+#include <igl/barycenter.h>
+#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
 
 class ConsistencyTest{
 
 public:
-
 
 	double printThisOften, printForThisManySeconds;
 	int spaceIterations, timeIterations;

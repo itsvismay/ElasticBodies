@@ -1,25 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <string>
-#include <math.h>
-//#include <lbfgs.h>
-#include <set>
-#include <ctime>
-#include <fstream>
-#include <igl/writeOBJ.h>
-#include <igl/barycenter.h>
-
 #include "simulation.h"
-#include "globals.h"
-
-
-
-using namespace Eigen;
-using namespace std;
-typedef Eigen::Triplet<double> Trip;
-typedef Matrix<double, 12, 1> Vector12d;
 
 Simulation::Simulation(void){}
 
@@ -42,6 +21,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		exit(0);
 	}
 
+	
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
 		newTV.resize(TV.rows(), TV.cols());
@@ -106,6 +86,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		}
 		
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
+		cout<<"CHECK"<<endl;
+		for(int i=0; i<fixVertices.size();i++)
+			cout<<fixVertices[i]<<endl;
+		
 		integrator->fixVertices(newfixIndices);
 
 	}else{
@@ -120,6 +104,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 }
 
 
+
 void Simulation::headless(){
 	clock_t begin = clock();
 
@@ -128,7 +113,9 @@ void Simulation::headless(){
 	}
 
 	clock_t end = clock();
+	cout<<"TIME ELAPSED"<<endl<<endl;
 	cout<<"Seconds Elapsed: "<<double(end-begin)/CLOCKS_PER_SEC<<endl;
+
 }
 
 void Simulation::render(){
@@ -249,6 +236,7 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 
 void Simulation::setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
 	//TODO: implement this
+	
 }
 
 
@@ -341,7 +329,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	//Move vertices slightly in x,y,z direction
 	// [v, v, v..., f, f, ...(m), (m), (m)...]
 	for(unsigned int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[1]-= move_step;//move step
+		TV.row(TV.rows()-i-1)[1] -= move_step;//move step
 	}
 	
 	//Newtons method static solve for minimum Strain E
@@ -477,10 +465,10 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
 
 	ofstream distvLoadFile;
-	distvLoadFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/distvLoad.txt");
+	distvLoadFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/distvLoadprq2.txt");
 
 	ofstream youngsFile;
-	youngsFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/youngsspringneo.txt");
+	youngsFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/youngsspringneoprq2.txt");
 
 
 	//REAL VALUES FROM EXPERIMENT
@@ -597,7 +585,6 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 	vector<pair<double, double>> realLoads = 
 	{
-		{0.00709,	0.06437},
 		{0.01708,	0.25298},
 		{0.02459,	0.42219},
 		{0.03355,	0.61954},
@@ -871,11 +858,21 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 		//binary search for youngs
 		double min_youngs = 800000;
-		double max_youngs = 5000000;
+		double max_youngs = 6000000000;
 		load_scalar = 0;
 		while(abs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
 			load_scalar =0;
 			curr_youngs = (min_youngs+max_youngs)/2; //just a guess
+			
+			if(abs(curr_youngs - max_youngs)<0.0000001 || abs(curr_youngs - min_youngs)<0.0000001){
+				cout<<"Error: Young's Modulus did not converge."<<endl;
+				cout<<"Current y: "<<curr_youngs<<endl;
+				cout<<"Max y: "<<max_youngs<<endl;
+				cout<<"Min y: "<<min_youngs<<endl;
+				cout<<"Message: Check that the correct vertices are being moved and held"<<endl;
+				cout<<"Message: Check that the shape is stretched in the correct direction"<<endl;
+				exit(0);
+			}
 			M.setNewYoungsPoissons(curr_youngs, 0.35);
 			VectorXd f;
 			f.resize(3*TV.rows());
@@ -962,6 +959,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 
 			load_scalar = abs(load(0)/1000);
 
+			cout<<dist_moved<<", "<<load_scalar<<endl;
 			generateLoadsFile<<dist_moved<<", "<<load_scalar<<endl;
 		}
 		cout<<count<<endl;
@@ -1002,8 +1000,8 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, Matrix
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	system("mkdir -p " OUTPUT_SAVED_PATH "Condor/TestsResults/SpringLoadTests/");
-	igl::writeOBJ(OUTPUT_SAVED_PATH "Condor/TestsResults/SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	system("mkdir -p " OUTPUT_SAVED_PATH "Condor/TestsResults/prq2SpringLoadTests/");
+	igl::writeOBJ(OUTPUT_SAVED_PATH "Condor/TestsResults/prq2SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 	
 	return;
 }

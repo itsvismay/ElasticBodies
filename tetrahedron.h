@@ -1,15 +1,7 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef tetrahedron_h
+#define tetrahedron_h
 
-using namespace Eigen;
-using namespace std;
-
-typedef Matrix<double, 12, 1> Vector12d;
+#include "globals.h"
 
 class Tetrahedron
 {
@@ -26,3 +18,5 @@ public:
     Matrix3d computeDs(const Vector12d& x);
 
 };
+
+#endif

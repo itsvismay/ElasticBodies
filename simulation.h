@@ -1,28 +1,15 @@
-#ifndef SIMULATION__H
-#define SIMULATION__H
-
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <math.h>
-
-
+#ifndef simulation_h
+#define simulation_h
 
 #include "Verlet.h"
 #include "ImplicitEuler.h"
 #include "ImplicitNewmark.h"
 
+#include <igl/writeOBJ.h>
+#include <igl/barycenter.h>
+#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
 
-using namespace Eigen;
-using namespace std;
-
-#define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
-#define OUTPUT_SAVED_PATH "/scratch/cluster/vismay/"
-
-// #define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
-// #define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"
 
 class Simulation{
 
@@ -32,10 +19,6 @@ public:
 	vector<int> mapV2TV;
 	int iters;
 	MatrixXd sB;
-
-	//TODO: cleanup this code (its so terrible)
-	MatrixXd thisTV;
-	MatrixXd thisx;
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
@@ -56,5 +39,4 @@ public:
 	void render();
 
 };
-
 #endif
