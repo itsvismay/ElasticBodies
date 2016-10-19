@@ -5,13 +5,13 @@ FROM scratch
 RUN apt install aptitude
 RUN apt install vim
 RUN apt install git
-RUN apt install build-essentials
+RUN apt install build-essential
 RUN apt install libgl1-mesa-dev
 RUN apt install freeglut3-dev
 RUN apt install cmake
 RUN apt install libblas-dev
 RUN apt install libboost-dev
-RUN apt install llibmpfr4 libmpfr4-dbg
+RUN apt install libmpfr4 libmpfr4-dbg
 RUN apt install libopenblas-dev
 RUN apt install libpng12-dev
 RUN apt install python-matplotlib
@@ -28,6 +28,7 @@ RUN apt install libeigen3-dev
 RUN apt install openscad openscad-dbg
 RUN apt install slic3r
 RUN apt install meshlab
+RUN apt install clang
 
 # required downloads - use wget
 # Anaconda
