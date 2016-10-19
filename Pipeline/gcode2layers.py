@@ -11,7 +11,7 @@ layerHeight = 0.4
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'f', ["name="])
 except getopt.GetoptError:
-  print 'Error Bad Input'
+  #print 'Error Bad Input'
   sys.exit(-2)
 for opt, arg in opts:
   if opt == "--name":
@@ -45,9 +45,10 @@ class Extrusion:
     self.endW = self.calculateWidth(eX, eY, eF, sE, eE)
 
   def calculateWidth(self, x, y, f, e, pE):
+    #return 0.5
     deltaE = self.startE - self.endE
-    if deltaE < -1.0:
-      print 'ERROR ' + str(deltaE) + '\n'
+    #if deltaE < -1.0:
+    #  print 'ERROR ' + str(deltaE) + '\n'
     deltaD = np.sqrt((self.endX - self.startX)**2.0 + (self.endY - self.startY)**2)
     if deltaD == 0.0:
       return 0.0
@@ -120,10 +121,10 @@ def cleanData(rawData, numLines):
 
   return newData, extrusions, count, layer
 
-print vName
-Data_old, numLines_old = loadData(vName); print numLines_old
+#print vName
+Data_old, numLines_old = loadData(vName); #print numLines_old
 Data, extrusions, numLines, numLayers = cleanData(Data_old, numLines_old)
-print numLines, numLayers
+#print numLines, numLayers
 
 #-------------------------------------------------
 # Code for writing the layer files into scad
@@ -135,12 +136,45 @@ DataNP = np.array(Data)
 runLayers = range(numLayers+1)
 for layer in runLayers:
   layerData = DataNP[indices == layer]
-  filename = vName[:5]+"_layer" + str(layer) + ".scad"
+  filename = vName[:-6]+"_layer_" + str(layer) + ".scad"
   file_write = open(filename, "w")
+  # write needed modules
+  file_write.write("module drawBasicShape(x1, y1, x2, y2, width)\n")
+  file_write.write("{\n")
+  file_write.write("\tlength = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));\n")
+  file_write.write("\tif (width!=0.0) {\n")
+  file_write.write("\t\tsquare(size = [width, length], center = false);\n")
+  file_write.write("\t\ttranslate([width/2, 0, 0]) circle(d=width);\n")
+  file_write.write("\t\ttranslate([width/2, length, 0]) circle(d=width);\n")
+  file_write.write("\t}\n")
+  file_write.write("}\n")
+  file_write.write("\n")
+  file_write.write("module translateAndRotate(x1, y1, x2, y2, width)\n")
+  file_write.write("{\n")
+  file_write.write("\tif (width != 0.0) {\n")
+  file_write.write("\t\tangle = atan((y2-y1)/(x2-x1)) +270;\n")
+  file_write.write("\t\tif (x2>=x1) {\n")
+  if layer == 0:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  else:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);\n")
+  file_write.write("\t\t}\n")
+  file_write.write("\t\telse {\n")
+  if layer == 0:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
+  else:
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);")
+  file_write.write("\t\t}\n")
+  file_write.write("\t}\n")
+  file_write.write("}\n")
+  file_write.write("\n")
+
+  # write actual data
   file_write.write('points' + str(layer) + ' = [\n')
   for row in layerData:
     file_write.write("[%7.3f, %8.3f, %2.6f],\n" % (row[1], row[2], row[3]))
   file_write.write("];\n")
+  file_write.write("\n")
   z += layerThk
   file_write.write("translate([0.0, 0.0, %6.3f]) {\n" % (z))
   file_write.write("\tlinear_extrude(height = %6.3f, center = false, convexity = 10, twist = 0) {\n" % (layerThk))
@@ -161,7 +195,9 @@ for layer in runLayers:
 filename = "CCgcode_for_loop.scad"
 file_write = open(filename, "w")
 for layer in runLayers:
-  file_write.write("include <gcode_layer%d.scad>;\n" % (layer))
+  file_write.write("include <"+vName[:-6]+"_layer_%d.scad>;\n" % (layer))
 file_write.close()
 
-sys.exit(numLayers)
+print numLayers
+
+#sys.exit(numLayers)

@@ -27,6 +27,7 @@ RUN apt purge libcgal-dev
 RUN apt install libeigen3-dev
 RUN apt install openscad openscad-dbg
 RUN apt install slic3r
+RUN apt install meshlab
 
 # required downloads - use wget
 # Anaconda
