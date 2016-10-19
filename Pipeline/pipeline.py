@@ -7,6 +7,7 @@
 # --batch + "filename.txt"   -> indicates to generate scad files for a file containing all of the data for an individual in a single line
 # --template + "filename.py" -> indicates which template to use for generating scad files
 # --name + "name"            -> indicates specific name for non-batch input file
+# --sConfig + "name.ini"     -> indicates the specific slic3r settings to use
 # --ind + #                  -> indicates individual number
 # --gen + #                  -> indicates generation number
 # -c                         -> indicates that this script should delete intermediate files after it runs
@@ -25,11 +26,12 @@ template = ""
 name = ""
 generation = 0
 individual = 0
+sConfig = "slic3rConfig.ini"
 
 currentPath = os.path.dirname(os.path.abspath(__file__))
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'c', ["file=","batch=","template=","name=","ind=","gen="])
+  opts, args = getopt.getopt(sys.argv[1:], 'c', ["file=","batch=","template=","name=","ind=","gen=", "sConfig="])
 except getopt.GetoptError:
   print 'Error Bad Input'
   sys.exit(-2)
@@ -52,6 +54,8 @@ for opt, arg in opts:
     individual = int(arg)
   if opt == "-c":
     cleanAll = True
+  if opt == "sConfig":
+    sConfig = arg
 
 initialScadFiles = []
 initialSTLFiles = []
@@ -87,10 +91,10 @@ for i in range(len(initialScadFiles)):
   initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
 for i in range(len(initialSTLFiles)):
-  # run slic3r initialSTLFiles[i] --load slic3rConfig.ini
-  print 'slic3r', initialSTLFiles[i], '--load slic3rConfig.ini'
+  # run slic3r initialSTLFiles[i] --load sConfig
+  print 'slic3r', initialSTLFiles[i], '--load', sConfig
   try:
-    result = subprocess.check_output(['slic3r', initialSTLFiles[i], '--load', 'slic3rConfig.ini'])
+    result = subprocess.check_output(['slic3r', initialSTLFiles[i], '--load', sConfig])
     print 'Finished Slic3r'
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
