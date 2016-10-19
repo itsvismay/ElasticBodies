@@ -1,17 +1,4 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
-
 #include "IntegratorsAbstract.h"
-#include "globals.h"
-
-
-using namespace Eigen;
-using namespace std;
 
 //TODO: Optimize this using hashing
 bool IntegratorAbstract::isFixed(int vert){
@@ -38,7 +25,7 @@ void IntegratorAbstract::printInfo(){
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 			
 			k++;
-			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
+			gravityE +=  massVector(k)*gravity*(x_old(k));//TODO CHANGE GRAVITY
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 			
 			k++;

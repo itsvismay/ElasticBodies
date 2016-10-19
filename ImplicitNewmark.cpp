@@ -1,22 +1,5 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
-// #include <lbfgs.h>
-// #include "Eigen/SPQRSupport"
-// #include <Eigen/CholmodSupport>
-
 #include "ImplicitNewmark.h"
 #include "globals.h"
-
-using namespace Eigen;
-using namespace std;
-
-typedef Eigen::Triplet<double> Trip;
-typedef Matrix<double, 12, 1> Vector12d;
 
 // static lbfgsfloatval_t evaluateNewmark(void *impn, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
 // 	ImplicitNewmark* in = (ImplicitNewmark*) impn;
@@ -309,10 +292,10 @@ void ImplicitNewmark::renderNewtonsMethod(){
 void ImplicitNewmark::render(){
 	simTime+=1;
 	cout<<"n"<<simTime<<endl;
+	IntegratorAbstract::printInfo();
 	// renderLBFGS();
 	renderNewtonsMethod();
 
 	NewmarkXtoTV(x_old, TV);
-	IntegratorAbstract::printInfo();
 	return;
 }

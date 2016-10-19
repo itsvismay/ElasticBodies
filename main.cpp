@@ -1,13 +1,11 @@
+#include "simulation.h"
+#include "ConsistencyTests.h"
 #include <igl/viewer/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
-// #include <igl/readOFF.h>
-// #include <igl/readOBJ.h>
-#include <fstream>
-
-#include "simulation.h"
-#include "globals.h"
-#include "ConsistencyTests.h"
-
+#include <igl/writeOBJ.h>
+#include <igl/barycenter.h>
+#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
 
 ofstream momentumFile;
 ofstream energyFile;
@@ -106,9 +104,9 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
 	
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,1,0));
-	viewer.data.add_edges(RowVector3d(0,39,0), RowVector3d(0,40,0), RowVector3d(1,0,1));
+	viewer.data.add_edges(RowVector3d(0,30,0), RowVector3d(0,41,0), RowVector3d(1,0,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,20), RowVector3d(0,1,1));
-	viewer.data.add_edges(RowVector3d(0,-1,0), RowVector3d(0,-2,0), RowVector3d(1,0,1));
+	viewer.data.add_edges(RowVector3d(0,-40,0), RowVector3d(0,-30,0), RowVector3d(1,0,1));
 
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
@@ -117,9 +115,9 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
+	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 
 
 	// Tetrahedralize the interior
@@ -143,27 +141,29 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// 	}
 	// }
 	//***************************
-	exit(0);
+
 	//********SPRING*******************
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	
 	// // move vertices
 	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[1]>=-3 && TV.row(i)[1]<-1){
+	 	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
 	 		moveVertices.push_back(i);
 	 	}
 	}
 
 	//fix vertices
 	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1]<=41 && TV.row(i)[1]>39){
+		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
 			fixedVertices.push_back(i);
+			cout<<"here"<<endl;
 		}
 	}
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
-		
+	
+	
 	if(headless){
 		Sim.headless();
 	}else{
@@ -189,11 +189,11 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 				4, 0, 2, 3;
 
 	TV_One_G.resize(5, 3);
-	TV_One_G << 10, 0, 0, //affect
+	TV_One_G << 10, 10, 0, //affect
+				0, 20, 0,
+				0, 10, 10,
 				0, 10, 0,
-				0, 0, 10,
-				0, 0, 0,
-				0, -10, 0;
+				0, 0, 0;
 				
 	// TV_One_G << 0, 0, 0, //affect
 	// 			1, 10, 0,

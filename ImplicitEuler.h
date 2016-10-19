@@ -1,14 +1,6 @@
-#ifndef IMPLICITEULER__H
-#define IMPLICITEULER__H
 
-
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef implicit_euler_h
+#define implicit_euler_h
 
 #include "IntegratorsAbstract.h"
 

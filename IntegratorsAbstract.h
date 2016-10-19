@@ -1,18 +1,11 @@
-#ifndef INTEGRATORS__H
-#define INTEGRATORS__H
-
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef integrators_abstract_h
+#define integrators_abstract_h
 
 #include "solidmesh.h"
 
-using namespace Eigen;
-using namespace std;
+#include "Eigen/SPQRSupport"
+#include <Eigen/CholmodSupport>
+#include <lbfgs.h>
 
 class IntegratorAbstract{
 
@@ -42,4 +35,5 @@ public:
 	void fixVertices(vector<int> fixMe);
 	void createXFromTet();
 };
+
 #endif

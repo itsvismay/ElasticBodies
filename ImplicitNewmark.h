@@ -1,18 +1,7 @@
-#ifndef IMPLICIT_NEWMARK__H
-#define IMPLICIT_NEWMARK__H
-
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef implicit_newmark_h
+#define implicit_newmark_h
 
 #include "IntegratorsAbstract.h"
-
-using namespace Eigen;
-using namespace std;
 
 class ImplicitNewmark: public IntegratorAbstract{
 

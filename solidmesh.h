@@ -1,9 +1,7 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include "tetrahedron.h"
+#ifndef solidmesh_h
+#define solidmesh_h
 
-using namespace Eigen;
-using namespace std;
+#include "tetrahedron.h"
 
 class SolidMesh
 {
@@ -15,3 +13,5 @@ class SolidMesh
 
         void setNewYoungsPoissons(double youngs, double poissons);
 };
+
+#endif

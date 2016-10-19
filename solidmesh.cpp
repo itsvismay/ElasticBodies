@@ -1,9 +1,5 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
 #include "solidmesh.h"
 
-using namespace Eigen;
-using namespace std;
 
 SolidMesh::SolidMesh(void){}
 
