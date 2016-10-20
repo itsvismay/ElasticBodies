@@ -1,6 +1,8 @@
 #include "mesh.h"
 
-Mesh::Mesh(char* f) {
+#include <iostream>
+
+Mesh::Mesh(string) {
   file = f;
   readFromFile();
 }
@@ -22,13 +24,28 @@ void Mesh::readFromFile() {
 }
 
 void Mesh::writeToFile() {
+  ofstream fileWrite(file);
 
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    fileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " (*it)->vert[2] << endl;
+  }
+  for (vector<ivec4>::iterator it = faces.begin(); it != faces.end(); ++it) {
+    fileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " (*it)[2] << " " << (*it)[3] << endl;
+  }
+
+  fileWrite.close();
 }
 
 void Mesh::translate(float x, float y, float z) {
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     (*it)->translate(x,y,z);
   }
+}
+
+BoundingVolume* Mesh::createCubeBound(float height) {
+  // will be implemented in a future iteration if needed
+  cout << "Mesh::createCubeBound not implemented" << endl;
+  return 0x0;
 }
 
 BoundingVolume* Mesh::createTopBound(float depth) {
