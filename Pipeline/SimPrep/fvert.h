@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+using namespace glm;
+
 class FVert {
 public:
   vec3 vert;

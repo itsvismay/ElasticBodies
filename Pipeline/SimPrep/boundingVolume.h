@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include "fvert.h"
 
 using namespace std;
 using namespace glm;

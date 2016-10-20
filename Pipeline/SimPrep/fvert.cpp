@@ -4,7 +4,7 @@ FVert::FVert() {
   vert = vec3(0.0f, 0.0f, 0.0f);
   index = -1;
   force = 0.0f;
-
+}
 
 FVert::FVert(vec3 v, int i) {
   vert = v;

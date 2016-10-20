@@ -24,6 +24,6 @@ void BoundingVolume::addBoundingVolume(BoundingVolume* volume) {
 void BoundingVolume::distributeForce(float maxForce) {
   float forcePerVert = maxForce / verts.size();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-    (*it).force += forcePerVert;
+    (*it)->force += forcePerVert;
   }
 }
