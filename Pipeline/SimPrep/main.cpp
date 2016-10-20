@@ -29,6 +29,20 @@
 // --frontCubeForce + depth  -> apply the force to the front cube of verts
 // --backCubeVerts + depth   -> apply the force to the back cube of verts
 
+// force domain arguements - will be included later also will be slower
+// to be used to define a custom domain, then detect verts in that domain
+// two of the following three must be defined, all three is an error
+// --domainMinX + #          -> define min x domain bounds
+// --domainMaxX + #          -> define max x domain bounds
+// --domainMinY + #          -> define min y domain bounds
+// --domainMaxY + #          -> define max y domain bounds
+// --domainMinZ + #          -> define min z domain bounds
+// --domainMaxZ + #          -> define max z domain bounds
+// --domainBezier + file.txt -> define bezier surface domain bounds
+// --domainDirX + #          -> define domain direction to be pos or neg x
+// --domainDirY + #          -> define domain direction to be pos or neg y
+// --domainDirZ + #          -> define domain direction to be pos or neg z
+
 #include <iostream>
 #include <fstream>
 #include <string>
