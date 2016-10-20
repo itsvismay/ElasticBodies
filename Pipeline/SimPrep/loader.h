@@ -20,7 +20,7 @@ public:
     while (ifs.peek() != EOF) {
       ifs.getline(line, sizeof(line), '\n');
       const char* token = line + strspn(line, " \t");
-      
+
       if (token[0] == 0) continue;
       if (token[0] == 'v' && isSpace(token[1])) parseVert(mesh, token += 2);
       if (token[0] == 'f' && isSpace(token[1])) parseFace(mesh, token += 2);
@@ -34,10 +34,26 @@ public:
   }
 
   static void parseVert(Mesh* mesh, char* token) {
-    // to be implemented
+    vec3 vert(0.0f,0.0f,0.0f);
+    int ind = 0;
+    while (token != NULL && ind != 3)
+    {
+      vert[ind] = atof(token);
+      ind++;
+      token = strtok(token, " ");
+    }
+    mesh->addVert(vert);
   }
 
   static void parseFace(Mesh* mesh, char* token) {
-    // to be implemented
+    ivec4 face(0, 0, 0, 0);
+    int ind = 0;
+    while (token != NULL && ind != 4)
+    {
+      vert[ind] = atoi(token);
+      ind++;
+      token = strtok(token, " ");
+    }
+    mesh->addFace(face);
   }
 };

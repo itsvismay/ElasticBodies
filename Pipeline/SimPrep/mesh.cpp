@@ -23,23 +23,49 @@ void Mesh::readFromFile() {
   Loader.loadMesh(this, file);
 }
 
-void Mesh::writeToFile() {
-  ofstream fileWrite(file);
+void Mesh::writeToFile(ProgramSettings* settings) {
+  ofstream objFileWrite(settings->mesh);
+  ofstream forceFileWrite(settings->outputForce);
 
-  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-    fileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " (*it)->vert[2] << endl;
-  }
-  for (vector<ivec4>::iterator it = faces.begin(); it != faces.end(); ++it) {
-    fileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " (*it)[2] << " " << (*it)[3] << endl;
+  // write geometry data
+  if (settings->needsAlignment) {
+    for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+      objFileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " (*it)->vert[2] << endl;
+    }
+    for (vector<ivec4>::iterator it = faces.begin(); it != faces.end(); ++it) {
+      objFileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " (*it)[2] << " " << (*it)[3] << endl;
+    }
   }
 
-  fileWrite.close();
+  // write force data
+  if (settings->needsForce) {
+    for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+      forceFileWrite << (*it)->force * settings->direction[0] << " " << (*it)->force * settings->direction[1] << " " << (*it)->force * settings->direction[2] << endl;
+    }
+  }
+
+  objFileWrite.close();
+  forceFileWrite.close();
 }
 
 void Mesh::translate(float x, float y, float z) {
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     (*it)->translate(x,y,z);
   }
+}
+
+void Mesh::addVert(vec3 vert) {
+  if (vert[0] < xExtremes[0]) xExtremes[0] = vert[0];
+  if (vert[0] > xExtremes[1]) xExtremes[1] = vert[0];
+  if (vert[1] < yExtremes[0]) yExtremes[0] = vert[1];
+  if (vert[1] > yExtremes[1]) yExtremes[1] = vert[1];
+  if (vert[2] < zExtremes[0]) zExtremes[0] = vert[2];
+  if (vert[2] > zExtremes[1]) zExtremes[1] = vert[2];
+  verts->push_back(new FVert(vert, verts.size()));
+}
+
+void Mesh::addFace(ivec4 face) {
+  faces->push_back(face);
 }
 
 BoundingVolume* Mesh::createCubeBound(float height) {

@@ -13,6 +13,12 @@ BoundingVolume::~BoundingVolume() {
 }
 
 void BoundingVolume::addVert(FVert* vert) {
+  if (vert.vert[0] < xExtremes[0]) xExtremes[0] = vert.vert[0];
+  if (vert.vert[0] > xExtremes[1]) xExtremes[1] = vert.vert[0];
+  if (vert.vert[1] < yExtremes[0]) yExtremes[0] = vert.vert[1];
+  if (vert.vert[1] > yExtremes[1]) yExtremes[1] = vert.vert[1];
+  if (vert.vert[2] < zExtremes[0]) zExtremes[0] = vert.vert[2];
+  if (vert.vert[2] > zExtremes[1]) zExtremes[1] = vert.vert[2];
   verts.push_back(vert);
 }
 

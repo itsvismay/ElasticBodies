@@ -48,7 +48,6 @@
 #include <fstream>
 #include <string>
 #include <glm/glm.hpp>
-#include "programSettings.h"
 #include "mesh.h"
 
 using namespace std;
@@ -80,9 +79,9 @@ int main(int argc, char* argv[]) {
     else if (strcmp(arg, "--leftCubeAlign")) settings->needsAlignment = true; settings->leftCubeAlign = true; settings->depth = atof(argv[++currentArg]);
     else if (strcmp(arg, "--frontCubeAlign")) settings->needsAlignment = true; settings->frontCubeAlign = true; settings->depth = atof(argv[++currentArg]);
     else if (strcmp(arg, "--backCubeAlign")) settings->needsAlignment = true; settings->backCubeAlign = true; settings->depth = atof(argv[++currentArg]);
-    else if (strcmp(arg, "--maxForce")) settings->maxForce = atof(argv[++currentArg]);
-    else if (strcmp(arg, "--constant")) settings->constantForce = true;
-    else if (strcmp(arg, "--impulse")) settings->impulseForce = true;
+    else if (strcmp(arg, "--maxForce")) settings->needsForce = true; settings->maxForce = atof(argv[++currentArg]);
+    else if (strcmp(arg, "--constant")) settings->needsForce = true; settings->constantForce = true; settings->maxForce = atof(argv[++currentArg]);
+    else if (strcmp(arg, "--impulse")) settings->needsForce = true; settings->impulseForce = true; settings->maxForce = atof(argv[++currentArg]);
     else if (strcmp(arg, "--bezierFile")) settings->bezierForce = true; settings->bezierForceFile = string(argv[++currentArg]);
     else if (strcmp(arg, "--topCubeForce")) settings->topCubeForce = true; settings->forceDepth = atof(argv[++currentArg]);
     else if (strcmp(arg, "--botCubeForce")) settings->botCubeForce = true; settings->forceDepth = atof(argv[++currentArg]);
@@ -122,10 +121,22 @@ int main(int argc, char* argv[]) {
     vec3 newOrigin = volume->getNewOrigin(settings->corner);
     mesh.translate(-newOrigin[0], -newOrigin[1], -newOrigin[2]);
   }
-  // calculate the force bounds and find all forces within it
+  // calculate the force bounds and calculate all forces within it
   BoundingVolume* forceVolume = 0x0;
+  if (settings->needsForce)
+  {
+    // initialize force bounding volume
+    if (settings->topCubeForce) forceVolume = mesh->createTopBound(settings->forceDepth);
+    else if (settings->botCubeForce) forceVolume = mesh->createBotBound(settings->forceDepth);
+    else if (settings->rightCubeForce) forceVolume = mesh->createRightBound(settings->forceDepth);
+    else if (settings->leftCubeForce) forceVolume = mesh->createLeftBound(settings->forceDepth);
+    else if (settings->frontCubeForce) forceVolume = mesh->createFrontBound(settings->forceDepth);
+    else if (settings->backCubeForce) forceVolume = mesh->createBackBound(settings->forceDepth);
+    // distribute force per vert in volume
+    forceVolume->distributeForce(settings->maxForce);
+  }
   // print all verts with forces into the data file
-
+  mesh->writeToFiles(settings);
   // clean up
   if (forceVolume) delete forceVolume;
   if (volume) delete volume;

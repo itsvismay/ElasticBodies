@@ -25,6 +25,7 @@ public:
   bool leftCubeAlign;
   bool frontCubeAlign;
   bool backCubeAlign;
+  bool needsForce;
   bool cubeForce;
   bool topCubeForce;
   bool botCubeForce;
