@@ -32,6 +32,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <glm/glm.hpp>
 
 using namespace std;
 using namespace glm;

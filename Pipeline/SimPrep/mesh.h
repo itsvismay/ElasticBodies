@@ -1,9 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <glm/ivec4.hpp>
-#include <glm/vec4.hpp>
-#include <glm/vec2.hpp>
+#include <glm/glm.hpp>
 #include "boundingVolume.h"
 
 using namespace std;
