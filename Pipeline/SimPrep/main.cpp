@@ -1,10 +1,9 @@
-#include <iostream>
-#include <glm/vec3.hpp>
-
 // input arguements
 
 // logistical arguements
-// --name + name             -> the name of the mesh to set up
+// --mesh + name             -> the name of the mesh to set up
+// --config + name           -> the name of the file that contains the config info
+// --output + name           -> the name of the output force file
 
 // alignment arguements
 // --corner + #              -> the corner of bounding shape to use as origin
@@ -30,9 +29,21 @@
 // --frontCubeForce + depth  -> apply the force to the front cube of verts
 // --backCubeVerts + depth   -> apply the force to the back cube of verts
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 using namespace std;
 using namespace glm;
 
 int main(int argc, char* argv[]) {
   cout << "HELLO WORLD" << endl;
+  if (argc == 2) return -1;
+
+  // stages of the program
+  // read in all the verts and faces
+  // calculate the bounding shape based on the verts
+  // translate the object to the origin
+  // calculate the force bounds and find all forces within it
+  // print all verts with forces into the data file
 }
