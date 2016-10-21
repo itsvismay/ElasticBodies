@@ -1,5 +1,7 @@
 #pragma once
 
+// I am representing bezier as its combination form
+
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -17,4 +19,7 @@ public:
   void addCtrl(vec2 point);
   void removeCtrl(vec2 point);
   void evaluateCtrls();
+  void drawBezier();
+  void drawBezierLines();
+  void drawBezierPoints();
 };
