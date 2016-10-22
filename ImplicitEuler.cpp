@@ -14,7 +14,6 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 		in->x_k(i) = x[i];
 	}
 
-	
 
 	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
 	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
@@ -130,10 +129,10 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
-		f(3*indices(0)+1) += vertex_mass*gravity;
-		f(3*indices(1)+1) += vertex_mass*gravity; 
-		f(3*indices(2)+1) += vertex_mass*gravity;
-		f(3*indices(3)+1) += vertex_mass*gravity;
+		f(3*indices(0)+0) += vertex_mass*gravity;
+		f(3*indices(1)+0) += vertex_mass*gravity; 
+		f(3*indices(2)+0) += vertex_mass*gravity;
+		f(3*indices(3)+0) += vertex_mass*gravity;
 	}
 
 	//elastic

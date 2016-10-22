@@ -2,6 +2,8 @@
 
 Simulation::Simulation(void){}
 
+int staticSolveDirection = 0;
+
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
 
@@ -86,9 +88,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		}
 		
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
-		cout<<"CHECK"<<endl;
-		for(int i=0; i<fixVertices.size();i++)
-			cout<<fixVertices[i]<<endl;
 		
 		integrator->fixVertices(newfixIndices);
 
@@ -329,7 +328,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	//Move vertices slightly in x,y,z direction
 	// [v, v, v..., f, f, ...(m), (m), (m)...]
 	for(unsigned int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[1] -= move_step;//move step
+		TV.row(TV.rows()-i-1)[staticSolveDirection] -= move_step;//move step
 	}
 	
 	//Newtons method static solve for minimum Strain E
@@ -886,9 +885,21 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 				i++;
 				i++;
 			}
+			Vector3d loadFixed(0,0,0);
+			for(unsigned int i=ignorePastIndex; i<f.size() - 3*moveVertices.size(); i++){
+				loadFixed += f.segment<3>(i);
+				i++;
+				i++;
+			}
 
-			load_scalar = abs(load(0)/1000);
+			double loadFixed_scalar = abs(loadFixed(staticSolveDirection)/1000);
 
+			//BELOW: dividing loads by 1000 because we measure forces in Newtons(real data), but calculate in mm based force
+			load_scalar = abs(load(staticSolveDirection)/1000); 
+			cout<<"$$$$$FORCESCHECK Moving vs Fixed should be same$$$"<<endl;
+			cout<<loadFixed_scalar<<endl;
+			cout<<load_scalar<<endl;
+			cout<<"$$$$$$$$"<<endl;
 			
 			if((load_scalar - realLoads[reals_index].second)>0){
 				cout<<"too high"<<endl;
@@ -957,7 +968,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 				i++;
 			}
 
-			load_scalar = abs(load(0)/1000);
+			load_scalar = abs(load(staticSolveDirection)/1000);
 
 			cout<<dist_moved<<", "<<load_scalar<<endl;
 			generateLoadsFile<<dist_moved<<", "<<load_scalar<<endl;

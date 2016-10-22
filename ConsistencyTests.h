@@ -17,6 +17,7 @@ public:
 
 	ConsistencyTest(void);
 
+	void replaceWithMain();
 	void runVerletTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt);
 	void runImpEulerTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt);
 	void runNewmarkTestRow(int spaceStep, MatrixXd& TV, MatrixXd& B, MatrixXi& TT, string dt);

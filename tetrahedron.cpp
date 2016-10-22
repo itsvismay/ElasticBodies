@@ -112,80 +112,39 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
     Matrix3d Ds = computeDs(x);
     Matrix3d dDs = computeDeltaDs(dx);
 
-
-
-    ////////////////////TEST dDs correctness///////////
-    // double epsilon = 0.000001;
-	// f(v+[e,0,0,0...]) - f(v) / e = df/dx
-	// cout<<"test dDs"<<endl;
-	// Matrix3d leftdDs = computeDeltaDs(dx*epsilon);
-	// Matrix3d rightdDs = computeDs(x + dx*epsilon) - Ds;
-	// cout<<leftdDs-rightdDs<<endl<<endl;
-	/////////////////////////////////////////////////
-
     Matrix3d F = Ds*this->InvRefShapeMatrix;
     Matrix3d dF = dDs*this->InvRefShapeMatrix;
 
-    ////////////////////TEST dF correctness///////////
-	// cout<<"test dF"<<endl;
-	// Matrix3d leftdF = (leftdDs)*this->InvRefShapeMatrix;
-	// Matrix3d rightF = computeDs(x+dx*epsilon)*this->InvRefShapeMatrix;
-	// Matrix3d rightdF =  rightF - Ds*this->InvRefShapeMatrix;
-	// cout<<leftdF - rightdF<<endl<<endl;
-	// //////////////////////////////////////////////////////
-
-    //Neohookean
-    double detF = F.determinant();
-    double logdetF = log(detF);
-    Matrix3d FInvTransp = (F.inverse()).transpose();
-    Matrix3d dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
+    Matrix3d dP;
+    if(material_model.compare("neo") == 0 ){
+        //Neohookean
+        double detF = F.determinant();
+        double logdetF = log(detF);
+        Matrix3d FInvTransp = (F.inverse()).transpose();
+        dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
+    }
+    else if(material_model.compare("svk") == 0){
+        //SVK
+        Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
+        Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
+        Matrix3d dE = 0.5*(F.transpose()*dF + dF.transpose()*F);
+        dP = 2*mu*dF*E + 2*mu*F*dE + lambda*E.trace()*dF*MatrixXd::Identity(3,3) + lambda*dE.trace()*F*MatrixXd::Identity(3,3);
     
-    // // Matrix3d P = mu*(F - (FInvTransp)) + lambda*logdetF*(FInvTransp);
-    // // OLD Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-    // // OLD Matrix3d dP = mu*dF + (mu - lambda*log(F.determinant()))*((F.inverse()).transpose())*dF.transpose()*((F.inverse()).transpose()) + lambda*(F.inverse()*dF).trace()*((F.inverse()).transpose());
-    
-    //SVK
-    // Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
-    // Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
-    // Matrix3d dE = 0.5*(F.transpose()*dF + dF.transpose()*F);
-    // Matrix3d dP = 2*mu*dF*E + 2*mu*F*dE + lambda*E.trace()*dF*MatrixXd::Identity(3,3) + lambda*dE.trace()*F*MatrixXd::Identity(3,3);
-    
-    // Matrix3d dP = dF*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
-    // dP+= F*(2*mu*(0.5*((dF.transpose()*F + F.transpose()*dF) - MatrixXd::Identity(3,3))));
-    // dP+= F*(lambda*(0.5*((dF.transpose()*F + F.transpose()*dF)-MatrixXd::Identity(3,3))).trace());
-
-    ////////////////////TEST dP correctness///////////
- //    cout<<"test dP"<<endl;
- //    Matrix3d leftdP = mu*leftdF + (mu - lambda*log(rightF.determinant()))*((rightF.inverse()).transpose())*leftdF.transpose()*((rightF.inverse()).transpose()) + lambda*(rightF.inverse()*leftdF).trace()*((rightF.inverse()).transpose());
-	// Matrix3d rightP1 = mu*(rightF - ((rightF.inverse()).transpose())) + lambda*log(rightF.determinant())*((rightF.inverse()).transpose());
-	// Matrix3d rightP2 = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-	// Matrix3d rightdP = rightP1 - rightP2;
- //    cout<<leftdP<<endl;
-	// cout<< leftdP - (rightP1 - rightP2)<<endl<<endl;
-	//////////////////////////////////////////////////////
-    // cout<<"dP matrix"<<endl;
-    // cout<<dP<<endl;
+    }
+    else{
+        cout<<"Material model not specified properly"<<endl;
+        exit(0);
+    }
 
     Matrix3d dH = -1*this->undeformedVol*dP*((this->InvRefShapeMatrix).transpose());
-    
-    ////////////////////TEST dH correctness///////////
- //    cout<<"test dH"<<endl;
- //    Matrix3d leftdH = -1*this->undeformedVol*leftdP*((this->InvRefShapeMatrix).transpose());
-	// Matrix3d rightH1 = -1*this->undeformedVol*rightP1*((this->InvRefShapeMatrix).transpose());
-	// Matrix3d rightH2 = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
-	// Matrix3d rightdH = rightH1 - rightH2;
-	// cout<< leftdH - rightdH<<endl<<endl;
-	/////////
+
 
     MatrixXd dForces(3,4);
     dForces.col(0) = dH.col(0);
     dForces.col(1) = dH.col(1);
     dForces.col(2) = dH.col(2);
     dForces.col(3) = -1*dH.col(0) - dH.col(1) - dH.col(2);
-    // cout<<endl<<"dForces matrix"<<endl;
-    // cout<<dForces<<endl<<endl;;
-    // cout<<"Mapped vector"<<endl;
-    // cout<<Map<VectorXd>(dForces.data(), dForces.cols()*dForces.rows())<<endl;
+
     return dForces;
 }
 
@@ -200,16 +159,24 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
 
     Matrix3d F = Ds*this->InvRefShapeMatrix;
 
+    Matrix3d P;
 
-    //SVK
-    //TODO: Spring Constant value
-    //Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
-    //Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff	
-    //this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
-
-    //Neo
-    Matrix3d P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-    this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
+    if(material_model.compare("neo") == 0){
+        //Neo
+        P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+        this->energyDensity = (mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()) + (lambda/2)*log(F.determinant())*log(F.determinant());
+    
+    }else if(material_model.compare("svk") == 0){
+        //SVK
+        //TODO: Spring Constant value
+        Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
+        P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff   
+        this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+    
+    }else{
+        cout<<"Material model not specified properly"<<endl;
+        exit(0);
+    }
 
 
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());

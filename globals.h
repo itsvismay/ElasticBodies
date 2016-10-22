@@ -31,5 +31,6 @@ extern ofstream gravityEnergyFile;
 extern double rayleighCoeff;
 extern double gravity;
 extern bool headless;
+extern string material_model;
 
 #endif
