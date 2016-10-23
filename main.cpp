@@ -20,6 +20,8 @@ bool headless;
 double youngs;
 double poissons;
 string tetgen_code;
+string solver;
+string objectName;
 
 
 // Input polygon
@@ -73,7 +75,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	//Sim.render();
+	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -116,7 +118,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 
@@ -159,7 +161,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	 	}
 	}
 
-	//fix vertices
+	// fix vertices
 	for(int i=0; i<TV.rows(); i++){
 		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
 			fixedVertices.push_back(i);
@@ -292,6 +294,14 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		material_model = line.c_str();
 		cout<<material_model<<endl;
+
+		getline(configFile, line);
+		solver = line.c_str();
+		cout<<solver<<endl;
+
+		getline(configFile, line);
+		objectName = line.c_str();
+		cout<<objectName<<endl;
 	}else{
 		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;

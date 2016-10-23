@@ -31,7 +31,7 @@ public:
 	void staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 
 	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
-	void printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
+	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
 	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
 	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);

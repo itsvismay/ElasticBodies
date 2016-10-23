@@ -1,5 +1,5 @@
-0.01
-t
+.1
+f
 i
 1
 0.00
@@ -7,8 +7,10 @@ i
 1
 2000000
 .35
--pRq10
+-pRq7
 neo
+newton
+spring
 
 #1 timestep
 #2 headless t/f
@@ -20,4 +22,6 @@ neo
 #8 youngs
 #9 poissons
 #10 tetgen code -pRq7
+#11 solver netwon or lbfgs
+#12 object name (in shared file)
 -pqa15000

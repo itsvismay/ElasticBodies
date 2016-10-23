@@ -94,6 +94,9 @@ void ConsistencyTest::runAllTests(){
 }
 
 void ConsistencyTest::test(double timestep, char method, string printToHere, MatrixXi cTT, MatrixXd cTV, MatrixXd cB){
+	system(("mkdir -p "+printToHere).c_str());
+	system(("(git log -1; echo ''; echo 'Ran Test On:'; date;) >>"+printToHere+"log.txt").c_str());	
+	
 	double seconds =0;
 	int iters =0;
 	int numberOfPrints =0;
@@ -104,12 +107,11 @@ void ConsistencyTest::test(double timestep, char method, string printToHere, Mat
 
 	//fix vertices
 	for(int i=0; i<cTV.rows(); i++){
-		if(cTV.row(i)[1]<=41 && cTV.row(i)[1]>39){
+		if(cTV.row(i)[1]<=41 && cTV.row(i)[1]>30){
 			fixedVertices.push_back(i);
 		}
 	}
 	cSim.initializeSimulation(timestep, 1, method, cTT, cTV, cB, moveVertices, fixedVertices, 2e6, 0.35);
-
 	while(seconds<printForThisManySeconds){
 		iters+=1;
 		cSim.render();
@@ -120,6 +122,7 @@ void ConsistencyTest::test(double timestep, char method, string printToHere, Mat
 			numberOfPrints+=1;
 		}
 	}
+	system(("(echo 'Finished Test On:'; date;)>>"+printToHere+"log.txt").c_str());
 	return;
 }
 
@@ -173,14 +176,16 @@ void ConsistencyTest::replaceWithMain()
 	gravity = -10;
 	rayleighCoeff = 0;
 	material_model = "neo";
+	solver = "newton";
+	objectName = "spring";
 
 
 	int spaceStep = 0;
 	char method = 'i';
-	string tetmesh_code = "-pRq12";
-	double implicitTimestep = 1e-1;
-	cout<<"----Constants for the test"<<endl;
+	string tetmesh_code = "-pRq7";
 	string spaceDescription = tetmesh_code;
+	double implicitTimestep = 1e-2;
+	cout<<"----Constants for the test"<<endl;
 
 	//Time stuff------
  	time_t now = time(0);
@@ -195,14 +200,15 @@ void ConsistencyTest::replaceWithMain()
  	MatrixXd TV;
  	MatrixXi TT;
  	MatrixXi TF;
- 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
+
+ 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	igl::copyleft::tetgen::tetrahedralize(V,F,tetmesh_code, TV, TT, TF);
 	igl::barycenter(TV, TT, B);
 	spaceStep =TT.rows();
 	
 	if(method == 'i'){
-		cout<<CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/implicit_euler/"+material_model+"/"+tetmesh_code+"@"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/"<<endl;
-		test(implicitTimestep, method, CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/implicit_euler/"+material_model+"/"+tetmesh_code+"@"+to_string(spaceStep)+"/timestep:"+to_string(implicitTimestep)+"/", TT, TV, B);	
+		string printHere = CONSISTENCY_TEST_SAVE_PATH"TestsResults/ConsistencyTests/objectName:"+objectName+"/implicit_euler@"+material_model+"@"+solver+"/"+to_string(spaceStep)+"tets@"+tetmesh_code+"/timestep:"+to_string(implicitTimestep)+"/";
+		test(implicitTimestep, method, printHere, TT, TV, B);	
 	}else if(method == 'n'){
 		cout<<"Not Yet, fill in the same thing for newmark"<<endl;
 	}else if(method = 'e'){

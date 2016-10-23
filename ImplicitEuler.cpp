@@ -334,8 +334,16 @@ void ImplicitEuler::render(){
 	cout<<"i"<<simTime<<endl;
 	IntegratorAbstract::printInfo();
 
-	renderNewtonsMethod();
-	// renderLBFGS();
+	if(solver.compare("newton")==0){
+		renderNewtonsMethod();
+		
+	}else if(solver.compare("lbfgs")==0){
+		renderLBFGS();
+		
+	}else{
+		cout<<"Solver not specified properly"<<endl;
+		exit(0);
+	}
 
 	// cout<<"*******************"<<endl;
 	// cout<< "New Pos"<<simTime<<endl;
