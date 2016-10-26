@@ -14,7 +14,7 @@ public:
   string config;
   string outputForce;
   string bezierForceFile;
-  string domainBezier;
+  string domainBezierFile;
 
   // steps
   bool needsAlignment;
@@ -57,7 +57,7 @@ public:
     config = "";
     outputForce = "";
     bezierForceFile = "";
-    domainBezier = "";
+    domainBezierFile = "";
     needsAlignment = false;
     cubeAlign = false;
     topCubeAlign = false;
@@ -82,7 +82,7 @@ public:
     constantForce = false;
     impulseForce = false;
     bezierForce = false;
-    corner = -1
+    corner = -1;
     depth = 0.0f;
     forceDepth = 0.0f;
     maxForce = 0.0f;

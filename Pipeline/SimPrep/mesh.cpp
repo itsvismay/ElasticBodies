@@ -1,9 +1,9 @@
 #include "mesh.h"
-
+#include "loader.h"
 #include <iostream>
 
-Mesh::Mesh(string) {
-  file = f;
+Mesh::Mesh(string f) {
+  file = f.c_str();
   readFromFile();
 }
 
@@ -20,7 +20,7 @@ void Mesh::readFromFile() {
   yExtremes[1] = -1000.0f;
   zExtremes[0] = 1000.0f;
   zExtremes[1] = -1000.0f;
-  Loader.loadMesh(this, file);
+  Loader::loadMesh(this, file);
 }
 
 void Mesh::writeToFile(ProgramSettings* settings) {
@@ -30,10 +30,10 @@ void Mesh::writeToFile(ProgramSettings* settings) {
   // write geometry data
   if (settings->needsAlignment) {
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-      objFileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " (*it)->vert[2] << endl;
+      objFileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " << (*it)->vert[2] << endl;
     }
     for (vector<ivec4>::iterator it = faces.begin(); it != faces.end(); ++it) {
-      objFileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " (*it)[2] << " " << (*it)[3] << endl;
+      objFileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << " " << (*it)[3] << endl;
     }
   }
 
@@ -61,11 +61,11 @@ void Mesh::addVert(vec3 vert) {
   if (vert[1] > yExtremes[1]) yExtremes[1] = vert[1];
   if (vert[2] < zExtremes[0]) zExtremes[0] = vert[2];
   if (vert[2] > zExtremes[1]) zExtremes[1] = vert[2];
-  verts->push_back(new FVert(vert, verts.size()));
+  verts.push_back(new FVert(vert, verts.size()));
 }
 
 void Mesh::addFace(ivec4 face) {
-  faces->push_back(face);
+  faces.push_back(face);
 }
 
 BoundingVolume* Mesh::createCubeBound(float height) {

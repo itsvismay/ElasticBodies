@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <string.h>
 #include <glm/glm.hpp>
 #include "mesh.h"
 
@@ -13,13 +13,13 @@ using namespace std;
 class Loader {
 public:
 
-  static void loadMesh(Mesh* mesh, char* file) {
-    ifstream ifs = open(file);
+  static void loadMesh(Mesh* mesh, const char* file) {
+    ifstream ifs(file, ifstream::in);
     char line[MAX_LINE_LENGTH];
 
     while (ifs.peek() != EOF) {
       ifs.getline(line, sizeof(line), '\n');
-      const char* token = line + strspn(line, " \t");
+      char* token = line + strspn(line, " \t");
 
       if (token[0] == 0) continue;
       if (token[0] == 'v' && isSpace(token[1])) parseVert(mesh, token += 2);
@@ -50,7 +50,7 @@ public:
     int ind = 0;
     while (token != NULL && ind != 4)
     {
-      vert[ind] = atoi(token);
+      face[ind] = atoi(token);
       ind++;
       token = strtok(token, " ");
     }

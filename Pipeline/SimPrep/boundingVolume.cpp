@@ -1,9 +1,9 @@
 #include "boundingVolume.h"
 
 BoundingVolume::BoundingVolume() {
-  xExtremes = vec2(10000f, -10000f);
-  yExtremes = vec2(10000f, -10000f);
-  zExtremes = vec2(10000f, -10000f);
+  xExtremes = vec2(10000.0f, -10000.0f);
+  yExtremes = vec2(10000.0f, -10000.0f);
+  zExtremes = vec2(10000.0f, -10000.0f);
 }
 
 BoundingVolume::~BoundingVolume() {
@@ -13,12 +13,12 @@ BoundingVolume::~BoundingVolume() {
 }
 
 void BoundingVolume::addVert(FVert* vert) {
-  if (vert.vert[0] < xExtremes[0]) xExtremes[0] = vert.vert[0];
-  if (vert.vert[0] > xExtremes[1]) xExtremes[1] = vert.vert[0];
-  if (vert.vert[1] < yExtremes[0]) yExtremes[0] = vert.vert[1];
-  if (vert.vert[1] > yExtremes[1]) yExtremes[1] = vert.vert[1];
-  if (vert.vert[2] < zExtremes[0]) zExtremes[0] = vert.vert[2];
-  if (vert.vert[2] > zExtremes[1]) zExtremes[1] = vert.vert[2];
+  if (vert->vert[0] < xExtremes[0]) xExtremes[0] = vert->vert[0];
+  if (vert->vert[0] > xExtremes[1]) xExtremes[1] = vert->vert[0];
+  if (vert->vert[1] < yExtremes[0]) yExtremes[0] = vert->vert[1];
+  if (vert->vert[1] > yExtremes[1]) yExtremes[1] = vert->vert[1];
+  if (vert->vert[2] < zExtremes[0]) zExtremes[0] = vert->vert[2];
+  if (vert->vert[2] > zExtremes[1]) zExtremes[1] = vert->vert[2];
   verts.push_back(vert);
 }
 
