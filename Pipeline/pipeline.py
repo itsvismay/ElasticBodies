@@ -65,6 +65,9 @@ layerScadFiles = []
 layerSTLFiles = []
 layerObjFiles = []
 meshedFile = ''
+fixedMeshedFile = ''
+prepedMesh = ''
+forceData = ''
 
 if isBatch == True:
   # generate all of the scad files based on the template
@@ -81,7 +84,7 @@ else:
 
 for i in range(len(initialScadFiles)):
   # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
-  
+
   print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
   try:
     result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
@@ -152,9 +155,26 @@ for i in range(len(initialGCodeFiles)):
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
-  meshedFile = "unioned.obj"
+# fix mesh
+#meshedFile = "unioned.obj"
+#fixedMeshedFile = "fixedUnion.obj"
+#try:
+#  print 'python fix_mesh.py', meshedFile
+#  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', meshedFile, fixedMeshedFile])
+#except OSError as e:
+#  print 'There was a System Error ', e, '\n'
 
-# save it and call simulation
+# run sim prep to set up the mesh for simulation
+#force = 10000;
+#prepedMesh = 'prepedMesh.obj'
+#forceData = 'forcedata.txt'
+#try:
+#  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData
+#  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData])
+#except:
+#  print 'There was a System Error ', e, '\n'
+
+# call simulation
 # still a work in progress
 
 # lists to clean
@@ -164,6 +184,10 @@ for i in range(len(initialGCodeFiles)):
 # -- layerScadFiles
 # -- layerSTLFiles
 # -- layerObjFiles
+# -- meshedFile
+# -- fixedMeshedFile
+# -- prepedMesh
+# -- forceData
 
 if cleanAll == True:
   for i in range(len(initialScadFiles)):
@@ -185,3 +209,11 @@ if cleanAll == True:
   for i in range(len(layerObjFiles)):
     print 'rm', layerObjFiles[i]
     result = subprocess.check_output(['rm', layerObjFiles[i]])
+  #print 'rm', meshedFile
+  #result = subprocess.check_output(['rm', meshedFile])
+  #print 'rm', fixedMeshedFile
+  #result = subprocess.check_output(['rm', fixedMeshedFile])
+  #print 'rm', prepedMesh
+  #result = subprocess.check_output(['rm', prepedMesh])
+  #print 'rm', forceData
+  #result = subprocess.check_output(['rm', forceData])

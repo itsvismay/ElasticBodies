@@ -56,6 +56,8 @@ using namespace glm;
 // function declarations
 void empty();
 
+// TODO :: CHANGE ALL OF THIS
+
 int main(int argc, char* argv[]) {
   cout << "HELLO WORLD" << endl;
   //if (argc == 2) return -1;
