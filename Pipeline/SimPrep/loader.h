@@ -36,24 +36,28 @@ public:
   static void parseVert(Mesh* mesh, char* token) {
     dvec3 vert(0.0,0.0,0.0);
     int ind = 0;
-    while (token != NULL && ind != 3)
+    char* tok = strtok(token, " ");
+    while (tok != NULL && ind != 3)
     {
-      vert[ind] = atof(token);
+      vert[ind] = atof(tok);
       ind++;
-      token = strtok(token, " ");
+      tok = strtok(NULL, " ");
     }
+    cout << "ADDING VERT:: " << vert[0] << " " << vert[1] << " " << vert[2] << endl;
     mesh->addVert(vert);
   }
 
   static void parseFace(Mesh* mesh, char* token) {
-    ivec4 face(0, 0, 0, 0);
+    ivec3 face(0, 0, 0);
     int ind = 0;
-    while (token != NULL && ind != 4)
+    char* tok = strtok(token, " ");
+    while (tok != NULL && ind != 3)
     {
-      face[ind] = atoi(token);
+      face[ind] = atoi(tok);
       ind++;
-      token = strtok(token, " ");
+      tok = strtok(NULL, " ");
     }
+    //cout << "ADDING FACE:: " << face[0] << " " << face[1] << " " << face[2] << endl;
     mesh->addFace(face);
   }
 };

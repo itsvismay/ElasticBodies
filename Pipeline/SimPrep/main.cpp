@@ -70,103 +70,106 @@ int main(int argc, char* argv[]) {
   while (currentArg != argc) {
     char* arg = argv[currentArg];
 
-    if (strcmp(arg, "--in")) {
+    if (strcmp(arg, "--in") == 0) {
       settings->mesh = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--out")) {
+    } else if (strcmp(arg, "--out") == 0) {
+      cout << "FOUND OUTPUT:: " << endl;
       settings->outputMesh = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--config")) {
+    } else if (strcmp(arg, "--config") == 0) {
       settings->config = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--force")) {
+      cout << "FOUND FORCE FILE" << endl;
+    } else if (strcmp(arg, "--force") == 0) {
       settings->outputForce = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--corner")) {
+    } else if (strcmp(arg, "--corner") == 0) {
       settings->corner = atoi(argv[++currentArg]);
-    } else if (strcmp(arg, "--cubeAlign")) {
+    } else if (strcmp(arg, "--cubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->cubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--topCubeAlign")) {
+    } else if (strcmp(arg, "--topCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->topCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--botCubeAlign")) {
+    } else if (strcmp(arg, "--botCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->botCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--rightCubeAlign")) {
+    } else if (strcmp(arg, "--rightCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->rightCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--leftCubeAlign")) {
+    } else if (strcmp(arg, "--leftCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->leftCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--frontCubeAlign")) {
+    } else if (strcmp(arg, "--frontCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->frontCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--backCubeAlign")) {
+    } else if (strcmp(arg, "--backCubeAlign") == 0) {
       settings->needsAlignment = true;
       settings->backCubeAlign = true;
       settings->depth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--maxForce")) {
+    } else if (strcmp(arg, "--maxForce") == 0) {
       settings->needsForce = true;
+      cout << "FOUND MAX FORCE" << endl;
       settings->maxForce = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--constant")) {
+    } else if (strcmp(arg, "--constant") == 0) {
       settings->needsForce = true;
       settings->constantForce = true;
       settings->maxForce = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--impulse")) {
+    } else if (strcmp(arg, "--impulse") == 0) {
       settings->needsForce = true;
       settings->impulseForce = true;
       settings->maxForce = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--bezierFile")) {
+    } else if (strcmp(arg, "--bezierFile") == 0) {
       settings->bezierForce = true;
       settings->bezierForceFile = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--topCubeForce")) {
+    } else if (strcmp(arg, "--topCubeForce") == 0) {
       settings->topCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--botCubeForce")) {
+    } else if (strcmp(arg, "--botCubeForce") == 0) {
       settings->botCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--rightCubeForce")) {
+    } else if (strcmp(arg, "--rightCubeForce") == 0) {
       settings->rightCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--leftCubeForce")) {
+    } else if (strcmp(arg, "--leftCubeForce") == 0) {
       settings->leftCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--frontCubeForce")) {
+    } else if (strcmp(arg, "--frontCubeForce") == 0) {
       settings->frontCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--backCubeForce")) {
+    } else if (strcmp(arg, "--backCubeForce") == 0) {
       settings->backCubeForce = true;
       settings->forceDepth = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMinX")) {
+    } else if (strcmp(arg, "--domainMinX") == 0) {
       settings->domainForce = true;
       settings->domainX[0] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMaxX")) {
+    } else if (strcmp(arg, "--domainMaxX") == 0) {
       settings->domainForce = true;
       settings->domainX[1] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMinY")) {
+    } else if (strcmp(arg, "--domainMinY") == 0) {
       settings->domainForce = true;
       settings->domainY[0] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMaxY")) {
+    } else if (strcmp(arg, "--domainMaxY") == 0) {
       settings->domainForce = true;
       settings->domainY[1] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMinZ")) {
+    } else if (strcmp(arg, "--domainMinZ") == 0) {
       settings->domainForce = true;
       settings->domainZ[0] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainMaxZ")) {
+    } else if (strcmp(arg, "--domainMaxZ") == 0) {
       settings->domainForce = true;
       settings->domainZ[1] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainBezier")) {
+    } else if (strcmp(arg, "--domainBezier") == 0) {
       settings->domainBezier = true;
-    } else if (strcmp(arg, "--domainDirX")) {
+    } else if (strcmp(arg, "--domainDirX") == 0) {
       settings->domainForce = true;
       settings->direction[0] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainDirY")) {
+    } else if (strcmp(arg, "--domainDirY") == 0) {
       settings->domainForce = true;
       settings->direction[1] = atof(argv[++currentArg]);
-    } else if (strcmp(arg, "--domainDirZ")) {
+    } else if (strcmp(arg, "--domainDirZ") == 0) {
       settings->domainForce = true;
       settings->direction[2] = atof(argv[++currentArg]);
     }
@@ -176,7 +179,9 @@ int main(int argc, char* argv[]) {
 
   // stages of the program
   // read in all the verts and faces
+  cout << "Making Mesh" << endl;
   Mesh* mesh = new Mesh(settings->mesh);
+  cout << "Made Mesh" << endl;
   // calculate the bounding shape based on the verts
   BoundingVolume* volume = 0x0;
   //if (settings->needsAlignment) {
@@ -189,16 +194,23 @@ int main(int argc, char* argv[]) {
     //else if (settings->leftCubeAlign) volume = mesh->createLeftBound(settings->depth);
     //else if (settings->frontCubeAlign) volume = mesh->createFrontBound(settings->depth);
     //else if (settings->backCubeAlign) volume = mesh->createBackBound(settings->depth);
+    cout << "Creating Fixed Volume" << endl;
     volume = mesh->createLeftBound(0.0);
+    cout << "Created Fixed Volume" << endl;
     // translate the object to the origin
     //vec3 newOrigin = volume->getNewOrigin(settings->corner);
-    vec3 newOrigin = volume->getNewOrigin(1);
-    mesh->translate(-newOrigin[0], -newOrigin[1], -newOrigin[2]);
+    cout << "Getting Origin" << endl;
+    dvec3 newOrigin = volume->getNewOrigin(1);
+    cout << "ORIGIN:: " << newOrigin[0] << " " << newOrigin[1] << " " << newOrigin[2] << endl;
+    //mesh->translate(-newOrigin[0], -newOrigin[1], -newOrigin[2]);
+    mesh->translate(-mesh->xExtremes[0], -mesh->yExtremes[1], -mesh->zExtremes[1]);
+    cout << "Making Fixed" << endl;
     volume->makeFixed();
   }
   // calculate the force bounds and calculate all forces within it
   BoundingVolume* forceVolume = 0x0;
   //if (settings->needsForce
+  cout << "Calculating Force Volume" << endl;
   if (true)
   {
     // initialize force bounding volume
@@ -208,12 +220,21 @@ int main(int argc, char* argv[]) {
     //else if (settings->leftCubeForce) forceVolume = mesh->createLeftBound(settings->forceDepth);
     //else if (settings->frontCubeForce) forceVolume = mesh->createFrontBound(settings->forceDepth);
     //else if (settings->backCubeForce) forceVolume = mesh->createBackBound(settings->forceDepth);
-    mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
+    cout << "FIXED BOUNDS :: " << volume->verts.size() << endl;
+    cout << "Creating Line Bound" << endl;
+    cout << "MESH XBNDS :: " << mesh->xBnds()[0] << " " << mesh->xBnds()[1] << endl;
+    cout << "MESH YBNDS :: " << mesh->yBnds()[0] << " " << mesh->yBnds()[1] << endl;
+    cout << "MESH ZBNDS :: " << mesh->zBnds()[0] << " " << mesh->zBnds()[1] << endl;
+    forceVolume = mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
     // distribute force per vert in volume
+    cout << "Distributing Max Force" << endl;
+    cout << "MAX FORCE :: " << settings->maxForce << endl;
     forceVolume->distributeForce(settings->maxForce);
   }
   // print all verts with forces into the data file
+  cout << "Writing All Files" << endl;
   mesh->writeToFile(settings);
+  cout << "Cleaning Up" << endl;
   // clean up
   if (forceVolume) delete forceVolume;
   if (volume) delete volume;

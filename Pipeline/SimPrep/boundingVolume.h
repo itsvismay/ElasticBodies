@@ -11,11 +11,11 @@ class BoundingVolume {
 private:
   // either containingVolumes or verts will be empty
   vector<BoundingVolume*> containingVolumes;
-  vector<FVert*> verts;
   dvec2 xExtremes;
   dvec2 yExtremes;
   dvec2 zExtremes;
 public:
+  vector<FVert*> verts;
   BoundingVolume();
   ~BoundingVolume();
   void addVert(FVert* vert);

@@ -36,14 +36,14 @@ int CombinationCache::getCombination(int n,int r) {
 }
 
 int CombinationCache::findCombination(int n,int r) {
-  return cache[n][r].val;
+  return cache[n][r];
 }
 
 int CombinationCache::calculateCombination(int n,int r) {
   // first increment the bounds if necessary
-  while(cache->getSize() < n+1) {
+  while(cache.size() < n+1) {
     vector<int> newAry;
-    for(int i=0;i<cache->size()+1;i++)
+    for(int i=0;i<cache.size()+1;i++)
       newAry.push_back(-1);
     cache.push_back(newAry);
   }
@@ -63,7 +63,7 @@ int CombinationCache::factorial(int val) {
 
 void CombinationCache::debug() {
   cout << "CombinationCache Debug: " << endl;
-  cout << "Cache Size: " << cache->getSize() << endl;
+  cout << "Cache Size: " << cache.size() << endl;
   for(int i=0;i<cache.size();i++)
     cout << "In-Cache Size: " << cache[i].size() << endl;
 }

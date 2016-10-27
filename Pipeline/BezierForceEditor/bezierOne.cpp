@@ -1,4 +1,7 @@
 #include "bezierOne.h"
+#include "combinationCache.h"
+#define GLFW_INCLUDE_GLU
+#include <GLFW/glfw3.h>
 
 // this class is a 1D Bezier
 
@@ -11,19 +14,23 @@ BezierOne::BezierOne() {
 }
 
 void BezierOne::addCtrl(vec2 point) {
-  for (vector<vec2>::iterator it = ctrlPoints.begin(), int i = 0; it != ctrlPoints.end(); ++it, ++i) {
+  int i = 0;
+  for (vector<vec2>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
     if (point[0] < (*it)[0]) {
       ctrlPoints.insert(ctrlPoints.begin() + i, point);
+      i++;
       it = ctrlPoints.end();
     }
   }
 }
 
 void BezierOne::removeCtrl(vec2 point) {
+  int i = 0;
   if (ctrlPoints.size() > 4 && point[0] != 0.0f && point[0] != 1.0f) {
-    for (vector<vec2>::iterator it = ctrlPoints.begin(), int i = 0; it != ctrlPoints.end(); ++it, ++i) {
+    for (vector<vec2>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
       if ((*it)[0] == point[0] && (*it)[1] == point[1]) {
         ctrlPoints.erase(ctrlPoints.begin() + i);
+        i++;
         it = ctrlPoints.end();
       }
     }
@@ -33,7 +40,7 @@ void BezierOne::removeCtrl(vec2 point) {
 void BezierOne::evaluateCtrls() {
   evalPoints.clear();
   int numCtlPts = ctrlPoints.size();
-  int numEvalPoints = VERTS_PER_CTRL * numCtrlPts; //numCtlPts * 4;
+  int numEvalPoints = VERTS_PER_CTRL * numCtlPts; //numCtlPts * 4;
   //float length = ctrlPoints[numCtlPts-1][0] - ctrlPoints[0][0];
   float length = 1.0f;
   float uMult = length / numEvalPoints;

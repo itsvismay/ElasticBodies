@@ -1,4 +1,4 @@
-#include "bezierOne.h"
+#include "bezierIO.h"
 
 void BezierIO::writeBezierToFile(string file, BezierOne* curve) {
   // to be implemented

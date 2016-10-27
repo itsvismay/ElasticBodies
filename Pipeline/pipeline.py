@@ -156,26 +156,27 @@ for i in range(len(initialGCodeFiles)):
     print 'There was a System Error: ', e, '\n'
 
 # fix mesh
-#meshedFile = "unioned.obj"
-#fixedMeshedFile = "fixedUnion.obj"
-#try:
-#  print 'python fix_mesh.py', meshedFile
-#  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', meshedFile, fixedMeshedFile])
-#except OSError as e:
-#  print 'There was a System Error ', e, '\n'
+meshedFile = "unioned.obj"
+fixedMeshedFile = "fixedUnion.obj"
+try:
+  print 'python fix_mesh.py', meshedFile
+  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', meshedFile, fixedMeshedFile])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
 
 # run sim prep to set up the mesh for simulation
-#force = 10000;
-#prepedMesh = 'prepedMesh.obj'
-#forceData = 'forcedata.txt'
-#try:
-#  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
-#  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force])
-#except:
-#  print 'There was a System Error ', e, '\n'
+force = 20000;
+prepedMesh = 'prepedMesh.obj'
+forceData = 'forcedata.txt'
+try:
+  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
+  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', str(force)])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
+
+# run tetgen on the mesh
 
 # call simulation
-# still a work in progress
 
 # lists to clean
 # -- initialScadFiles

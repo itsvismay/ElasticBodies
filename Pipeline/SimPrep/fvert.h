@@ -12,6 +12,6 @@ public:
   bool fixed;
 
   FVert();
-  FVert(vec3 v, int i);
+  FVert(dvec3 v, int i);
   void translate(double x, double y, double z);
 };

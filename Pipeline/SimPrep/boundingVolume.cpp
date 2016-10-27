@@ -1,4 +1,7 @@
 #include "boundingVolume.h"
+#include <iostream>
+
+using namespace std;
 
 BoundingVolume::BoundingVolume() {
   xExtremes = vec2(10000.0, -10000.0);
@@ -27,6 +30,11 @@ void BoundingVolume::addBoundingVolume(BoundingVolume* volume) {
 }
 
 void BoundingVolume::distributeForce(double maxForce) {
+  if (verts.size() == 0) {
+    cout << "VERTS SIZE IS ZERO FOR FORCE" << endl;
+    return;
+  }
+  cout << "VERTS SIZE :: " << verts.size() << endl;
   float forcePerVert = maxForce / verts.size();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     (*it)->force += forcePerVert;

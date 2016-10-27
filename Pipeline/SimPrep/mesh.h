@@ -13,20 +13,21 @@ using namespace glm;
 class Mesh {
 private:
   const char* file;
-  vector<ivec4> faces;
+  vector<ivec3> faces;
   vector<FVert*> verts;
   // should these be properties of mesh or bounding volumes
-  dvec2 xExtremes;
-  dvec2 yExtremes;
-  dvec2 zExtremes;
 
   void readFromFile();
 public:
+  dvec2 xExtremes;
+  dvec2 yExtremes;
+  dvec2 zExtremes;
+  
   Mesh(string f);
   ~Mesh();
   void translate(double x, double y, double z);
   void addVert(dvec3 vert);
-  void addFace(ivec4 face);
+  void addFace(ivec3 face);
   void writeToFile(ProgramSettings* settings);
   BoundingVolume* createCubeBound(double height);
   BoundingVolume* createTopBound(double depth);   // +z

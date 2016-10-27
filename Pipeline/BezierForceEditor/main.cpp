@@ -1,14 +1,15 @@
-#pragma once
-
 // input arguements
 // some shit will go here
 
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
 #include "bezierOne.h"
+#include <iostream>
+
+using namespace std;
 
 // openGL methods
-void display();
+void display(BezierOne *curve);
 void reshape(int w,int h);
 void keyboard(GLFWwindow* window,int key,int scancode,int action,int mods);
 void mouseMove(GLFWwindow* window,double x,double y);
@@ -17,7 +18,8 @@ void error(int error, const char* description);
 
 int main(int argc, char* argv[]) {
   // initialization of program data
-  BezierOne *curve = new BezierOne();
+  cout << "HELLO WORLD" << endl;
+  //BezierOne *curve = new BezierOne();
 
   // initialize glfw
   if(!glfwInit())
@@ -37,13 +39,17 @@ int main(int argc, char* argv[]) {
   glfwGetFramebufferSize(window, &width, &height);
   glViewport(0,0,1.0f,1.0f);
   glfwSwapInterval(1);
-  transitionToMapView();
 
   // main loop
   while (!glfwWindowShouldClose(window))
   {
-    dt+=.1;
-    display(curve);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glClearColor(0.0f,0.0f,0.0f,1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    //display(curve);
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -53,12 +59,6 @@ int main(int argc, char* argv[]) {
 }
 
 void display(BezierOne *curve) {
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glClearColor(0.0f,0.0f,0.0f,1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
 
   glLineWidth(0.5);
   glBegin(GL_LINES);
