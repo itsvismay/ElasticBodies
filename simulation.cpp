@@ -2,6 +2,8 @@
 
 Simulation::Simulation(void){}
 
+int staticSolveDirection = 0;
+
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
 
@@ -86,9 +88,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		}
 		
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
-		cout<<"CHECK"<<endl;
-		for(int i=0; i<fixVertices.size();i++)
-			cout<<fixVertices[i]<<endl;
 		
 		integrator->fixVertices(newfixIndices);
 
@@ -329,7 +328,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	//Move vertices slightly in x,y,z direction
 	// [v, v, v..., f, f, ...(m), (m), (m)...]
 	for(unsigned int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[1] -= move_step;//move step
+		TV.row(TV.rows()-i-1)[staticSolveDirection] -= move_step;//move step
 	}
 	
 	//Newtons method static solve for minimum Strain E
@@ -463,12 +462,6 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 
 void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
 	cout<<"############Starting Binary Search for Youngs ######################"<<endl;
-
-	ofstream distvLoadFile;
-	distvLoadFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/distvLoadprq2.txt");
-
-	ofstream youngsFile;
-	youngsFile.open(OUTPUT_SAVED_PATH"Condor/Scripts/youngsspringneoprq2.txt");
 
 
 	//REAL VALUES FROM EXPERIMENT
@@ -826,6 +819,22 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	};
 	//#############################
 
+	//Time stuff------
+ 	time_t now = time(0);
+ 	string dt = ctime(&now);//local time, replace all spaces and new lines
+ 	dt.erase('\n');
+ 	replace(dt.begin(), dt.end(), ' ', '-');
+ 	//-----------------
+	
+	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/StaticSolve/"+objectName+"/"+to_string(TT.rows())+"tets@"+tetgen_code+"@"+material_model+"/";
+	system(("mkdir -p "+saveTestToHere).c_str());
+	system(("(git log -1; echo ''; echo 'Ran Test On:'; date;) >>"+saveTestToHere+"log.txt").c_str());
+	
+	ofstream distvLoadFile;
+	distvLoadFile.open(saveTestToHere+"#distVLoad.txt");
+
+	ofstream youngsFile;
+	youngsFile.open(saveTestToHere+"#Youngs.txt");
 	vector<double> derivedYoungs;
 
 	//size of move
@@ -839,7 +848,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	int count=0;
 	
 	int reals_index =0;
-	printObj(count, TV, TT, B);
+	printObj(saveTestToHere, count, TV, TT, B);
 	//New Binary Search
 	while(dist_moved<move_amount && reals_index<realLoads.size()){
 		M.setNewYoungsPoissons(1000000, 0.35);
@@ -852,7 +861,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			cout<<(dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
 			staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
 			count++;
-			printObj(count, TV, TT, B);
+			printObj(saveTestToHere,  count, TV, TT, B);
 			// staticSolveStepLBFGS(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 		}
 
@@ -860,6 +869,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		double min_youngs = 800000;
 		double max_youngs = 6000000000;
 		load_scalar = 0;
+		Vector3d load(0,0,0);
 		while(abs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
 			load_scalar =0;
 			curr_youngs = (min_youngs+max_youngs)/2; //just a guess
@@ -880,15 +890,15 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 
 			//Calculate Load on moving verts
-			Vector3d load(0,0,0);
+			load.setZero();
 			for(unsigned int i=f.size() - 3*moveVertices.size(); i<f.size(); i++){
 				load+=f.segment<3>(i);
 				i++;
 				i++;
 			}
 
-			load_scalar = abs(load(0)/1000);
-
+			//BELOW: dividing loads by 1000 because we measure forces in Newtons(real data), but calculate in mm based force
+			load_scalar = abs(load(staticSolveDirection)/1000);
 			
 			if((load_scalar - realLoads[reals_index].second)>0){
 				cout<<"too high"<<endl;
@@ -907,6 +917,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<"----------------"<<endl;
 		}
+		distvLoadFile<<dist_moved<<", "<<abs(load(0)/1000)<<", "<<abs(load(1)/1000)<<", "<<abs(load(2)/1000)<<endl;
 		youngsFile<<dist_moved<<", "<<curr_youngs<<", "<<min_youngs<<", "<<max_youngs <<endl;
 		reals_index+=1;
 	}
@@ -920,9 +931,9 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
 	//TODO: move this into the tests section
 	cout<<"############Starting Synthetic Load Generation######################"<<endl;
-
+	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/SyntheticStaticSolve/";
 	ofstream generateLoadsFile;
-	generateLoadsFile.open(HOME_SAVED_PATH"Condor/Scripts/syntheticGeneratedLoads.txt");
+	generateLoadsFile.open(saveTestToHere+"syntheticGeneratedLoads.txt");
 	
 	int setYoungs = 2e6;
 	M.setNewYoungsPoissons(setYoungs, 0.35);
@@ -944,7 +955,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 
 		if(true /*count%10==0*/){
 			cout<<"	print dist/load to file"<<endl;
-			printObj(count/10, TV, TT, B);
+			//printObj(count/10, TV, TT, B);
 
 			VectorXd f;
 			f.resize(3*TV.rows());
@@ -957,7 +968,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 				i++;
 			}
 
-			load_scalar = abs(load(0)/1000);
+			load_scalar = abs(load(staticSolveDirection)/1000);
 
 			cout<<dist_moved<<", "<<load_scalar<<endl;
 			generateLoadsFile<<dist_moved<<", "<<load_scalar<<endl;
@@ -970,7 +981,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	cout<<"############End Synthetic Load Generation######################"<<endl;
 }
 
-void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B){
+void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B){
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -1000,8 +1011,8 @@ void Simulation::printObj(int numberOfPrints, MatrixXd& TV, MatrixXi& TT, Matrix
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 
-	system("mkdir -p " OUTPUT_SAVED_PATH "Condor/TestsResults/prq2SpringLoadTests/");
-	igl::writeOBJ(OUTPUT_SAVED_PATH "Condor/TestsResults/prq2SpringLoadTests/" + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	system(("mkdir -p " +printToHere).c_str());
+	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 	
 	return;
 }

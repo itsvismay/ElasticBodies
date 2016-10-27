@@ -31,5 +31,9 @@ extern ofstream gravityEnergyFile;
 extern double rayleighCoeff;
 extern double gravity;
 extern bool headless;
+extern string material_model;
+extern string tetgen_code;
+extern string solver;
+extern string objectName;
 
 #endif

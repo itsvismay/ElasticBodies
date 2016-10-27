@@ -15,10 +15,13 @@ ofstream gravityEnergyFile;
 
 double rayleighCoeff;
 double gravity;
+string material_model;
 bool headless;
 double youngs;
 double poissons;
 string tetgen_code;
+string solver;
+string objectName;
 
 
 // Input polygon
@@ -115,18 +118,26 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/spring.obj", V, F);
+	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
 	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
 
-
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
+
 	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a10", TV,TT,TF);
 	
+	// cout<<"2222222222"<<endl;
+	// cout<<V<<endl;
+	// cout<<"2222222222"<<endl;
+
+	// cout<<"8888888888"<<endl;
+	// cout<<TV<<endl;
+	// cout<<"8888888888"<<endl;
+	
+	vector<int> moveVertices;
+	vector<int> fixedVertices;
 	//*********BEAM******************
-	// vector<int> moveVertices;
-	// vector<int> fixedVertices;
 	// // move vertices
 	// for(int i=0; i<TV.rows(); i++){
 	//  	if(TV.row(i)[0]>=180){
@@ -142,24 +153,21 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// }
 	//***************************
 
-	//********SPRING*******************
-	vector<int> moveVertices;
-	vector<int> fixedVertices;
-	
-	// // move vertices
+	//********SPRING*******************	
+	// move vertices
 	for(int i=0; i<TV.rows(); i++){
 	 	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
 	 		moveVertices.push_back(i);
 	 	}
 	}
 
-	//fix vertices
+	// fix vertices
 	for(int i=0; i<TV.rows(); i++){
 		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
 			fixedVertices.push_back(i);
-			cout<<"here"<<endl;
 		}
 	}
+
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	
@@ -228,8 +236,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 void consistencyTests( double timestep, int iterations, char method){	
 
 	ConsistencyTest c;
-	// c.runTimeTests(Sim);
-	c.runAllTests();
+	c.replaceWithMain();
 	
 }
 
@@ -283,6 +290,18 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		tetgen_code = line.c_str();
 		cout<<tetgen_code<<endl;
+
+		getline(configFile, line);
+		material_model = line.c_str();
+		cout<<material_model<<endl;
+
+		getline(configFile, line);
+		solver = line.c_str();
+		cout<<solver<<endl;
+
+		getline(configFile, line);
+		objectName = line.c_str();
+		cout<<objectName<<endl;
 	}else{
 		cout<<"Elastic Error: Config file not found"<<endl;
 		return 0;
