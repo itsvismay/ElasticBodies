@@ -11,6 +11,7 @@ using namespace glm;
 class ProgramSettings {
 public:
   string mesh;
+  string outputMesh;
   string config;
   string outputForce;
   string bezierForceFile;

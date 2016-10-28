@@ -6,11 +6,12 @@ using namespace glm;
 
 class FVert {
 public:
-  vec3 vert;
+  dvec3 vert;
   int index;
   float force;
+  bool fixed;
 
   FVert();
   FVert(vec3 v, int i);
-  void translate(float x, float y, float z);
+  void translate(double x, double y, double z);
 };

@@ -16,23 +16,27 @@ private:
   vector<ivec4> faces;
   vector<FVert*> verts;
   // should these be properties of mesh or bounding volumes
-  vec2 xExtremes;
-  vec2 yExtremes;
-  vec2 zExtremes;
+  dvec2 xExtremes;
+  dvec2 yExtremes;
+  dvec2 zExtremes;
 
   void readFromFile();
 public:
   Mesh(string f);
   ~Mesh();
-  void translate(float x, float y, float z);
-  void addVert(vec3 vert);
+  void translate(double x, double y, double z);
+  void addVert(dvec3 vert);
   void addFace(ivec4 face);
   void writeToFile(ProgramSettings* settings);
-  BoundingVolume* createCubeBound(float height);
-  BoundingVolume* createTopBound(float depth);   // +z
-  BoundingVolume* createBotBound(float depth);   // -z
-  BoundingVolume* createRightBound(float depth); // +x
-  BoundingVolume* createLeftBound(float depth);  // -x
-  BoundingVolume* createFrontBound(float depth); // -y
-  BoundingVolume* createBackBound(float depth);  // +y
+  BoundingVolume* createCubeBound(double height);
+  BoundingVolume* createTopBound(double depth);   // +z
+  BoundingVolume* createBotBound(double depth);   // -z
+  BoundingVolume* createRightBound(double depth); // +x
+  BoundingVolume* createLeftBound(double depth);  // -x
+  BoundingVolume* createFrontBound(double depth); // -y
+  BoundingVolume* createBackBound(double depth);  // +y
+  BoundingVolume* createLineBound(double x, double y, double z, bool alongX, bool alongY, bool alongZ);
+  dvec2 xBnds();
+  dvec2 yBnds();
+  dvec2 zBnds();
 };

@@ -1,18 +1,20 @@
 #include "fvert.h"
 
 FVert::FVert() {
-  vert = vec3(0.0f, 0.0f, 0.0f);
+  vert = dvec3(0.0, 0.0, 0.0);
   index = -1;
   force = 0.0f;
+  fixed = false;
 }
 
-FVert::FVert(vec3 v, int i) {
+FVert::FVert(dvec3 v, int i) {
   vert = v;
   index = i;
   force = 0.0f;
+  fixed = false;
 }
 
-void FVert::translate(float x, float y, float z) {
+void FVert::translate(double x, double y, double z) {
   vert[0] += x;
   vert[1] += y;
   vert[2] += z;

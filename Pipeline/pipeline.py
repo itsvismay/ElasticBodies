@@ -169,8 +169,8 @@ for i in range(len(initialGCodeFiles)):
 #prepedMesh = 'prepedMesh.obj'
 #forceData = 'forcedata.txt'
 #try:
-#  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData
-#  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData])
+#  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
+#  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force])
 #except:
 #  print 'There was a System Error ', e, '\n'
 

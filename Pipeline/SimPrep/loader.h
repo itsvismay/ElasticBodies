@@ -34,7 +34,7 @@ public:
   }
 
   static void parseVert(Mesh* mesh, char* token) {
-    vec3 vert(0.0f,0.0f,0.0f);
+    dvec3 vert(0.0,0.0,0.0);
     int ind = 0;
     while (token != NULL && ind != 3)
     {

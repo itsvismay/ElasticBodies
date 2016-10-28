@@ -1,9 +1,9 @@
 #include "boundingVolume.h"
 
 BoundingVolume::BoundingVolume() {
-  xExtremes = vec2(10000.0f, -10000.0f);
-  yExtremes = vec2(10000.0f, -10000.0f);
-  zExtremes = vec2(10000.0f, -10000.0f);
+  xExtremes = vec2(10000.0, -10000.0);
+  yExtremes = vec2(10000.0, -10000.0);
+  zExtremes = vec2(10000.0, -10000.0);
 }
 
 BoundingVolume::~BoundingVolume() {
@@ -26,10 +26,16 @@ void BoundingVolume::addBoundingVolume(BoundingVolume* volume) {
   containingVolumes.push_back(volume);
 }
 
-void BoundingVolume::distributeForce(float maxForce) {
+void BoundingVolume::distributeForce(double maxForce) {
   float forcePerVert = maxForce / verts.size();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     (*it)->force += forcePerVert;
+  }
+}
+
+void BoundingVolume::makeFixed() {
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    (*it)->fixed = true;
   }
 }
 
@@ -52,5 +58,5 @@ vec3 BoundingVolume::getNewOrigin(int corner) {
   if (corner == 5) return vec3(xExtremes[0], yExtremes[1], zExtremes[0]);
   if (corner == 6) return vec3(xExtremes[0], yExtremes[0], zExtremes[0]);
   if (corner == 7) return vec3(xExtremes[1], yExtremes[0], zExtremes[0]);
-  return vec3(0.0f, 0.0f, 0.0f);
+  return vec3(0.0, 0.0, 0.0);
 }

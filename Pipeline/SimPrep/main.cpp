@@ -70,11 +70,13 @@ int main(int argc, char* argv[]) {
   while (currentArg != argc) {
     char* arg = argv[currentArg];
 
-    if (strcmp(arg, "--mesh")) {
+    if (strcmp(arg, "--in")) {
       settings->mesh = string(argv[++currentArg]);
+    } else if (strcmp(arg, "--out")) {
+      settings->outputMesh = string(argv[++currentArg]);
     } else if (strcmp(arg, "--config")) {
       settings->config = string(argv[++currentArg]);
-    } else if (strcmp(arg, "--output")) {
+    } else if (strcmp(arg, "--force")) {
       settings->outputForce = string(argv[++currentArg]);
     } else if (strcmp(arg, "--corner")) {
       settings->corner = atoi(argv[++currentArg]);
@@ -145,7 +147,7 @@ int main(int argc, char* argv[]) {
       settings->domainForce = true;
       settings->domainX[1] = atof(argv[++currentArg]);
     } else if (strcmp(arg, "--domainMinY")) {
-      settings->domainForce = true; 
+      settings->domainForce = true;
       settings->domainY[0] = atof(argv[++currentArg]);
     } else if (strcmp(arg, "--domainMaxY")) {
       settings->domainForce = true;
@@ -177,30 +179,36 @@ int main(int argc, char* argv[]) {
   Mesh* mesh = new Mesh(settings->mesh);
   // calculate the bounding shape based on the verts
   BoundingVolume* volume = 0x0;
-  if (settings->needsAlignment) {
+  //if (settings->needsAlignment) {
+  if (true) {
     // initialize bounding volume
-    if (settings->cubeAlign) volume = mesh->createCubeBound(settings->depth);
-    else if (settings->topCubeAlign) volume = mesh->createTopBound(settings->depth);
-    else if (settings->botCubeAlign) volume = mesh->createBotBound(settings->depth);
-    else if (settings->rightCubeAlign) volume = mesh->createRightBound(settings->depth);
-    else if (settings->leftCubeAlign) volume = mesh->createLeftBound(settings->depth);
-    else if (settings->frontCubeAlign) volume = mesh->createFrontBound(settings->depth);
-    else if (settings->backCubeAlign) volume = mesh->createBackBound(settings->depth);
+    //if (settings->cubeAlign) volume = mesh->createCubeBound(settings->depth);
+    //else if (settings->topCubeAlign) volume = mesh->createTopBound(settings->depth);
+    //else if (settings->botCubeAlign) volume = mesh->createBotBound(settings->depth);
+    //else if (settings->rightCubeAlign) volume = mesh->createRightBound(settings->depth);
+    //else if (settings->leftCubeAlign) volume = mesh->createLeftBound(settings->depth);
+    //else if (settings->frontCubeAlign) volume = mesh->createFrontBound(settings->depth);
+    //else if (settings->backCubeAlign) volume = mesh->createBackBound(settings->depth);
+    volume = mesh->createLeftBound(0.0);
     // translate the object to the origin
-    vec3 newOrigin = volume->getNewOrigin(settings->corner);
+    //vec3 newOrigin = volume->getNewOrigin(settings->corner);
+    vec3 newOrigin = volume->getNewOrigin(1);
     mesh->translate(-newOrigin[0], -newOrigin[1], -newOrigin[2]);
+    volume->makeFixed();
   }
   // calculate the force bounds and calculate all forces within it
   BoundingVolume* forceVolume = 0x0;
-  if (settings->needsForce)
+  //if (settings->needsForce
+  if (true)
   {
     // initialize force bounding volume
-    if (settings->topCubeForce) forceVolume = mesh->createTopBound(settings->forceDepth);
-    else if (settings->botCubeForce) forceVolume = mesh->createBotBound(settings->forceDepth);
-    else if (settings->rightCubeForce) forceVolume = mesh->createRightBound(settings->forceDepth);
-    else if (settings->leftCubeForce) forceVolume = mesh->createLeftBound(settings->forceDepth);
-    else if (settings->frontCubeForce) forceVolume = mesh->createFrontBound(settings->forceDepth);
-    else if (settings->backCubeForce) forceVolume = mesh->createBackBound(settings->forceDepth);
+    //if (settings->topCubeForce) forceVolume = mesh->createTopBound(settings->forceDepth);
+    //else if (settings->botCubeForce) forceVolume = mesh->createBotBound(settings->forceDepth);
+    //else if (settings->rightCubeForce) forceVolume = mesh->createRightBound(settings->forceDepth);
+    //else if (settings->leftCubeForce) forceVolume = mesh->createLeftBound(settings->forceDepth);
+    //else if (settings->frontCubeForce) forceVolume = mesh->createFrontBound(settings->forceDepth);
+    //else if (settings->backCubeForce) forceVolume = mesh->createBackBound(settings->forceDepth);
+    mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
     // distribute force per vert in volume
     forceVolume->distributeForce(settings->maxForce);
   }
