@@ -2,37 +2,57 @@
 #include "combinationCache.h"
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
+#include <iostream>
+
+using namespace std;
 
 // this class is a 1D Bezier
 
 BezierOne::BezierOne() {
-  ctrlPoints.push_back(new vec2(0.0f, 0.25f));
-  ctrlPoints.push_back(new vec2(0.33f, 0.1f));
-  ctrlPoints.push_back(new vec2(0.67f, 0.75f));
-  ctrlPoints.push_back(new vec2(1.0f, 0.25f));
+  Point* one = new Point(vec2(0.0f, 0.25f));
+  Point* two = new Point(vec2(0.33f, 0.1f));
+  Point* three = new Point(vec2(0.67f, 0.75f));
+  Point* four = new Point(vec2(1.0f, 0.25f));
+  one->next = two;
+  two->prev = one;
+  two->next = three;
+  three->prev = two;
+  three->next = four;
+  four->prev = three;
+  ctrlPoints.push_back(one);
+  ctrlPoints.push_back(two);
+  ctrlPoints.push_back(three);
+  ctrlPoints.push_back(four);
   evaluateCtrls();
 }
 
-void BezierOne::addCtrl(vec2* point) {
+void BezierOne::addCtrl(vec2 point) {
   int i = 0;
-  for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-    if ((*point)[0] < (**it)[0]) {
-      ctrlPoints.insert(ctrlPoints.begin() + i, point);
-      i++;
-      it = ctrlPoints.end();
+  for (vector<Point*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+    if (point[0] < (*it)->pos[0] && point[0] > 0.0f && point[0] < 1.0f) {
+      Point* newPt = new Point(point);
+      newPt->prev = *(it - 1);
+      newPt->next = *(it);
+      (*(it - 1))->next = newPt;
+      (*(it))->prev = newPt;
+      ctrlPoints.insert(ctrlPoints.begin() + i, newPt);
+      it = ctrlPoints.end() - 1;
     }
+    i++;
   }
 }
 
-void BezierOne::removeCtrl(vec2* point) {
+void BezierOne::removeCtrl(Point* point) {
   int i = 0;
-  if (ctrlPoints.size() > 4 && (*point)[0] != 0.0f && (*point)[0] != 1.0f) {
-    for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-      if ((**it)[0] == (*point)[0] && (**it)[1] == (*point)[1]) {
+  if (ctrlPoints.size() > 4 && point->pos[0] != 0.0f && point->pos[0] != 1.0f) {
+    for (vector<Point*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+      if (*it == point) {
+        (*it)->prev->next = (*it)->next;
+        (*it)->next->prev = (*it)->prev;
         ctrlPoints.erase(ctrlPoints.begin() + i);
-        i++;
-        it = ctrlPoints.end();
+        it = ctrlPoints.end() - 1;
       }
+      i++;
     }
   }
 }
@@ -54,14 +74,14 @@ void BezierOne::evaluateCtrls() {
     for(int j = 0;j<numCtlPts;j++) {
       float tmp = powf(pos,(float)j) * powf(ompos,(float)n-j);
       tmp *= cc->getCombination(n,j);
-      ypos += tmp * (*(ctrlPoints[j]))[1];
-      xpos += tmp * (*(ctrlPoints[j]))[0];
+      ypos += tmp * ctrlPoints[j]->pos[1];
+      xpos += tmp * ctrlPoints[j]->pos[0];
     }
     evalPoints.push_back(vec2(xpos,ypos));
   }
 }
 
-void BezierOne::drawBezier(double pointSize, double lineSize, vec2* selected) {
+void BezierOne::drawBezier(double pointSize, double lineSize, Point* selected) {
   glLineWidth(lineSize);
   glColor4f(0.0f,0.0f,1.0f,1.0f);
   glBegin(GL_LINES);
@@ -75,7 +95,7 @@ void BezierOne::drawBezier(double pointSize, double lineSize, vec2* selected) {
   if (selected) {
     glColor4f(0.0f,1.0f,0.0f,1.0f);
     glBegin(GL_POINTS);
-    glVertex2f((*selected)[0], (*selected)[1]);
+    glVertex2f(selected->pos[0], selected->pos[1]);
     glEnd();
   }
 }
@@ -90,7 +110,7 @@ void BezierOne::drawBezierLines() {
 }
 
 void BezierOne::drawBezierPoints() {
-  for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-    glVertex2f((**it)[0], (**it)[1]);
+  for (vector<Point*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+    glVertex2f((*it)->pos[0], (*it)->pos[1]);
   }
 }

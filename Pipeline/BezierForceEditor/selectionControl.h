@@ -1,15 +1,13 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
-using namespace glm;
+#include "point.h"
 
 class SelectionControl {
 public:
-  vec2* selectedCtrl;
+  Point* selectedCtrl;
   bool hasSelection;
   
   SelectionControl();
-  void setSelected(vec2* point);
+  void setSelected(Point* point);
   void clearSelected();
 };

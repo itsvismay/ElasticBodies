@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include "point.h"
 
 using namespace std;
 using namespace glm;
@@ -14,12 +15,12 @@ class BezierOne {
 private:
   vector<vec2> evalPoints;
 public:
-  vector<vec2*> ctrlPoints;
+  vector<Point*> ctrlPoints;
   BezierOne();
-  void addCtrl(vec2* point);
-  void removeCtrl(vec2* point);
+  void addCtrl(vec2 point);
+  void removeCtrl(Point* point);
   void evaluateCtrls();
-  void drawBezier(double pointSize, double lineSize, vec2* selected);
+  void drawBezier(double pointSize, double lineSize, Point* selected);
   void drawBezierLines();
   void drawBezierPoints();
 };

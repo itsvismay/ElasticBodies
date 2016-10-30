@@ -5,7 +5,7 @@ SelectionControl::SelectionControl() {
   hasSelection = false;
 }
 
-void SelectionControl::setSelected(vec2* point) {
+void SelectionControl::setSelected(Point* point) {
   selectedCtrl = point;
   hasSelection = true;
 }

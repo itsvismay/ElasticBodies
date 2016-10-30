@@ -21,4 +21,6 @@ public:
   void handleMouseDown();
   void handleMouseUp();
   void handleMouseMove(double x,double y);
+  void createCtrl();
+  void deleteCtrl();
 };

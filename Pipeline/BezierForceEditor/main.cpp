@@ -82,6 +82,25 @@ void display(BezierOne *curve) {
   glVertex2f(0.001,0.999);
   glVertex2f(0.001,0.001);
   glVertex2f(0.999,0.001);
+  // draw hashes
+  for (float i=0.1;i<1.0;i+=0.1) {
+    glVertex2f(0.001, i);
+    glVertex2f(0.05, i);
+    glVertex2f(i, 0.001);
+    glVertex2f(i, 0.05);
+  }
+  for (float i=0.05;i<1.0;i+=0.1) {
+    glVertex2f(0.001, i);
+    glVertex2f(0.025, i);
+    glVertex2f(i, 0.001);
+    glVertex2f(i, 0.025);
+  }
+  for (float i=0.01;i<1.0;i+=0.01) {
+    glVertex2f(0.001, i);
+    glVertex2f(0.010, i);
+    glVertex2f(i, 0.001);
+    glVertex2f(i, 0.010);
+  }
 
   curve->drawBezier(data->pointSize, data->lineSize, data->selectionControl->selectedCtrl);
 
@@ -89,11 +108,16 @@ void display(BezierOne *curve) {
 }
 
 void reshape(int w,int h) {
-  // to be implemented
+  glViewport(0,0,w,h);
+  data->width = (double)w;
+  data->height = (double)h;
 }
 
 void keyboard(GLFWwindow* window,int key,int scancode,int action,int mods) {
-  // to be implemented
+  if (key == GLFW_KEY_C && action == GLFW_PRESS)
+    data->createCtrl();
+  if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    data->deleteCtrl();
 }
 
 void mouseMove(GLFWwindow* window,double x,double y) {

@@ -23,9 +23,9 @@ ProgramData::~ProgramData() {
 }
 
 void ProgramData::handleMouseDown() {
-  for (vector<vec2*>::iterator it = curve->ctrlPoints.begin(); it != curve->ctrlPoints.end(); ++it) {
-    if (mouseX >= (**it)[0] - pointSize / width && mouseX <= (**it)[0] + pointSize / width)
-      if (mouseY >= (**it)[1] - pointSize / height && mouseY <= (**it)[1] + pointSize / height) {
+  for (vector<Point*>::iterator it = curve->ctrlPoints.begin(); it != curve->ctrlPoints.end(); ++it) {
+    if (mouseX >= (*it)->pos[0] - pointSize / width && mouseX <= (*it)->pos[0] + pointSize / width)
+      if (mouseY >= (*it)->pos[1] - pointSize / height && mouseY <= (*it)->pos[1] + pointSize / height) {
         selectionControl->setSelected(*it);
         drag = true;
       }
@@ -41,8 +41,22 @@ void ProgramData::handleMouseMove(double x,double y) {
   mouseY = 1.0 - (y / height);
   //cout << x << "," << y << endl;
   if (drag && selectionControl->hasSelection) {
-    (*(selectionControl->selectedCtrl))[0] = mouseX;
-    (*(selectionControl->selectedCtrl))[1] = mouseY;
+    selectionControl->selectedCtrl->move(mouseX, mouseY);
     curve->evaluateCtrls();
+  }
+}
+
+void ProgramData::createCtrl() {
+  if (!drag) {
+    curve->addCtrl(vec2((float)mouseX, (float)mouseY));
+    curve->evaluateCtrls();
+  }
+}
+
+void ProgramData::deleteCtrl() {
+  if (!drag && selectionControl->selectedCtrl) {
+    curve->removeCtrl(selectionControl->selectedCtrl);
+    curve->evaluateCtrls();
+    selectionControl->selectedCtrl = 0x0;
   }
 }
