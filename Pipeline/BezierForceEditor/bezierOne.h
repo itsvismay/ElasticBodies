@@ -8,7 +8,7 @@
 using namespace std;
 using namespace glm;
 
-#define VERTS_PER_CTRL 4
+#define VERTS_PER_CTRL 8
 
 class BezierOne {
 private:

@@ -6,10 +6,10 @@
 // this class is a 1D Bezier
 
 BezierOne::BezierOne() {
-  ctrlPoints.push_back(vec2(0.0f, 0.5f));
-  ctrlPoints.push_back(vec2(0.33f, 0.5f));
-  ctrlPoints.push_back(vec2(0.67f, 0.5f));
-  ctrlPoints.push_back(vec2(1.0f, 0.5f));
+  ctrlPoints.push_back(vec2(0.0f, 0.25f));
+  ctrlPoints.push_back(vec2(0.33f, 0.1f));
+  ctrlPoints.push_back(vec2(0.67f, 0.75f));
+  ctrlPoints.push_back(vec2(1.0f, 0.25f));
   evaluateCtrls();
 }
 
@@ -62,9 +62,13 @@ void BezierOne::evaluateCtrls() {
 }
 
 void BezierOne::drawBezier() {
+  glLineWidth(4.0);
+  glColor4f(0.0f,0.0f,1.0f,1.0f);
   glBegin(GL_LINES);
   drawBezierLines();
   glEnd();
+  glPointSize(14.0);
+  glColor4f(1.0f,0.0f,0.0f,1.0f);
   glBegin(GL_POINTS);
   drawBezierPoints();
   glEnd();

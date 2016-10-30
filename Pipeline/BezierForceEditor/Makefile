@@ -4,7 +4,7 @@ PROD=bezEditor
 SRCS= $(shell ls *.cpp)
 OBJS= $(patsubst %.cpp, %.o, $(SRCS))
 STRINGFIX = -ldl -lm -lXext -lX11 -lXxf86vm -lXrandr -lXi -lXcursor -lXinerama -L/usr/lib/nvidia-340-updates
-GLFW = -lGL -lGLU -lglfw -lpthread
+GLFW = -lglfw3 -lGLU -lGL -lpthread
 LIBS = $(STRINGFIX) $(GLFW)
 all: $(PROD)
 
