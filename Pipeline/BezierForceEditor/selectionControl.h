@@ -5,11 +5,11 @@
 using namespace glm;
 
 class SelectionControl {
-private:
-  vec2 selectedCtrl;
-  bool hasSelection;
 public:
+  vec2* selectedCtrl;
+  bool hasSelection;
+  
   SelectionControl();
-  void setSelected(vec2 point);
+  void setSelected(vec2* point);
   void clearSelected();
 };

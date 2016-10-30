@@ -3,9 +3,9 @@
 
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
-#include "bezierOne.h"
 #include <iostream>
 #include "combinationCache.h"
+#include "programData.h"
 
 using namespace std;
 
@@ -17,12 +17,14 @@ void mouseMove(GLFWwindow* window,double x,double y);
 void mouseClick(GLFWwindow* window,int button,int action,int mods);
 void error(int error, const char* description);
 
+ProgramData* data;
+
 int main(int argc, char* argv[]) {
   // initialization of program data
   cout << "HELLO WORLD" << endl;
 
   CombinationCache::initialize();
-  BezierOne *curve = new BezierOne();
+  data = new ProgramData();
 
   // initialize glfw
   if(!glfwInit())
@@ -40,8 +42,10 @@ int main(int argc, char* argv[]) {
   glfwSetCursorPosCallback(window,mouseMove);
   glfwSetMouseButtonCallback(window,mouseClick);
   glfwGetFramebufferSize(window, &width, &height);
-  //glViewport(0,0,1.0f,1.0f);
   glfwSwapInterval(1);
+
+  data->height = height;
+  data->width = width;
 
   // main loop
   while (!glfwWindowShouldClose(window))
@@ -53,12 +57,14 @@ int main(int argc, char* argv[]) {
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-    display(curve);
+    display(data->curve);
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
   glfwDestroyWindow(window);
   glfwTerminate();
+
+  delete data;
   return 0;
 }
 
@@ -77,7 +83,7 @@ void display(BezierOne *curve) {
   glVertex2f(0.001,0.001);
   glVertex2f(0.999,0.001);
 
-  curve->drawBezier();
+  curve->drawBezier(data->pointSize, data->lineSize, data->selectionControl->selectedCtrl);
 
   glEnd();
 }
@@ -91,11 +97,14 @@ void keyboard(GLFWwindow* window,int key,int scancode,int action,int mods) {
 }
 
 void mouseMove(GLFWwindow* window,double x,double y) {
-  // to be implemented
+  data->handleMouseMove(x,y);
 }
 
 void mouseClick(GLFWwindow* window,int button,int action,int mods) {
-  // to be implemented
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    data->handleMouseDown();
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    data->handleMouseUp();
 }
 
 void error(int error, const char* description) {

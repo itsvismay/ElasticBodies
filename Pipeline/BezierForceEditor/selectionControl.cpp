@@ -1,11 +1,11 @@
 #include "selectionControl.h"
 
 SelectionControl::SelectionControl() {
-  selectedCtrl = vec2(0.0f, 0.0f);
+  selectedCtrl = 0x0;
   hasSelection = false;
 }
 
-void SelectionControl::setSelected(vec2 point) {
+void SelectionControl::setSelected(vec2* point) {
   selectedCtrl = point;
   hasSelection = true;
 }

@@ -6,17 +6,17 @@
 // this class is a 1D Bezier
 
 BezierOne::BezierOne() {
-  ctrlPoints.push_back(vec2(0.0f, 0.25f));
-  ctrlPoints.push_back(vec2(0.33f, 0.1f));
-  ctrlPoints.push_back(vec2(0.67f, 0.75f));
-  ctrlPoints.push_back(vec2(1.0f, 0.25f));
+  ctrlPoints.push_back(new vec2(0.0f, 0.25f));
+  ctrlPoints.push_back(new vec2(0.33f, 0.1f));
+  ctrlPoints.push_back(new vec2(0.67f, 0.75f));
+  ctrlPoints.push_back(new vec2(1.0f, 0.25f));
   evaluateCtrls();
 }
 
-void BezierOne::addCtrl(vec2 point) {
+void BezierOne::addCtrl(vec2* point) {
   int i = 0;
-  for (vector<vec2>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-    if (point[0] < (*it)[0]) {
+  for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+    if ((*point)[0] < (**it)[0]) {
       ctrlPoints.insert(ctrlPoints.begin() + i, point);
       i++;
       it = ctrlPoints.end();
@@ -24,11 +24,11 @@ void BezierOne::addCtrl(vec2 point) {
   }
 }
 
-void BezierOne::removeCtrl(vec2 point) {
+void BezierOne::removeCtrl(vec2* point) {
   int i = 0;
-  if (ctrlPoints.size() > 4 && point[0] != 0.0f && point[0] != 1.0f) {
-    for (vector<vec2>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-      if ((*it)[0] == point[0] && (*it)[1] == point[1]) {
+  if (ctrlPoints.size() > 4 && (*point)[0] != 0.0f && (*point)[0] != 1.0f) {
+    for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+      if ((**it)[0] == (*point)[0] && (**it)[1] == (*point)[1]) {
         ctrlPoints.erase(ctrlPoints.begin() + i);
         i++;
         it = ctrlPoints.end();
@@ -54,24 +54,30 @@ void BezierOne::evaluateCtrls() {
     for(int j = 0;j<numCtlPts;j++) {
       float tmp = powf(pos,(float)j) * powf(ompos,(float)n-j);
       tmp *= cc->getCombination(n,j);
-      ypos += tmp * ctrlPoints[j][1];
-      xpos += tmp * ctrlPoints[j][0];
+      ypos += tmp * (*(ctrlPoints[j]))[1];
+      xpos += tmp * (*(ctrlPoints[j]))[0];
     }
     evalPoints.push_back(vec2(xpos,ypos));
   }
 }
 
-void BezierOne::drawBezier() {
-  glLineWidth(4.0);
+void BezierOne::drawBezier(double pointSize, double lineSize, vec2* selected) {
+  glLineWidth(lineSize);
   glColor4f(0.0f,0.0f,1.0f,1.0f);
   glBegin(GL_LINES);
   drawBezierLines();
   glEnd();
-  glPointSize(14.0);
+  glPointSize(pointSize);
   glColor4f(1.0f,0.0f,0.0f,1.0f);
   glBegin(GL_POINTS);
   drawBezierPoints();
   glEnd();
+  if (selected) {
+    glColor4f(0.0f,1.0f,0.0f,1.0f);
+    glBegin(GL_POINTS);
+    glVertex2f((*selected)[0], (*selected)[1]);
+    glEnd();
+  }
 }
 
 void BezierOne::drawBezierLines() {
@@ -84,7 +90,7 @@ void BezierOne::drawBezierLines() {
 }
 
 void BezierOne::drawBezierPoints() {
-  for (vector<vec2>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
-    glVertex2f((*it)[0], (*it)[1]);
+  for (vector<vec2*>::iterator it = ctrlPoints.begin(); it != ctrlPoints.end(); ++it) {
+    glVertex2f((**it)[0], (**it)[1]);
   }
 }
