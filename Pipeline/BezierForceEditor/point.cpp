@@ -19,6 +19,10 @@ Point::Point(vec2 o) {
 }
 
 void Point::move(double x, double y) {
+  if (x > 1.0) x = 1.0;
+  if (x < 0.0) x = 0.0;
+  if (y > 1.0) y = 1.0;
+  if (y < 0.0) y = 0.0;
   if (!next || !prev) {
     pos[1] = (float)y;
   } else {

@@ -2,6 +2,7 @@
 #include "combinationCache.h"
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
+#include <glm/gtx/spline.hpp>
 #include <iostream>
 
 using namespace std;
@@ -40,6 +41,8 @@ void BezierOne::addCtrl(vec2 point) {
     }
     i++;
   }
+  for (int i=0;i<ctrlPoints.size();i++)
+    cout << "XPOS :: " << ctrlPoints[i]->pos[0] << endl;
 }
 
 void BezierOne::removeCtrl(Point* point) {
@@ -57,27 +60,113 @@ void BezierOne::removeCtrl(Point* point) {
   }
 }
 
+void BezierOne::evaluateCtrlsTwo() {
+  evalPoints.clear();
+  int numCtrlPts = ctrlPoints.size();
+  int numEvalPoints = VERTS_PER_CTRL * numCtrlPts;
+  for (int i = 0; i < numEvalPoints+1; i++) {
+    float pointPos = (float)i / (float)numEvalPoints;
+    vec2 point = getValueAtPoint(pointPos, (int)((float)(i-1) / (float)VERTS_PER_CTRL / 4.0f));
+    cout << "POIHNT :: " << pointPos << endl;
+    evalPoints.push_back(point);
+    //int ind = i / VERTS_PER_CTRL;
+    //int i0 = ind == 0 ? 0 : ind-1;
+    //int i1 = ind;
+    //int i2 = ind == numCtrlPoints ? numCtrlPoints : ind+1;
+    //int i3 = ind == numCtrlPoints ? numCtrlPoints : ind+2;
+    //float fractPoint = (ctrlPoints[i3]->pos[0] - ctrlPoints[i0]->pos[0])
+    //vec2 point = glm::gtx::spline::cubic(ctrlPoints[i0], ctrlPoints[i1], ctrlPoints[i2], ctrlPoints[i3], )
+    
+  }
+}
+
+void BezierOne::subdivide() {
+  // to be implemented
+  cout << "WHAT" << endl;
+  int numCtrls = ctrlPoints.size();
+  float currentSpacing = 1.0f / numCtrls;
+  float newSpacing = currentSpacing / 4.0f;
+  vector<vec2> newPts = vector<vec2>();
+  int ind = 0;
+  int numMade = 0;
+  for(float f = 0.0f; f < 1.0f; f += newSpacing) {
+    if (fract(f / currentSpacing) != 0.0f)
+    {
+      cout << "MAKING ONE" << endl;
+      newPts.push_back(getValueAtPoint(f, ind));
+      cout << "MADE ONE" << endl;
+      numMade++;
+    }
+    else {
+      //ind++;
+    }
+  }
+  cout << "afasdfasfas" << endl;
+  for (int i = 0; i < newPts.size(); i++) {
+    addCtrl(newPts[i]);
+  }
+  cout << "Subdivision Created :: " << numMade << " Points " << endl;
+  evaluateCtrls();
+}
+
+vec2 BezierOne::getValueAtPoint(float point, int ind) {
+  //int i0 = clamp<int>(point - 1, 0, ctrlPoints.size() - 1);
+  //int i1 = clamp<int>(point, 0, ctrlPoints.size() - 1);
+  //int i2 = clamp<int>(point + 1, 0, ctrlPoints.size() - 1);
+  //int i3 = clamp<int>(point + 2, 0, ctrlPoints.size() - 1);
+  int i0 = ind == 0 ? 0 : ind * 4 - 1;
+  float partial = fract((point * VERTS_PER_CTRL) / 4.0f);
+  
+
+  double pos = point;
+  double ompos = 1.0f - point;
+  double xpos = 0.0f;
+  double ypos = 0.0f;
+  int n = 3;
+  //cout << "IND :: " << ind << endl;
+  CombinationCache* cc = CombinationCache::getInstance();
+  for(int j = 0;j<4;j++) {
+    double tmp = pow(pos,(double)j) * powf(ompos,(double)n-j);
+    tmp *= cc->getCombination(n,j);
+    //cout << "j + i0 :: " << j + i0 << endl;
+    ypos += tmp * ctrlPoints[j+i0]->pos[1];
+    xpos += tmp * ctrlPoints[j+i0]->pos[0];
+  }
+  return vec2((float)xpos, (float)ypos);
+  //  evalPoints.push_back(vec2(xpos,ypos));
+
+
+
+  //cout << "PARTIAL :: " << partial << endl;
+  //vec2 result = cubic(ctrlPoints[i0]->pos, ctrlPoints[i1]->pos, ctrlPoints[i2]->pos, ctrlPoints[i3]->pos, point); 
+  //cout << "RESULT :: " << result[0] << "," << result[1] << endl;
+  //result[0] -= 1;
+  //result[1] /= 4;
+  //return result;
+  //return (((ctrlPoints[i3]->pos * point) + ctrlPoints[i2]->pos) * point + ctrlPoints[i1]->pos) * point + ctrlPoints[i0]->pos;
+}
+
 void BezierOne::evaluateCtrls() {
   evalPoints.clear();
   int numCtlPts = ctrlPoints.size();
   int numEvalPoints = VERTS_PER_CTRL * numCtlPts; //numCtlPts * 4;
   //float length = ctrlPoints[numCtlPts-1][0] - ctrlPoints[0][0];
-  float length = 1.0f;
-  float uMult = length / numEvalPoints;
+  //float length = 1.0f;
+  //float uMult = length / numEvalPoints;
   CombinationCache* cc = CombinationCache::getInstance();
   for(int i=0;i<numEvalPoints+1;i++) {
-    float pos = ((float)i)/((float)numEvalPoints);
-    float ompos = 1 - pos;
-    float ypos = 0.0f;
-    float xpos = 0.0f;
-    float n = numCtlPts - 1;
+    double pos = ((float)i)/((float)numEvalPoints);
+    double ompos = 1 - pos;
+    double ypos = 0.0f;
+    double xpos = 0.0f;
+    double n = numCtlPts - 1;
     for(int j = 0;j<numCtlPts;j++) {
-      float tmp = powf(pos,(float)j) * powf(ompos,(float)n-j);
+      double tmp = powf(pos,(double)j) * powf(ompos,(double)n-j);
       tmp *= cc->getCombination(n,j);
       ypos += tmp * ctrlPoints[j]->pos[1];
       xpos += tmp * ctrlPoints[j]->pos[0];
     }
-    evalPoints.push_back(vec2(xpos,ypos));
+    evalPoints.push_back(vec2((float)xpos,(float)ypos));
   }
 }
 
@@ -95,6 +184,13 @@ void BezierOne::drawBezier(double pointSize, double lineSize, Point* selected) {
   if (selected) {
     glColor4f(0.0f,1.0f,0.0f,1.0f);
     glBegin(GL_POINTS);
+    glVertex2f(selected->pos[0], selected->pos[1]);
+    glEnd();
+    glColor4f(0.0f, 0.4f, 0.0f, 1.0f);
+    glBegin(GL_LINES);
+    glVertex2f(0.0f, selected->pos[1]);
+    glVertex2f(selected->pos[0], selected->pos[1]);
+    glVertex2f(selected->pos[0], 0.0f);
     glVertex2f(selected->pos[0], selected->pos[1]);
     glEnd();
   }

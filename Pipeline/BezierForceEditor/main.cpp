@@ -115,9 +115,15 @@ void reshape(int w,int h) {
 
 void keyboard(GLFWwindow* window,int key,int scancode,int action,int mods) {
   if (key == GLFW_KEY_C && action == GLFW_PRESS)
-    data->createCtrl();
+    if (data->curve->ctrlPoints.size() < 21)
+      data->createCtrl();
   if (key == GLFW_KEY_D && action == GLFW_PRESS)
     data->deleteCtrl();
+  if (key == GLFW_KEY_X && action == GLFW_PRESS)
+    CombinationCache::getInstance()->debug();
+  if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    if (data->curve->ctrlPoints.size() == 4)
+      data->curve->subdivide();
 }
 
 void mouseMove(GLFWwindow* window,double x,double y) {

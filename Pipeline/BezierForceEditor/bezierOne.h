@@ -14,12 +14,15 @@ using namespace glm;
 class BezierOne {
 private:
   vector<vec2> evalPoints;
+  vec2 getValueAtPoint(float point, int ind);
 public:
   vector<Point*> ctrlPoints;
   BezierOne();
   void addCtrl(vec2 point);
   void removeCtrl(Point* point);
   void evaluateCtrls();
+  void subdivide();
+  void evaluateCtrlsTwo();
   void drawBezier(double pointSize, double lineSize, Point* selected);
   void drawBezierLines();
   void drawBezierPoints();

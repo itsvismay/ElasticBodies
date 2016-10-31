@@ -8,15 +8,16 @@ class CombinationCache {
 private:
   static CombinationCache* instance;
   CombinationCache();
-  int calculateCombination(int n,int r);
-  int findCombination(int n,int r);
-  int factorial(int val);
-  vector<vector<int>> cache;
-  void debug();
+  long calculateCombination(long n,long r);
+  long findCombination(long n,long r);
+  long factorial(long val);
+  vector<vector<long>> cache;
 public:
   ~CombinationCache();
   static CombinationCache* getInstance();
   static void initialize();
   static void destroy();
-  int getCombination(int n,int r);
+  long getCombination(long n,long r);
+  void debug();
+  void specialComb(long n, long r);
 };
