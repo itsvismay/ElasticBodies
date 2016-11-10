@@ -158,9 +158,17 @@ for i in range(len(initialGCodeFiles)):
 # fix mesh
 meshedFile = "unioned.obj"
 fixedMeshedFile = "fixedUnion.obj"
+doubleMeshedFile = "doubleFixed.obj"
+
 try:
   print 'python fix_mesh.py', meshedFile
-  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', meshedFile, fixedMeshedFile])
+  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', meshedFile, fixedMeshedFile])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
+
+try:
+  print 'python fix_mesh.py', fixedMeshedFile
+  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', fixedMeshedFile, doubleMeshedFile])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
@@ -168,15 +176,23 @@ except OSError as e:
 force = 20000;
 prepedMesh = 'prepedMesh.obj'
 forceData = 'forcedata.txt'
+
+# temp for beam
+prepedMesh = '../shared/lowDetailBeam.obj'
+forceData = '../shared/lowBeamForce.txt'
+
 try:
   print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
   result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', str(force)])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
-# run tetgen on the mesh
-
 # call simulation
+try:
+  print './elastic', '\n'
+  result = subprocess.check_output(['./../elastic'])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
 
 # lists to clean
 # -- initialScadFiles
@@ -210,10 +226,10 @@ if cleanAll == True:
   for i in range(len(layerObjFiles)):
     print 'rm', layerObjFiles[i]
     result = subprocess.check_output(['rm', layerObjFiles[i]])
-  #print 'rm', meshedFile
-  #result = subprocess.check_output(['rm', meshedFile])
-  #print 'rm', fixedMeshedFile
-  #result = subprocess.check_output(['rm', fixedMeshedFile])
+  print 'rm', meshedFile
+  result = subprocess.check_output(['rm', meshedFile])
+  print 'rm', fixedMeshedFile
+  result = subprocess.check_output(['rm', fixedMeshedFile])
   #print 'rm', prepedMesh
   #result = subprocess.check_output(['rm', prepedMesh])
   #print 'rm', forceData
