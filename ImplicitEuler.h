@@ -23,9 +23,9 @@ public:
 	VectorXd x_k, v_k;
 	MatrixXd TVk;
 
-	void render();
-	void renderNewtonsMethod();
-	void renderLBFGS();
+	void render(VectorXd& ext_force);
+	void renderNewtonsMethod(VectorXd& ext_force);
+	void renderLBFGS(VectorXd& ext_force);
 	
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);

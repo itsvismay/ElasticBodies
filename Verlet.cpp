@@ -45,7 +45,7 @@ void Verlet::calculateElasticForce(){
 	}
 }
 
-void Verlet::render(){
+void Verlet::render(VectorXd& ext_force){
 	simTime+=1;
 	cout<<"e"<<simTime<<endl;
 	// cout<<"XOld"<<endl;

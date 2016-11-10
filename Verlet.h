@@ -11,7 +11,7 @@ public:
 	void createForceVector();
 	void calculateGravity();
 	void calculateElasticForce();
-	void render();
+	void render(VectorXd& ext_force);
 };
 
 #endif

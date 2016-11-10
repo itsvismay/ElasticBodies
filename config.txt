@@ -7,10 +7,10 @@ i
 1
 2000000
 .35
--pRq7
-neo
+-pR
+svk
 newton
-spring
+lowDetailBeam
 
 #1 timestep
 #2 headless t/f
@@ -25,3 +25,4 @@ spring
 #11 solver netwon or lbfgs
 #12 object name (in shared file)
 -pqa15000
+-pRq1.18

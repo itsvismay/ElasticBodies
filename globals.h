@@ -27,6 +27,7 @@ extern ofstream energyFile;
 extern ofstream strainEnergyFile;
 extern ofstream kineticEnergyFile;
 extern ofstream gravityEnergyFile;
+extern ofstream optimizationFile;
 
 extern double rayleighCoeff;
 extern double gravity;

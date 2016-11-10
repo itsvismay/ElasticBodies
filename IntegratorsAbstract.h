@@ -28,7 +28,7 @@ public:
 
 	bool isFixed(int vert);
 	void printInfo();
-	virtual void render()=0; //pure virtual render class
+	virtual void render(VectorXd& ext_force)=0; //pure virtual render class
 	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT)=0;
 	void initVectors();
 	void initMassMatrices();

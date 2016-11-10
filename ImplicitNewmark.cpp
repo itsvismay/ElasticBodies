@@ -289,7 +289,7 @@ void ImplicitNewmark::renderNewtonsMethod(){
 //     lbfgs_free(x);
 // }
 
-void ImplicitNewmark::render(){
+void ImplicitNewmark::render(VectorXd& ext_force){
 	simTime+=1;
 	cout<<"n"<<simTime<<endl;
 	IntegratorAbstract::printInfo();
