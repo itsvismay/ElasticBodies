@@ -18,7 +18,9 @@ public:
 	IntegratorAbstract* integrator;
 	vector<int> mapV2TV;
 	int iters;
-	MatrixXd sB;
+	MatrixXd sB, TV_k;
+	VectorXd x_k, f_k, external_force;
+	int ignorePastIndex;
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
@@ -26,13 +28,23 @@ public:
 	void binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
 	void staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 	void syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
-	void reIndexTVandTT(vector<int> newVertsIndices, int sizeFixed, int sizeMove,MatrixXd& TV, MatrixXi& TT, MatrixXd& newTV, MatrixXi& newTT);
+	void reIndexTVandTT(vector<int> newVertsIndices, 
+						int sizeFixed, 
+						int sizeMove, 
+						MatrixXd& TV, 
+						MatrixXi& TT, 
+						VectorXd& force, 
+						MatrixXd& newTV, 
+						MatrixXi& newTT, 
+						VectorXd& new_force);
 	
 	void staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 
-	void setInitPosition(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
+	void setInitPosition(VectorXd& force, vector<int>& fixVertices);
 	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
+	void xToTV(VectorXd& x, MatrixXd& TV);
+	void applyExternalForces();
 	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
 	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);
 	void headless();

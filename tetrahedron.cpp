@@ -161,6 +161,7 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
 
     Matrix3d P;
 
+    this->currentVol = (1.0/6)*abs(Ds.determinant());
     if(material_model.compare("neo") == 0){
         //Neo
         P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
