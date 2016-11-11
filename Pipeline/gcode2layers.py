@@ -69,7 +69,7 @@ def loadData(fileName):
   return Data, count
 
 def cleanData(rawData, numLines):
-  
+
   newData = []
   extrusions = []
   count = 0;
@@ -157,13 +157,13 @@ for layer in runLayers:
   if layer == 0:
     file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);\n")
   else:
-    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);\n")
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.01]) drawBasicShape(x1, y1, x2, y2, width);\n")
   file_write.write("\t\t}\n")
   file_write.write("\t\telse {\n")
   if layer == 0:
     file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);")
   else:
-    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.00001]) drawBasicShape(x1, y1, x2, y2, width);")
+    file_write.write("\t\t\ttranslate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) scale([1.0, 1.0, 1.01]) drawBasicShape(x1, y1, x2, y2, width);")
   file_write.write("\t\t}\n")
   file_write.write("\t}\n")
   file_write.write("}\n")
@@ -176,8 +176,11 @@ for layer in runLayers:
   file_write.write("];\n")
   file_write.write("\n")
   z += layerThk
-  file_write.write("translate([0.0, 0.0, %6.3f]) {\n" % (z))
-  file_write.write("\tlinear_extrude(height = %6.3f, center = false, convexity = 10, twist = 0) {\n" % (layerThk))
+  file_write.write("translate([0.0, 0.0, %6.3f]) {\n" % (z - (layerThk * .005)))
+  if layer == 0:
+    file_write.write("\tlinear_extrude(height = %6.3f, center = false, convexity = 10, twist = 0) {\n" % (layerThk))
+  else:
+    file_write.write("\tlinear_extrude(height = %6.3f, center = false, convexity = 10, twist = 0) {\n" % (layerThk*1.01))
   file_write.write("\t\tunion() {\n")
   file_write.write("\t\t\tfor( i=[0:len(points" + str(layer) + ")-2] ){ \n")
   file_write.write("\t\t\t\tx1 = points" + str(layer) + "[i][0];\n")
