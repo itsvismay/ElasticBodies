@@ -18,7 +18,7 @@ public:
 	double gamma = 0.5;
 	double beta =0.25;
 	
-	void render();
+	void render(VectorXd& ext_force);
 	void renderNewtonsMethod();
 	void renderLBFGS();
 	

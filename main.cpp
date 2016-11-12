@@ -12,6 +12,7 @@ ofstream energyFile;
 ofstream strainEnergyFile;
 ofstream kineticEnergyFile;
 ofstream gravityEnergyFile;
+ofstream optimizationFile;
 
 double rayleighCoeff;
 double gravity;
@@ -125,7 +126,6 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 
-	// igl::copyleft::tetgen::tetrahedralize(V,F,"pq1.414a10", TV,TT,TF);
 	
 	// cout<<"2222222222"<<endl;
 	// cout<<V<<endl;
@@ -138,7 +138,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 	//*********BEAM******************
-	// // move vertices
+	//move vertices
 	// for(int i=0; i<TV.rows(); i++){
 	//  	if(TV.row(i)[0]>=180){
 	//  		moveVertices.push_back(i);
@@ -154,19 +154,19 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	//***************************
 
 	//********SPRING*******************	
-	// move vertices
-	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
-	 		moveVertices.push_back(i);
-	 	}
-	}
+	// //move vertices
+	// for(int i=0; i<TV.rows(); i++){
+	//  	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
+	//  		moveVertices.push_back(i);
+	//  	}
+	// }
 
-	// fix vertices
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
-			fixedVertices.push_back(i);
-		}
-	}
+	// // // fix vertices
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
+	// 		fixedVertices.push_back(i);
+	// 	}
+	// }
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 		objectName = line.c_str();
 		cout<<objectName<<endl;
 	}else{
-		cout<<"Elastic Error: Config file not found"<<endl;
+		cout<<"Check yo self: Config file not found"<<endl;
 		return 0;
 	}
     
@@ -318,6 +318,7 @@ int main(int argc, char *argv[])
 	strainEnergyFile.open("../Scripts/senergy.txt");
 	kineticEnergyFile.open("../Scripts/kenergy.txt");
 	gravityEnergyFile.open("../Scripts/genergy.txt");
+	optimizationFile.open("../TestsResults/opt.txt");
 	
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);	
@@ -333,6 +334,7 @@ int main(int argc, char *argv[])
 	kineticEnergyFile.close();
 	gravityEnergyFile.close();
 	momentumFile.close();
+	optimizationFile.close();
 	cout<<"###########################My Code ###################"<<endl;
 	
 

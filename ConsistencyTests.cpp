@@ -182,9 +182,9 @@ void ConsistencyTest::replaceWithMain()
 
 	int spaceStep = 0;
 	char method = 'i';
-	string tetmesh_code = "-pRq7";
+	string tetmesh_code = "-pRq1.7";
 	string spaceDescription = tetmesh_code;
-	double implicitTimestep = 1e-2;
+	double implicitTimestep = 1e-1;
 	cout<<"----Constants for the test"<<endl;
 
 	//Time stuff------

@@ -129,10 +129,10 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
 		Vector4i indices = M.tets[i].verticesIndex;
-		f(3*indices(0)+0) += vertex_mass*gravity;
-		f(3*indices(1)+0) += vertex_mass*gravity; 
-		f(3*indices(2)+0) += vertex_mass*gravity;
-		f(3*indices(3)+0) += vertex_mass*gravity;
+		f(3*indices(0)+1) += vertex_mass*gravity;
+		f(3*indices(1)+1) += vertex_mass*gravity; 
+		f(3*indices(2)+1) += vertex_mass*gravity;
+		f(3*indices(3)+1) += vertex_mass*gravity;
 	}
 
 	//elastic
@@ -190,7 +190,7 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
 	return;
 }
-void ImplicitEuler::renderNewtonsMethod(){
+void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
 	v_k.setZero();
 	x_k.setZero();
@@ -219,6 +219,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
+		f+=ext_force;
 
 	
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
@@ -280,7 +281,7 @@ void ImplicitEuler::renderNewtonsMethod(){
 	x_old = x_k;
 }
 
-void ImplicitEuler::renderLBFGS(){
+void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
 
 	//LBFGS
 	int N=3*vertsNum;
@@ -329,16 +330,16 @@ void ImplicitEuler::renderLBFGS(){
     lbfgs_free(x);
 }
 
-void ImplicitEuler::render(){
+void ImplicitEuler::render(VectorXd& ext_force){
 	simTime+=1;
 	cout<<"i"<<simTime<<endl;
 	IntegratorAbstract::printInfo();
 
 	if(solver.compare("newton")==0){
-		renderNewtonsMethod();
+		renderNewtonsMethod(ext_force);
 		
 	}else if(solver.compare("lbfgs")==0){
-		renderLBFGS();
+		renderLBFGS(ext_force);
 		
 	}else{
 		cout<<"Solver not specified properly"<<endl;
