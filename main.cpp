@@ -6,6 +6,7 @@
 #include <igl/barycenter.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+#include <igl/slice.h>
 
 ofstream momentumFile;
 ofstream energyFile;
@@ -31,6 +32,7 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 
 // Tetrahedralized interior
+Eigen::MatrixXd ForcesTV;
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
 Eigen::MatrixXi TF;
@@ -107,10 +109,15 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 	
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,1,0));
-	viewer.data.add_edges(RowVector3d(0,30,0), RowVector3d(0,41,0), RowVector3d(1,0,1));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,20), RowVector3d(0,1,1));
-	viewer.data.add_edges(RowVector3d(0,-40,0), RowVector3d(0,-30,0), RowVector3d(1,0,1));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
+
+	ForcesTV.setZero();
+	for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
+		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+	}
+	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
@@ -170,8 +177,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
-	
-	
+	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
 	if(headless){
 		Sim.headless();
 	}else{

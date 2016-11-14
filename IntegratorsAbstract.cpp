@@ -25,7 +25,7 @@ void IntegratorAbstract::printInfo(){
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 			
 			k++;
-			gravityE +=  massVector(k)*gravity*(x_old(k));//TODO CHANGE GRAVITY
+			gravityE +=  massVector(k)*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 			
 			k++;
@@ -33,14 +33,10 @@ void IntegratorAbstract::printInfo(){
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 		}		
 	}
-	double totalVol = 0;
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;		
-		totalVol += M.tets[i].currentVol;
-	}
-	cout<<"Total Vol"<<endl;
-	cout<<totalVol<<endl;
-	optimizationFile<<totalVol<<endl;
+	
+	// for(int i=0;)
+	// cout<<totalVol<<endl;
+	// optimizationFile<<totalVol<<endl;
 
 	TotalEnergy+= gravityE + kineticE + strainE;
 	// cout<<endl<<"Grav E"<<endl;
