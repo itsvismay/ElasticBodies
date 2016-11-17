@@ -30,6 +30,10 @@ RUN apt install slic3r
 RUN apt install meshlab
 RUN apt install clang
 RUN apt install libtool
+RUN apt install libtbb-dev
+RUN apt install libqt4-dev
+RUN apt install qt4-dev-tool
+RUN apt install libcgal-qt5-dev
 
 # required downloads - use wget
 # Anaconda
