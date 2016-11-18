@@ -38,6 +38,8 @@ def g0(x):
       curLine = line.strip().split(' ')
       print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
       print 1e-4 - float(curLine[0]) / -1000
+      # the 1e-3 is wrong, i just tried to use it to offset the values being
+      # returned by the simulation (they were larger than they should have been)
       return 1e-3 - float(curLine[0]) / -1000
 
     
