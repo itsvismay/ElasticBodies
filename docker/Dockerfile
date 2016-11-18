@@ -29,6 +29,7 @@ RUN apt install openscad openscad-dbg
 RUN apt install slic3r
 RUN apt install meshlab
 RUN apt install clang
+RUN apt install libtool
 
 # required downloads - use wget
 # Anaconda
