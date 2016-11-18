@@ -21,6 +21,8 @@ public:
 	MatrixXd sB, TV_k;
 	VectorXd x_k, f_k, external_force;
 	int ignorePastIndex;
+	VectorXi putForceOnTheseVerts;
+	double maxDisp = 100;
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);

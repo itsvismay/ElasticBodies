@@ -25,7 +25,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
-	
 	setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
@@ -119,7 +118,17 @@ void Simulation::headless(){
 
 	while(integrator->simTime<iters){
 		integrator->render(this->external_force);
+		cout<<"Min Displacement"<<endl;
+		double disp =0;
+		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
+			disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+		}
+		if(disp < maxDisp){
+			maxDisp = disp;
+		}
+		cout<<maxDisp<<"\n";
 	}
+	optimizationFile<<maxDisp<<endl;
 
 	clock_t end = clock();
 	cout<<"TIME ELAPSED"<<endl<<endl;
@@ -129,6 +138,15 @@ void Simulation::headless(){
 
 void Simulation::render(){
 	integrator->render(this->external_force);
+	cout<<"Max Displacement"<<endl;
+	double disp =0;
+	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
+		disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+	}
+	if(disp > maxDisp){
+		maxDisp = disp;
+	}
+	cout<<maxDisp<<endl;
 }
 
 //TODO: Clean up function params size Fixed and size Move are not needed
@@ -256,6 +274,7 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	//TODO: implement this later - with Zack's code
 	//hard coded the force file for now
+	vector<int> temp;
 	cout<<force.rows()<<endl;
 	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
 	if(forceInputFile.is_open()){
@@ -267,14 +286,22 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			int fixedOrNot; //1 is fixed, 0 not fixed
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			//cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
-			force(3*index) = fx;
-			force(3*index+1) = fy;
-			force(3*index+2) = fz;
+			if(abs(fx + fy + fz)>0){
+				temp.push_back(index);
+			}
+			force(3*index) = fx*100;
+			force(3*index+1) = fy*100;
+			force(3*index+2) = fz*100;
 			if(fixedOrNot == 1){
 				fixVertices.push_back(index);
 			}
 			index+=1;
 		}
+		this->putForceOnTheseVerts.resize(temp.size());
+		for(int i=0; i<temp.size(); i++){
+			this->putForceOnTheseVerts(i) = temp[i];
+		}
+		cout<<this->putForceOnTheseVerts<<endl;
 	}else{
 		cout<<"Check yo self: Force input error, file not found"<<endl;
 	}
