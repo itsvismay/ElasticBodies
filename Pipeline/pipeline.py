@@ -166,11 +166,11 @@ try:
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
-try:
-  print 'python fix_mesh.py', fixedMeshedFile
-  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', fixedMeshedFile, doubleMeshedFile])
-except OSError as e:
-  print 'There was a System Error ', e, '\n'
+#try:
+#  print 'python fix_mesh.py', fixedMeshedFile
+#  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', fixedMeshedFile, doubleMeshedFile])
+#except OSError as e:
+#  print 'There was a System Error ', e, '\n'
 
 # run sim prep to set up the mesh for simulation
 force = 20000;
