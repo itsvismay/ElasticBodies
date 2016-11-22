@@ -48,6 +48,7 @@ void Mesh::writeToFile(ProgramSettings* settings) {
 
   //if (settings->needsForce) {
   if (true) {
+    cout << "THIS SHOULD BE WORKING" << endl;
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
       if ((*it)->fixed)
         forceFileWrite << 0 << " " << 0 << " " << 0 << " " << 1 << endl;

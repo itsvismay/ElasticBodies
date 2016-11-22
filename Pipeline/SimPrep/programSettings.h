@@ -56,7 +56,7 @@ public:
   ProgramSettings() {
     mesh = "";
     config = "";
-    outputForce = "";
+    outputForce = "test.txt";
     bezierForceFile = "";
     domainBezierFile = "";
     needsAlignment = false;

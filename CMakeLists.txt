@@ -79,7 +79,7 @@ set(LIBS
 
 if(UNIX AND NOT APPLE)
   set(LIBS ${LIBS} ${LIBS})
-  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama ")
+  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama -ldl")
 endif(UNIX AND NOT APPLE)
 
 FILE(GLOB HEADFILES *.h)
