@@ -285,7 +285,6 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			double fx, fy, fz;
 			int fixedOrNot; //1 is fixed, 0 not fixed
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
-			//cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
 			if(abs(fx + fy + fz)>0){
 				temp.push_back(index);
 			}
@@ -293,6 +292,8 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			force(3*index+1) = fy*100;
 			force(3*index+2) = fz*100;
 			if(fixedOrNot == 1){
+				cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
+				cout<<index<<endl;
 				fixVertices.push_back(index);
 			}
 			index+=1;

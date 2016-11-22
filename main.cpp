@@ -32,7 +32,7 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 
 // Tetrahedralized interior
-Eigen::MatrixXd ForcesTV;
+Eigen::MatrixXd ForcesTV, FixedTV;
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
 Eigen::MatrixXi TF;
@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	Sim.render();
+	// Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -116,20 +116,30 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	ForcesTV.setZero();
 	for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
 		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+		// ForcesTV.row(i) = Sim.integrator->TV.row(0);
+		// cout<<Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i))<<endl;
+		// cout<<Sim.putForceOnTheseVerts(i)<<endl;
 	}
-	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 
+
+	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
+		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	}
+	// cout<<"----"<<endl;
+	// cout<<Sim.integrator->TV.row(0)<<endl;
+	// cout<<Sim.integrator->TV.row(1)<<endl;
+	// cout<<Sim.integrator->TV.row(2)<<endl;
+	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
+	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
+	exit(0);
 }
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
 	igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/tensileTest.obj", V, F);
-	// igl::readOBJ(TUTORIAL_SHARED_PATH "shared/springTruncd.obj", V, F);
-
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 
@@ -178,6 +188,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
+	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
 	if(headless){
 		Sim.headless();
 	}else{
