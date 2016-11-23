@@ -1,16 +1,16 @@
-.1
-f
+.001
+t
 i
 200
 0.00
 -0
 1
-200
+2000000
 .35
 -pR
 svk
 newton
-../3dUnion/SpringLayers/layer1.stl
+lowDetailBeam
 
 #1 timestep
 #2 headless t/f

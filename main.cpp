@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -113,13 +113,13 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
 
-	ForcesTV.setZero();
-	for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
-		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
-		// ForcesTV.row(i) = Sim.integrator->TV.row(0);
-		// cout<<Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i))<<endl;
-		// cout<<Sim.putForceOnTheseVerts(i)<<endl;
-	}
+	// ForcesTV.setZero();
+	// for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
+	// 	ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+	// 	// ForcesTV.row(i) = Sim.integrator->TV.row(0);
+	// 	cout<<Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i))<<endl;
+	// 	cout<<Sim.putForceOnTheseVerts(i)<<endl;
+	// }
 
 
 	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
@@ -129,12 +129,11 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	// cout<<Sim.integrator->TV.row(0)<<endl;
 	// cout<<Sim.integrator->TV.row(1)<<endl;
 	// cout<<Sim.integrator->TV.row(2)<<endl;
-	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
+	// viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
-	exit(0);
 }
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
@@ -171,19 +170,19 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	//***************************
 
 	//********SPRING*******************	
-	// //move vertices
+	//move vertices
 	// for(int i=0; i<TV.rows(); i++){
 	//  	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
 	//  		moveVertices.push_back(i);
 	//  	}
 	// }
 
-	// // // fix vertices
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
-	// 		fixedVertices.push_back(i);
-	// 	}
-	// }
+	// fix vertices
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
+			fixedVertices.push_back(i);
+		}
+	}
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
@@ -233,7 +232,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	//moveVertices.push_back(0);
 
 	// fix vertices
-	//fixedVertices.push_back(1);
+	fixedVertices.push_back(1);
 	// fixedVertices.push_back(1);
 
 				

@@ -110,7 +110,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 }
 
 void Simulation::applyExternalForces(){
-	this->external_force;
+	this->external_force.setZero();
 }
 
 void Simulation::headless(){
@@ -118,7 +118,7 @@ void Simulation::headless(){
 
 	while(integrator->simTime<iters){
 		integrator->render(this->external_force);
-		cout<<"Min Displacement"<<endl;
+		cout<<"Min Displacement (called maxDisp in code)"<<endl;
 		double disp =0;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 			disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
@@ -138,12 +138,12 @@ void Simulation::headless(){
 
 void Simulation::render(){
 	integrator->render(this->external_force);
-	cout<<"Max Displacement"<<endl;
+	cout<<"Max Displacement (called maxDisp in code)"<<endl;
 	double disp =0;
 	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 		disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 	}
-	if(disp > maxDisp){
+	if(disp < maxDisp){
 		maxDisp = disp;
 	}
 	cout<<maxDisp<<endl;
@@ -275,7 +275,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	//TODO: implement this later - with Zack's code
 	//hard coded the force file for now
 	vector<int> temp;
-	cout<<force.rows()<<endl;
+	//cout<<force.rows()<<endl;
 	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
 	if(forceInputFile.is_open()){
 		string line;
@@ -287,13 +287,14 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(abs(fx + fy + fz)>0){
 				temp.push_back(index);
-			}
-			force(3*index) = fx*100;
-			force(3*index+1) = fy*100;
-			force(3*index+2) = fz*100;
-			if(fixedOrNot == 1){
-				cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
 				cout<<index<<endl;
+			}
+			force(3*index) = fx*10;
+			force(3*index+1) = fy*10;
+			force(3*index+2) = fz*10;
+			if(fixedOrNot == 1){
+				// cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
+				// cout<<index<<endl;
 				fixVertices.push_back(index);
 			}
 			index+=1;
@@ -301,8 +302,8 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 		this->putForceOnTheseVerts.resize(temp.size());
 		for(int i=0; i<temp.size(); i++){
 			this->putForceOnTheseVerts(i) = temp[i];
+			cout<<TV_k.row(temp[i])<<endl;
 		}
-		cout<<this->putForceOnTheseVerts<<endl;
 	}else{
 		cout<<"Check yo self: Force input error, file not found"<<endl;
 	}
@@ -314,7 +315,6 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	// for(int i=0; i<force.rows(); i+=3){
 	// 	cout<<force(i)<<" "<<force(i+1)<<" "<<force(i+2)<<" "<<endl;
 	// }
-
 }
 
 

@@ -219,8 +219,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-		f+=ext_force;
-
+		f = f+ext_force;
 	
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
@@ -337,6 +336,7 @@ void ImplicitEuler::render(VectorXd& ext_force){
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
+
 		
 	}else if(solver.compare("lbfgs")==0){
 		renderLBFGS(ext_force);

@@ -34,7 +34,9 @@ void IntegratorAbstract::printInfo(){
 		}		
 	}
 	
-	// for(int i=0;)
+	for(int i=0; i< M.tets.size(); i++){
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	}
 	// cout<<totalVol<<endl;
 	// optimizationFile<<totalVol<<endl;
 
@@ -123,7 +125,7 @@ void IntegratorAbstract::initMassMatrices(){
 	RegMass.resize(3*vertsNum, 3*vertsNum);
 
 	for(unsigned int i=0; i<M.tets.size(); i++){
-		double vol = (M.tets[i].undeformedVol/4);//*9.7e-7; //UNITS: THIS ACTUALLY DENSITY
+		double vol = (M.tets[i].undeformedVol/4)*9.7e-7; //UNITS: THIS ACTUALLY DENSITY
 		Vector4i indices = M.tets[i].verticesIndex;
 
 		massVector(3*indices(0)) += vol;
