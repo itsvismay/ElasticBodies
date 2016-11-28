@@ -1,54 +1,5 @@
-
 FROM scratch
-
-# required libraries
-RUN apt install aptitude
-RUN apt install vim
-RUN apt install git
-RUN apt install build-essential
-RUN apt install libgl1-mesa-dev
-RUN apt install freeglut3-dev
-RUN apt install cmake
-RUN apt install libblas-dev
-RUN apt install libboost-dev
-RUN apt install libmpfr4 libmpfr4-dbg
-RUN apt install libopenblas-dev
-RUN apt install libpng12-dev
-RUN apt install python-matplotlib
-RUN apt install python-scipy
-RUN apt install swig
-RUN apt install zlib1g-dev
-RUN apt install libxcursor-dev
-RUN apt install libxi-dev
-RUN apt install libxinerama-dev
-RUN apt install libxrandr-dev
-RUN apt install libcgal-dev
-RUN apt purge libcgal-dev
-RUN apt install libeigen3-dev
-RUN apt install openscad openscad-dbg
-RUN apt install slic3r
-RUN apt install meshlab
-RUN apt install clang
-RUN apt install libtool
-RUN apt install libtbb-dev
-RUN apt install libqt4-dev
-RUN apt install qt4-dev-tool
-RUN apt install libcgal-qt5-dev
-
-# required downloads - use wget
-# Anaconda
-# CGAL
-# liblbfgs-1.10
-
-# required git repositories and building them
-# git clone https://github.com/qnzhou/PyMesh.git
-# to be done
-# git clone https://github.com/jluttine/suitespares.git
-# to be done
-# git clone --recursive https://github.com/libigl/libigl.git
-# to be done
-# git clone https://github.com/itsvismay/ElasticBodies.git
-# to be done
+MAINTAINER zack441@mac.com
 
 ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
 
@@ -95,4 +46,53 @@ RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
 RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
 
 # overwrite this with 'CMD []' in a dependent Dockerfile
-CMD ["/bin/bash"]
+# CMD ["/bin/bash"]
+
+# required libraries
+RUN apt install aptitude
+RUN apt install vim
+RUN apt install git
+RUN apt install build-essential
+RUN apt install libgl1-mesa-dev
+RUN apt install freeglut3-dev
+RUN apt install cmake
+RUN apt install libblas-dev
+RUN apt install libboost-dev
+RUN apt install libmpfr4 libmpfr4-dbg
+RUN apt install libopenblas-dev
+RUN apt install libpng12-dev
+RUN apt install python-matplotlib
+RUN apt install python-scipy
+RUN apt install swig
+RUN apt install zlib1g-dev
+RUN apt install libxcursor-dev
+RUN apt install libxi-dev
+RUN apt install libxinerama-dev
+RUN apt install libxrandr-dev
+RUN apt install libcgal-dev
+RUN apt purge libcgal-dev
+RUN apt install libeigen3-dev
+RUN apt install openscad openscad-dbg
+RUN apt install slic3r
+RUN apt install meshlab
+RUN apt install clang
+RUN apt install libtool
+RUN apt install libtbb-dev
+RUN apt install libqt4-dev
+RUN apt install qt4-dev-tool
+#RUN apt install libcgal-qt5-dev
+
+# git clones
+RUN git clone --recursive https://github.com/qnzhou/PyMesh.git
+RUN git clone https://github.com/chokkan/liblbfgs.git
+RUN git clone --recursive https://github.com/libigl/libigl.git
+RUN git clone https://github.com/jluttine/suitesparse.git
+RUN git clone https://github.com/itsvismay/ElasticBodies.git
+
+# required downloads - use wget
+# Anaconda
+RUN wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh
+RUN bash Anaconda2-4.2.0-Linux-x86_64.sh -b
+# CGAL
+RUN wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.9/CGAL-4.9.tar.xz
+RUN tar xf CGAL-4.9.tar.xz

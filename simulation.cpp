@@ -25,15 +25,23 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
-	setInitPosition(force, fixVertices);
+	//if (fixVertices.size() > 0) cout << "PreInit Count" << endl;
+	setInitPosition(force, fixVertices, moveVertices);
+	//if (fixVertices.size() > 0) cout << "PostInit Count" << endl;
+
+	//cout << "POINTS POST INIT ::" << endl;
+        //for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
+        //        cout << "X:" << TV.row(this->putForceOnTheseVerts(i))(0) << " Y:" << TV.row(this->putForceOnTheseVerts(i))(1) << " Z:" << TV.row(this->putForceOnTheseVerts(i))(2) << endl;
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
+		//cout << "DOING STUFFS" << endl;
 		MatrixXd newTV;
 		newTV.resize(TV.rows(), TV.cols());
 		newTV.setZero();
 		MatrixXi newTT;
 		newTT.resize(TT.rows(), TT.cols());
 		newTT.setZero();
+		//cout << "MoveVertsSize :: " << moveVertices.size() << endl;
 
 		//TODO: Make this shit more efficient
 		//Hash maps or something
@@ -77,6 +85,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			newMoveIndices.push_back(i);
 		}
 
+		//cout << "NewMoveIndicesSize :: " << newMoveIndices.size() << endl;
+
 		VectorXd new_force;
 		new_force.resize(3*TV.rows());
 		reIndexTVandTT(vertexNewIndices, fixVertices.size(), moveVertices.size(), TV, TT, force, newTV, newTT, new_force);
@@ -95,9 +105,15 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
+		//cout << "Printing New Move Indices" << endl;
+		//for (int i = 0; i < putForceOnTheseVerts.rows(); i++) {
+		//	putForceOnTheseVerts(i) = newMoveIndices[i];
+		//	cout << newMoveIndices[i] << endl;
+		//}
 
 
 	}else{
+		//cout << "Doing Other Stuffs" << endl;
 		igl::barycenter(TV, TT, B);
 		M.initializeMesh(TT, TV, youngs, poissons);
 		integrator->initializeIntegrator(deltaT, M, TV, TT);
@@ -116,17 +132,40 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	clock_t begin = clock();
 
+	//int tempRows = integrator->TV.rows();
+	
+	//cout << "BASELINE ::" << endl;
+	//for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
+	//	cout << integrator->TV.row(integrator->TV.rows()-i-1)(2) << endl;
+
+	//cout << "INDEXES ::" << endl;
+	//for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
+	//	cout << this->putForceOnTheseVerts(i) << endl;
+
+        //cout << "POINTS ::" << endl;
+        //for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
+	//	cout << "X:" << integrator->TV.row(this->putForceOnTheseVerts(i))(0) << " Y:" << integrator->TV.row(this->putForceOnTheseVerts(i))(1) << " Z:" << integrator->TV.row(this->putForceOnTheseVerts(i))(2) << endl;
+
+	//cout << "TT ::" << endl;
+        //for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
+	//	cout << integrator->TT.row(this->putForceOnTheseVerts(i)(0)) << endl;
+
+	//cout << endl;
+
 	while(integrator->simTime<iters){
 		integrator->render(this->external_force);
 		cout<<"Min Displacement (called maxDisp in code)"<<endl;
 		double disp =0;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-			disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+			//disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 		}
 		if(disp < maxDisp){
 			maxDisp = disp;
 		}
-		cout<<maxDisp<<"\n";
+		cout<<"Current Disp :: "<<disp<<"\n";
+		cout<<"Max Disp ::"<<maxDisp<<"\n";
 	}
 	optimizationFile<<maxDisp<<endl;
 
@@ -140,13 +179,17 @@ void Simulation::render(){
 	integrator->render(this->external_force);
 	cout<<"Max Displacement (called maxDisp in code)"<<endl;
 	double disp =0;
+	int vertRows = integrator->TV.rows();
 	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-		disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+		//disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+		if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+			disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 	}
 	if(disp < maxDisp){
 		maxDisp = disp;
 	}
-	cout<<maxDisp<<endl;
+	cout<<"Current Disp ::"<<disp<<endl;
+	cout<<"Max Disp ::"<<maxDisp<<endl;
 }
 
 //TODO: Clean up function params size Fixed and size Move are not needed
@@ -271,38 +314,39 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	return;
 }
 
-void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
-	//TODO: implement this later - with Zack's code
-	//hard coded the force file for now
+void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices){
 	vector<int> temp;
-	//cout<<force.rows()<<endl;
 	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
+		int fixedIndex = 0;
 		while(getline(forceInputFile, line)){
 			istringstream iss(line);
 			double fx, fy, fz;
 			int fixedOrNot; //1 is fixed, 0 not fixed
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(abs(fx + fy + fz)>0){
-				temp.push_back(index);
+				temp.push_back(index - fixedIndex);
 				cout<<index<<endl;
 			}
-			force(3*index) = fx*10;
-			force(3*index+1) = fy*10;
-			force(3*index+2) = fz*10;
+			force(3*index) = fx;
+			force(3*index+1) = fy;
+			force(3*index+2) = fz;
 			if(fixedOrNot == 1){
 				// cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
 				// cout<<index<<endl;
 				fixVertices.push_back(index);
+				fixedIndex++;
 			}
 			index+=1;
 		}
 		this->putForceOnTheseVerts.resize(temp.size());
 		for(int i=0; i<temp.size(); i++){
 			this->putForceOnTheseVerts(i) = temp[i];
-			cout<<TV_k.row(temp[i])<<endl;
+			//moveVertices.push_back(temp[i]);
+			cout << "VERTIND :: " << temp[i] << endl;
+			//cout<<TV_k.row(temp[i])<<endl;
 		}
 	}else{
 		cout<<"Check yo self: Force input error, file not found"<<endl;
