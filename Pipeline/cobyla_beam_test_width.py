@@ -1,61 +1,62 @@
 from scipy.optimize import fmin_cobyla
 import sys, os, subprocess, numpy
 
-P, E, L, w = 1000.0, 69e9, 0.5, 0.1 # N, Pa, m, m
+P, E, l, h = 1000.0, 69e9, 0.5, 0.1 # N, Pa, m, m
 
 # all values are scaled by 1000 for the mesh to be of decent size
 
 fileName = 'optimizeTest.txt'
 resultName = '../TestsResults/opt.txt'
-resultsName = "../TestsResults/cobylaResults.txt"
+resultsName = "../TestsResults/cobylaResultsWidth.txt"
 
 results_write = open(resultsName, 'w')
 
 def objective(x):
-    height = x #units in m
-    volume = L * w * height
+    width = x #units in m
+    volume = width * l * h
     return volume
 
 def g0(x):
     print 'g0 of ', x
-    height = 0.0
+    width = 0.0
     if type(x) is numpy.ndarray:
-      height = x[0]
+      width = x[0]
     else:
-      height = x
-    if (height < 0):
-      print 'Displacement for', height, 'is ::', "NaN", '\n' 
+      width = x
+    if (width < 0):
+      print 'Displacement for', width, 'is ::', "NaN", '\n' 
       return -1000000
-    print 'Calculating for Height:', height, '\n'
+    print 'Calculating for Width:', width, '\n'
     
     #file_write = open(fileName, 'w')
-    #file_write.write(fileName + ".scad 50 10 "+str(height*1000))
+    #file_write.write(fileName + ".scad 50 "+str(width*1000)+" 10")
     #file_write.close()
     #subprocess.check_output(['python', 'pipeline.py', '--template', 'templateBeam.py', '--batch', fileName, '--sConfig', 'slic3rConfig.ini', '-c'])
     # read results from file and return those
     #opt = open(resultName)
     #for line in opt.readlines():
     #  curLine = line.strip().split(' ')
-    #  print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
+    #  print 'Displacement for', width, 'is ::', float(curLine[0]) / 1000, '\n' 
     #  print 1e-4 - float(curLine[0]) / -1000
-    #  results_write.write(str(height) + " " + str(float(curLine[0]) / -1000) + "\n")
-    #  return 1e-4 - (float(curLine[0]) / -1000)
+    #  results_write.write(str(width) + " " + str(float(curLine[0]) / -1000) + "\n")
+    #  return 1e-4 - float(curLine[0]) / -1000
 
     
     # Displacement constraint if no result specified
-    height = x
-    I = w * height**3 / 12 # m^4
-    tip_disp = (P * L**3)/(3*E*I)
+    width = x
+    I = width * h**3 / 12 # m^4
+    tip_disp = (P * l**3)/(E*I*3)
     print "Displacement", 1e-4 - tip_disp
-    results_write.write(str(height) + " " + str(tip_disp) + "\n")
+    results_write.write(str(width) + " FAILED " + str(tip_disp) + "\n")
+    print "blah blah"
     return 1e-4 - tip_disp # max(disp) < 1e-3 m (1 mm)
 
 def g1(x):
-    # height > 0.01 m (10 mm)
+    # length > 0.01 m (10 mm)
     return x - 0.01
     
 def g2(x):
-    # height < 0.5 m (500 mm)
+    # length < 0.5 m (500 mm)
     return 0.5 - x
     
 h0 = 0.02 # 20 mm

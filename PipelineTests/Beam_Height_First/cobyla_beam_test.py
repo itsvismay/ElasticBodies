@@ -28,27 +28,27 @@ def g0(x):
       return -1000000
     print 'Calculating for Height:', height, '\n'
     
-    #file_write = open(fileName, 'w')
-    #file_write.write(fileName + ".scad 50 10 "+str(height*1000))
-    #file_write.close()
-    #subprocess.check_output(['python', 'pipeline.py', '--template', 'templateBeam.py', '--batch', fileName, '--sConfig', 'slic3rConfig.ini', '-c'])
+    file_write = open(fileName, 'w')
+    file_write.write(fileName + ".scad 50 10 "+str(height*1000))
+    file_write.close()
+    subprocess.check_output(['python', 'pipeline.py', '--template', 'templateBeam.py', '--batch', fileName, '--sConfig', 'slic3rConfig.ini', '-c'])
     # read results from file and return those
-    #opt = open(resultName)
-    #for line in opt.readlines():
-    #  curLine = line.strip().split(' ')
-    #  print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
-    #  print 1e-4 - float(curLine[0]) / -1000
-    #  results_write.write(str(height) + " " + str(float(curLine[0]) / -1000) + "\n")
-    #  return 1e-4 - (float(curLine[0]) / -1000)
+    opt = open(resultName)
+    for line in opt.readlines():
+      curLine = line.strip().split(' ')
+      print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
+      print 1e-3 - float(curLine[0]) / -1000
+      results_write.write(str(height) + " " + str(float(curLine[0]) / -1000) + "\n")
+      return 1e-3 - float(curLine[0]) / -1000
 
     
     # Displacement constraint if no result specified
     height = x
     I = w * height**3 / 12 # m^4
     tip_disp = (P * L**3)/(3*E*I)
-    print "Displacement", 1e-4 - tip_disp
+    print "Displacement", 1e-3 - tip_disp
     results_write.write(str(height) + " " + str(tip_disp) + "\n")
-    return 1e-4 - tip_disp # max(disp) < 1e-3 m (1 mm)
+    return 1e-3 - tip_disp # max(disp) < 1e-3 m (1 mm)
 
 def g1(x):
     # height > 0.01 m (10 mm)

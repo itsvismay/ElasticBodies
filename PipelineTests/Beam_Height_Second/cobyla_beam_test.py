@@ -1,7 +1,7 @@
 from scipy.optimize import fmin_cobyla
 import sys, os, subprocess, numpy
 
-P, E, L, w = 1000.0, 69e9, 0.5, 0.1 # N, Pa, m, m
+P, E, L, w = 1000.0, 69e9, 0.05, 0.01 # N, Pa, m, m
 
 # all values are scaled by 1000 for the mesh to be of decent size
 
@@ -28,18 +28,18 @@ def g0(x):
       return -1000000
     print 'Calculating for Height:', height, '\n'
     
-    #file_write = open(fileName, 'w')
-    #file_write.write(fileName + ".scad 50 10 "+str(height*1000))
-    #file_write.close()
-    #subprocess.check_output(['python', 'pipeline.py', '--template', 'templateBeam.py', '--batch', fileName, '--sConfig', 'slic3rConfig.ini', '-c'])
+    file_write = open(fileName, 'w')
+    file_write.write(fileName + ".scad 50 10 "+str(height*1000))
+    file_write.close()
+    subprocess.check_output(['python', 'pipeline.py', '--template', 'templateBeam.py', '--batch', fileName, '--sConfig', 'slic3rConfig.ini', '-c'])
     # read results from file and return those
-    #opt = open(resultName)
-    #for line in opt.readlines():
-    #  curLine = line.strip().split(' ')
-    #  print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
-    #  print 1e-4 - float(curLine[0]) / -1000
-    #  results_write.write(str(height) + " " + str(float(curLine[0]) / -1000) + "\n")
-    #  return 1e-4 - (float(curLine[0]) / -1000)
+    opt = open(resultName)
+    for line in opt.readlines():
+      curLine = line.strip().split(' ')
+      print 'Displacement for', height, 'is ::', float(curLine[0]) / 1000, '\n' 
+      print 1e-4 - float(curLine[0]) / -1000
+      results_write.write(str(height) + " " + str(float(curLine[0]) / -1000) + "\n")
+      return 1e-4 - (float(curLine[0]) / -1000)
 
     
     # Displacement constraint if no result specified
