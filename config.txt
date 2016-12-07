@@ -4,13 +4,13 @@ i
 5
 0.00
 -0
-1
-69000000
+0
+20000000
 .35
 -pR
 svk
 newton
-lowDetailBeam
+testObject
 
 #1 timestep
 #2 headless t/f
