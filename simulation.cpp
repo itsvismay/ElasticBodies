@@ -105,11 +105,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
-		//cout << "Printing New Move Indices" << endl;
-		//for (int i = 0; i < putForceOnTheseVerts.rows(); i++) {
-		//	putForceOnTheseVerts(i) = newMoveIndices[i];
-		//	cout << newMoveIndices[i] << endl;
-		//}
+		int ignorePastIndex = newTV.rows() - newfixIndices.size();
+		staticSolveNewtonsForces(newTV, newTT, new_force, ignorePastIndex);
 
 
 	}else{
@@ -314,6 +311,82 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	return;
 }
 
+void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, VectorXd& fixed_forces, int ignorePastIndex){
+	cout<<"----------------Static Solve Newtons, Fix Forces-------------"<<endl;
+	//Newtons method static solve for minimum Strain E
+	SparseMatrix<double> forceGradient;
+	forceGradient.resize(3*TV.rows(), 3*TV.rows());
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	VectorXd f, x;
+	f.resize(3*TV.rows());
+	f.setZero();
+	x.resize(3*TV.rows());
+	x.setZero();
+	setTVtoX(x, TV);
+
+	int NEWTON_MAX = 100, k=0;
+	for(k=0; k<NEWTON_MAX; k++){
+		xToTV(x, TV);
+
+		calculateForceGradient(TV, forceGradient);
+		calculateElasticForces(f, TV);
+		for(unsigned int i=0; i<fixed_forces.size(); i++){
+			if(abs(fixed_forces(i))>0.0000001){
+				f(i) = fixed_forces(i);
+			}
+		}
+		
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd fblock = f.head(ignorePastIndex*3);
+
+		// Conj Grad
+		ConjugateGradient<SparseMatrix<double>> cg;
+		cg.compute(forceGradientStaticBlock);
+		if(cg.info() == Eigen::NumericalIssue){
+			cout<<"ConjugateGradient numerical issue"<<endl;
+			exit(0);
+		}
+		VectorXd deltaX = -1*cg.solve(fblock);
+
+		x.segment(0,3*(ignorePastIndex))+=deltaX;
+		cout<<"		Newton Iter "<<k<<endl;
+
+		if(x != x){
+			cout<<"NAN"<<endl;
+			exit(0);
+		}
+		
+		cout<<"fblock square norm"<<endl;
+		cout<<fblock.squaredNorm()/fblock.size()<<endl;
+		double strainE = 0;
+		for(int i=0; i< M.tets.size(); i++){
+			strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		}
+		cout<<strainE<<endl;
+		if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			break;
+		}
+
+	}
+	if(k== NEWTON_MAX){
+		cout<<"ERROR Static Solve: Newton max reached"<<endl;
+		cout<<k<<endl;
+		exit(0);
+	}
+	double strainE = 0;
+	for(int i=0; i< M.tets.size(); i++){
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	}
+	cout<<"strain E"<<strainE<<endl;
+	cout<<"x[0] "<<x(0)<<endl;
+	cout<<"x[1] "<<x(1)<<endl;
+	exit(0);				
+
+	cout<<"-------------------"<<endl;
+}
+
 void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices){
 	vector<int> temp;
 	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
@@ -330,9 +403,9 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vect
 				temp.push_back(index - fixedIndex);
 				cout<<index<<endl;
 			}
-			force(3*index) = fx;
-			force(3*index+1) = fy;
-			force(3*index+2) = fz;
+			force(3*index) = fx*0.00001;
+			force(3*index+1) = fy*0.00001;
+			force(3*index+2) = fz*0.00001;
 			if(fixedOrNot == 1){
 				// cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
 				// cout<<index<<endl;
