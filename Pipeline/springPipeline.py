@@ -190,11 +190,11 @@ except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 # call simulation
-#try:
-#  print './elastic', '\n'
-#  result = subprocess.check_output(['./../elastic'])
-#except OSError as e:
-#  print 'There was a System Error ', e, '\n'
+try:
+  print './elastic', '\n'
+  result = subprocess.check_output(['./../elastic'])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
 
 # lists to clean
 # -- initialScadFiles
