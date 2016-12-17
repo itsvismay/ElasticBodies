@@ -30,6 +30,7 @@ for opt, arg in opts:
 file_write = open(name, 'w')
 file_write.write("use <BezierScad.scad>;\n")
 file_write.write("bezierSpring(x3="+str(x3)+",y3="+str(y3)+");\n");
+file_write.write("$fn=40;\n")
 file_write.write("\n")
 file_write.write("module bezierSpring(x3,y3) {\n")
 file_write.write("\tx1=0.0;\n")
@@ -93,4 +94,6 @@ file_write.write("\t\t%translate([-10.0,-thk,0])\n")
 file_write.write("\t\tcube([20, thk, 10], center=false);\n")
 file_write.write("\t}\n")
 file_write.write("}\n")
+file_write.close()
 
+print name

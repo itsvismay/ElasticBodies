@@ -158,7 +158,7 @@ void Simulation::headless(){
 		double disp =0;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 			//disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
-			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+			if (integrator->TV.row(this->putForceOnTheseVerts(i))(1) < disp)
 				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 		}
 		if(disp < maxDisp){
@@ -182,7 +182,7 @@ void Simulation::render(){
 	int vertRows = integrator->TV.rows();
 	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 		//disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
-		if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+		if (integrator->TV.row(this->putForceOnTheseVerts(i))(1) < disp)
 			disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 	}
 	if(disp < maxDisp){

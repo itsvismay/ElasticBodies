@@ -53,7 +53,7 @@ void Mesh::writeToFile(ProgramSettings* settings) {
       if ((*it)->fixed)
         forceFileWrite << 0 << " " << 0 << " " << 0 << " " << 1 << endl;
       else
-        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 0 << endl;
+        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * -1 << " " << (*it)->force * 0 << " " << 0 << endl;
     }
   }
 
@@ -149,7 +149,7 @@ BoundingVolume* Mesh::createBackBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[1] >= yExtremes[0] - depth)
+    if (vert[1] >= yExtremes[1] - depth)
       volume->addVert(*it);
   }
   return volume;
