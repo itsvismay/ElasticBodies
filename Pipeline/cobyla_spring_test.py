@@ -12,8 +12,8 @@ resultsName = "../TestsResults/cobylaSpringResults.txt"
 results_write = open(resultsName, 'w')
 
 def g0(x):
-    if x > -.05:
-      return x+.05
+    if x > -.04:
+      return x+.04
     return x
 
 def objective(x):
@@ -41,6 +41,8 @@ def objective(x):
       results_write.write(str(xpos) + " " + str(float(curLine[0]) / -1000) + "\n")
       return (float(curLine[0]) / -1000)
 
+    results_write.write(str(xpos) + " NEWTON ERROR\n")
+
     return 10000.0
     # Displacement constraint if no result specified
     #height = x
@@ -52,9 +54,9 @@ def objective(x):
 
 def g1(x):
     # height > 0.01 m (10 mm)
-    if x > .05:
+    if x > .04:
       return -x
-    return x+.05
+    return x+.04
     
 def g2(x):
     # height < 0.5 m (500 mm)

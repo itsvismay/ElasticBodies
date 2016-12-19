@@ -180,10 +180,29 @@ forceData = 'forcedata.txt'
 # temp for beam
 prepedMesh = '../shared/lowDetailBeam.obj'
 forceData = '../shared/lowBeamForce.txt'
+resultMeshes = '../PipelineTests/'
 
 try:
   print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
   result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', str(force)])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
+
+try:
+  print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.obj'
+  result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.obj'])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
+
+try:
+  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.obj'
+  result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.obj'])
+except OSError as e:
+  print 'There was a System Error ', e, '\n'
+
+try:
+  print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.obj'
+  result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.obj'])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
