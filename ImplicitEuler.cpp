@@ -8,7 +8,6 @@ typedef Matrix<double, 12, 1> Vector12d;
 
 static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
 	ImplicitEuler* in = (ImplicitEuler*) impe;
-
 	//from x to x_k
 	for(int i=0; i< n; i++){
 		in->x_k(i) = x[i];
@@ -16,9 +15,10 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 
 
 	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
+	// int ignorePast = TVk.rows() - fixedVerts.size();
 	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
 	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
-
+	in->f(1) =10;
 	lbfgsfloatval_t fx = 0.0;
 	for(int i=0; i<n; i++){
 		fx+= 0.5*x[i]*in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i)*x[i] - in->massVector(i)*in->h*in->v_old(i)*x[i]; //big G function, anti-deriv of g
@@ -52,6 +52,7 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 	// //fx += in->h*rayleighCoeff*((in->x_k.dot(in->f) - strainE) - in->f.dot(in->x_old));
 	//TODO Add gravity potential
 	// //fx += mgh
+	// exit(0);
 	return fx;
 }
 

@@ -25,7 +25,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
-	setInitPosition(force, fixVertices);
+	//setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -95,6 +95,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
+		// int ignorePastIndex = TV.rows() - newfixIndices.size();
+		// staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
+
 
 
 	}else{
@@ -193,6 +196,85 @@ void Simulation::reIndexTVandTT(
 	}
 }
 
+void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, int ignorePastIndex){
+	cout<<"------------I am here----------------"<<endl;
+	cout<<ignorePastIndex<<endl;
+	//Newtons method static solve for minimum Strain E
+	SparseMatrix<double> forceGradient;
+	forceGradient.resize(3*TV.rows(), 3*TV.rows());
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	VectorXd f, x;
+	f.resize(3*TV.rows());
+	f.setZero();
+	x.resize(3*TV.rows());
+	x.setZero();
+	setTVtoX(x, TV);
+
+	int NEWTON_MAX = 10, k=0;
+	for(k=0; k<NEWTON_MAX; k++){
+		xToTV(x, TV);
+
+		calculateForceGradient(TV, forceGradient);
+		calculateElasticForces(f, TV);
+		//PLAYGROUND - Check forces in mathematica
+		cout<<TV<<endl;
+		cout<<f<<endl;
+		//--------------
+		for(int i=0; i<fixed_forces.rows(); i++){
+			if(abs(fixed_forces(i))>0.00001){
+				f(i) = fixed_forces(i);
+				//cout<<f(i)<<endl;
+			}
+		}
+		
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd fblock = f.head(ignorePastIndex*3);
+
+		// Conj Grad
+		ConjugateGradient<SparseMatrix<double>> cg;
+		cg.compute(forceGradientStaticBlock);
+		if(cg.info() == Eigen::NumericalIssue){
+			cout<<"ConjugateGradient numerical issue"<<endl;
+			exit(0);
+		}
+		VectorXd deltaX = -1*cg.solve(fblock);
+
+		x.segment(0,3*(ignorePastIndex))+=deltaX;
+		cout<<"		Newton Iter "<<k<<endl;
+
+		if(x != x){
+			cout<<"NAN"<<endl;
+			exit(0);
+		}
+		cout<<"fblock"<<endl;
+		cout<<fblock.squaredNorm()/fblock.size()<<endl;
+
+		if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			break;
+		}
+
+	}
+	if(k== NEWTON_MAX){
+		cout<<"ERROR Static Solve: Newton max reached"<<endl;
+		cout<<k<<endl;
+		exit(0);
+	}
+	double strainE = 0;
+	for(int i=0; i< M.tets.size(); i++){
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	}
+	cout<<"strain E"<<strainE<<endl;
+	cout<<"x[0] "<<x(0)<<endl;
+	cout<<"x[1] "<<x(1)<<endl;
+
+
+	cout<<"----------------------"<<endl;
+	cout<<TV<<endl;
+	exit(0);
+}
+
 void Simulation::setTVtoX(VectorXd &x, MatrixXd &TV){
 	//TV to X
 	for(unsigned int i = 0; i < M.tets.size(); i++){
@@ -276,7 +358,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	//hard coded the force file for now
 	vector<int> temp;
 	//cout<<force.rows()<<endl;
-	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
+	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/"+objectName+".txt");
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
@@ -289,9 +371,9 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 				temp.push_back(index);
 				cout<<index<<endl;
 			}
-			force(3*index) = fx*10;
-			force(3*index+1) = fy*10;
-			force(3*index+2) = fz*10;
+			force(3*index) = fx;
+			force(3*index+1) = fy;
+			force(3*index+2) = fz;
 			if(fixedOrNot == 1){
 				// cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
 				// cout<<index<<endl;
@@ -377,7 +459,6 @@ void Simulation::staticSolveStepLBFGS(double move_step, int ignorePastIndex, vec
 	for(unsigned int i=0; i<moveVertices.size(); i++){
 		TV.row(TV.rows()-i-1)[staticSolveDirection] += move_step;//move step
 	}
-	
 
 	int N = ignorePastIndex*3;
 	cout<<"N "<<N<<endl;

@@ -114,8 +114,8 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	// v_old(0) =1;
-	// v_old(1) =1;
+	v_old(0) =10;
+	v_old(1) =100;
 	// // v_old(2) =1;
 	// v_old(3) =1;
 }

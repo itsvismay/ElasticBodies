@@ -10,17 +10,28 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     26900,        793]
-NotebookOptionsPosition[     25429,        744]
-NotebookOutlinePosition[     25762,        759]
-CellTagsIndexPosition[     25719,        756]
+NotebookDataLength[     29734,        886]
+NotebookOptionsPosition[     27962,        827]
+NotebookOutlinePosition[     28295,        842]
+CellTagsIndexPosition[     28252,        839]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
+
+Cell[CellGroupData[{
 Cell[BoxData[
  RowBox[{
   RowBox[{"Remove", "[", "\"\<Global`*\>\"", "]"}], ";"}]], "Input"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "Remove","rmnsm",
+   "\"There are no symbols matching \\\"\\!\\(\\*RowBox[{\\\"\\\\\\\"Global`*\
+\\\\\\\"\\\"}]\\)\\\".\"",2,1,1,25659232604501781584,"Local"},
+  "MessageTemplate"]], "Message", "MSG",
+ CellChangeTimes->{3.690627523257975*^9}]
+}, Open  ]],
 
 Cell[BoxData[
  RowBox[{
@@ -162,7 +173,7 @@ Cell[BoxData[
    3.6855594207841043`*^9, 3.685559428240795*^9}, 3.685560882629994*^9, 
    3.6855627469512377`*^9, {3.685585935782854*^9, 3.685585960306237*^9}, 
    3.685588872179915*^9, 3.6855889066409407`*^9, 3.685590776727255*^9, 
-   3.6855970739996033`*^9}],
+   3.6855970739996033`*^9, 3.6906275234309273`*^9}],
 
 Cell[BoxData[
  RowBox[{"{", 
@@ -174,7 +185,7 @@ Cell[BoxData[
    3.6855594207841043`*^9, 3.685559428240795*^9}, 3.685560882629994*^9, 
    3.6855627469512377`*^9, {3.685585935782854*^9, 3.685585960306237*^9}, 
    3.685588872179915*^9, 3.6855889066409407`*^9, 3.685590776727255*^9, 
-   3.6855970740034323`*^9}]
+   3.6855970739996033`*^9, 3.690627523431733*^9}]
 }, Open  ]],
 
 Cell[BoxData[{
@@ -486,7 +497,7 @@ Cell[BoxData["0.`"], "Output",
   3.685559490703395*^9, 3.685560756279195*^9, 3.685560882750745*^9, {
    3.685562738736247*^9, 3.68556274709476*^9}, {3.685585935937595*^9, 
    3.685585960395442*^9}, 3.685588872353931*^9, 3.685588906808453*^9, 
-   3.6855907768776703`*^9, 3.68559707413872*^9}]
+   3.6855907768776703`*^9, 3.68559707413872*^9, 3.690627523522194*^9}]
 }, Open  ]],
 
 Cell[BoxData[
@@ -548,7 +559,7 @@ Cell[BoxData[
  CellChangeTimes->{{3.6855616442181587`*^9, 3.685561660350711*^9}, 
    3.685562747129466*^9, {3.6855859359802113`*^9, 3.685585960437284*^9}, 
    3.685588872398314*^9, 3.685588906849429*^9, 3.685590776917897*^9, 
-   3.685597074185408*^9}]
+   3.685597074185408*^9, 3.690627523569762*^9}]
 }, Open  ]],
 
 Cell[BoxData[""], "Input",
@@ -739,11 +750,83 @@ Cell[BoxData[
   3.685586773591444*^9, 3.685588872725584*^9, 3.685588907188995*^9, 
    3.685589487108317*^9, 3.685590446966666*^9, 3.6855904790956306`*^9, 
    3.685590777329616*^9, {3.6855970484266167`*^9, 3.685597115121809*^9}, {
-   3.6855971537113657`*^9, 3.685597189952606*^9}, 3.685599454296296*^9}]
+   3.6855971537113657`*^9, 3.685597189952606*^9}, 3.685599454296296*^9, 
+   3.6906275256837397`*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.690627638810752*^9, 3.690627639808319*^9}}],
+
+Cell["\<\
+TESTING THINGS Here, the verify euler code is above, just checking forces and \
+stuff
+\
+\>", "Text",
+ CellChangeTimes->{{3.690627645687361*^9, 3.690627666254347*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"checkpts", " ", "=", " ", 
+   RowBox[{"{", " ", 
+    RowBox[{
+    "10", ",", "10.0081", ",", "0", ",", "    ", "0", ",", "20", ",", "0", 
+     ",", "    ", "0", ",", "10", ",", "10", ",", "    ", "0", ",", "10", ",",
+      "0", ",", "    ", "0.0162", ",", "0", ",", " ", "0"}], "}"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.690627671650743*^9, 3.690627737745504*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"dEnergy", "[", "checkpts", "]"}], "//", "MatrixForm"}]], "Input",
+ CellChangeTimes->{{3.690627747207755*^9, 3.690627778667156*^9}}],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", 
+   TagBox[GridBox[{
+      {
+       RowBox[{"-", "53.99990434571216`"}]},
+      {
+       RowBox[{"-", "0.08747984667206765`"}]},
+      {"0.`"},
+      {
+       RowBox[{"-", "10000.000000000378`"}]},
+      {
+       RowBox[{"-", "2.4253192047278085`*^-9"}]},
+      {"0.`"},
+      {"0.`"},
+      {"0.`"},
+      {
+       RowBox[{"-", "37.79997520406483`"}]},
+      {"20054.043644266425`"},
+      {
+       RowBox[{"-", "53.91242449458332`"}]},
+      {"37.79997520406483`"},
+      {
+       RowBox[{"-", "10000.043739922136`"}]},
+      {"53.99990434328684`"},
+      {"0.`"}
+     },
+     GridBoxAlignment->{
+      "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, "Rows" -> {{Baseline}},
+        "RowsIndexed" -> {}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.5599999999999999]}, 
+         Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}, "RowsIndexed" -> {}}],
+    Column], "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[BoxForm`e$]]]], "Output",
+ CellChangeTimes->{{3.690627753278307*^9, 3.6906277793075113`*^9}}]
 }, Open  ]]
 },
 WindowSize->{928, 1028},
-WindowMargins->{{Automatic, 0}, {0, Automatic}},
+WindowMargins->{{0, Automatic}, {0, Automatic}},
 FrontEndVersion->"11.0 for Linux x86 (64-bit) (July 28, 2016)",
 StyleDefinitions->"Default.nb"
 ]
@@ -758,42 +841,52 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[558, 20, 92, 2, 35, "Input"],
-Cell[653, 24, 545, 15, 35, "Input"],
-Cell[1201, 41, 402, 9, 32, "Input"],
-Cell[1606, 52, 2510, 83, 94, "Input"],
 Cell[CellGroupData[{
-Cell[4141, 139, 587, 15, 52, "Input"],
-Cell[4731, 156, 434, 8, 32, "Output"],
-Cell[5168, 166, 529, 10, 32, "Output"]
+Cell[580, 22, 92, 2, 35, "Input"],
+Cell[675, 26, 273, 6, 23, "Message"]
 }, Open  ]],
-Cell[5712, 179, 982, 20, 52, "Input"],
-Cell[6697, 201, 87, 2, 32, "Input"],
-Cell[6787, 205, 301, 7, 52, "Input"],
-Cell[7091, 214, 1236, 37, 140, "Input"],
-Cell[8330, 253, 3307, 94, 154, "Input"],
-Cell[11640, 349, 198, 3, 30, "Input"],
-Cell[11841, 354, 551, 15, 77, "Input"],
-Cell[12395, 371, 461, 13, 57, "Input"],
-Cell[12859, 386, 875, 26, 54, "Input"],
-Cell[13737, 414, 2337, 61, 122, "Input"],
+Cell[963, 35, 545, 15, 35, "Input"],
+Cell[1511, 52, 402, 9, 32, "Input"],
+Cell[1916, 63, 2510, 83, 94, "Input"],
 Cell[CellGroupData[{
-Cell[16099, 479, 131, 2, 35, "Input"],
-Cell[16233, 483, 311, 5, 30, "Output"]
+Cell[4451, 150, 587, 15, 52, "Input"],
+Cell[5041, 167, 458, 8, 32, "Output"],
+Cell[5502, 177, 551, 10, 32, "Output"]
 }, Open  ]],
-Cell[16559, 491, 382, 11, 33, "Input"],
+Cell[6068, 190, 982, 20, 52, "Input"],
+Cell[7053, 212, 87, 2, 32, "Input"],
+Cell[7143, 216, 301, 7, 52, "Input"],
+Cell[7447, 225, 1236, 37, 140, "Input"],
+Cell[8686, 264, 3307, 94, 154, "Input"],
+Cell[11996, 360, 198, 3, 30, "Input"],
+Cell[12197, 365, 551, 15, 77, "Input"],
+Cell[12751, 382, 461, 13, 57, "Input"],
+Cell[13215, 397, 875, 26, 54, "Input"],
+Cell[14093, 425, 2337, 61, 122, "Input"],
 Cell[CellGroupData[{
-Cell[16966, 506, 165, 3, 35, "Input"],
-Cell[17134, 511, 1249, 39, 335, "Output"]
+Cell[16455, 490, 131, 2, 35, "Input"],
+Cell[16589, 494, 333, 5, 30, "Output"]
 }, Open  ]],
-Cell[18398, 553, 143, 2, 30, "Input"],
-Cell[18544, 557, 440, 12, 33, "Input"],
-Cell[18987, 571, 261, 4, 30, "Input"],
-Cell[19251, 577, 438, 10, 52, "Input"],
-Cell[19692, 589, 3595, 93, 355, "Input"],
+Cell[16937, 502, 382, 11, 33, "Input"],
 Cell[CellGroupData[{
-Cell[23312, 686, 617, 12, 35, "Input"],
-Cell[23932, 700, 1481, 41, 315, "Output"]
+Cell[17344, 517, 165, 3, 35, "Input"],
+Cell[17512, 522, 1271, 39, 335, "Output"]
+}, Open  ]],
+Cell[18798, 564, 143, 2, 30, "Input"],
+Cell[18944, 568, 440, 12, 33, "Input"],
+Cell[19387, 582, 261, 4, 30, "Input"],
+Cell[19651, 588, 438, 10, 52, "Input"],
+Cell[20092, 600, 3595, 93, 355, "Input"],
+Cell[CellGroupData[{
+Cell[23712, 697, 617, 12, 35, "Input"],
+Cell[24332, 711, 1509, 42, 315, "Output"]
+}, Open  ]],
+Cell[25856, 756, 92, 1, 30, "Input"],
+Cell[25951, 759, 176, 5, 55, "Text"],
+Cell[26130, 766, 407, 9, 32, "Input"],
+Cell[CellGroupData[{
+Cell[26562, 779, 166, 3, 32, "Input"],
+Cell[26731, 784, 1215, 40, 315, "Output"]
 }, Open  ]]
 }
 ]
