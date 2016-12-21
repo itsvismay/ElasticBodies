@@ -9,9 +9,13 @@ typedef Matrix<double, 12, 1> Vector12d;
 static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
 	ImplicitEuler* in = (ImplicitEuler*) impe;
 	//from x to x_k
+	cout<<"Vector of stuff"<<endl;
 	for(int i=0; i< n; i++){
+		cout<<x[i]<<endl;
 		in->x_k(i) = x[i];
 	}
+	cout<<"v old"<<endl;
+	cout<<in->v_old<<endl;
 
 
 	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
@@ -20,15 +24,29 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
 	lbfgsfloatval_t fx = 0.0;
 	for(int i=0; i<n; i++){
-		fx+= 0.5*x[i]*in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i)*x[i] - in->massVector(i)*in->h*in->v_old(i)*x[i]; //big G function, anti-deriv of g
-		g[i] = -1*(in->massVector(i)*x[i] - in->massVector(i)*in->x_old(i) - in->massVector(i)*in->h*in->v_old(i) - in->h*in->h*in->f(i));
+		fx+= 1*(
+			0.5*x[i]*in->massVector(i)*x[i] 
+			- in->massVector(i)*in->x_old(i)*x[i] 
+			- in->massVector(i)*in->h*in->v_old(i)*x[i]); //big G function, anti-deriv of g
+		g[i] = 1*
+		(in->massVector(i)*x[i] 
+		-in->massVector(i)*in->x_old(i) 
+		-in->massVector(i)*in->h*in->v_old(i) 
+		- in->h*in->h*in->f(i));
+		////
+		////
+		//RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 	}
+	double gnorm = 0;
+	for(int i=0; i<n; i++){
+		gnorm += g[i]*g[i];
+	}
+	cout<<"gnorm"<<endl;
+	cout<<gnorm<<endl;
 	cout<<"ignorepast"<<endl;
 	cout<<ignorePast<<endl;
 	cout<<"x_k"<<endl;
 	cout<<in->x_k<<endl;
-	cout<<"v_k"<<endl;
-	cout<<in->v_old<<endl;
 	cout<<"forces"<<endl;
 	cout<<in->f<<endl;
 	cout<<"g"<<endl;
@@ -62,8 +80,9 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 	//damping anti-derivative
 	// //fx += in->h*rayleighCoeff*((in->x_k.dot(in->f) - strainE) - in->f.dot(in->x_old));
 	//TODO Add gravity potential
-	// //fx += mgh
-	// exit(0);
+	for(unsigned int i=0; i<in->x_k.size()/3; i++){
+		fx -= in->h*in->h*in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
+	}
 	return fx;
 }
 
@@ -138,13 +157,9 @@ void ImplicitEuler::ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk){
 void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
 	// //gravity
 	f.setZero();
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-		Vector4i indices = M.tets[i].verticesIndex;
-		f(3*indices(0)+1) += vertex_mass*gravity;
-		f(3*indices(1)+1) += vertex_mass*gravity; 
-		f(3*indices(2)+1) += vertex_mass*gravity;
-		f(3*indices(3)+1) += vertex_mass*gravity;
+	for(unsigned int i=0; i<f.size()/3; i++){
+		double vertex_mass = massVector(3*i+1);
+		f(3*i+1) += vertex_mass*gravity;
 	}
 
 	//elastic
@@ -275,7 +290,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			Nan = true;
 			break;
 		}
-		if(g_block.squaredNorm()<.00000001){
+		if(g_block.squaredNorm()<1e-9){
+			cout<<"g norm"<<endl;
+			cout<<g_block.squaredNorm()<<endl;
 			break;
 		}
 	}
@@ -313,13 +330,14 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
     }
     x_k = x_old;
     v_k = v_old;
+
  	
      // Initialize the parameters for the L-BFGS optimization. 
     lbfgs_parameter_init(&param);
     //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-    // param.gtol = 0.0001;
-    // param.ftol = 0.000001;
-    // param.epsilon = 1e-7;
+    param.gtol = 0.0001;
+    param.ftol = 0.000001;
+    param.epsilon = 1e-9;
     /*
         Start the L-BFGS optimization; this will invoke the callback functions
         evaluateEuler() and progress() when necessary.
@@ -335,21 +353,19 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
     ImplicitXtoTV(x_old, TV);
 
     lbfgs_free(x);
-    cout<<"--------"<<simTime<<"-------"<<endl;
-	cout<<"x_k"<<endl;
-	cout<<x_k<<endl<<endl;
-	cout<<"v_old"<<endl;
-	cout<<v_old<<endl<<endl;
-	cout<<"--------------------"<<endl;
+ //    cout<<"--End----"<<simTime<<"-------"<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<x_k<<endl<<endl;
+	// cout<<"v_old"<<endl;
+	// cout<<v_old<<endl<<endl;
+	// cout<<"--------------------"<<endl;
 
 
-    exit(0);
 }
 
 void ImplicitEuler::render(VectorXd& ext_force){
 	simTime+=1;
 	cout<<"i"<<simTime<<endl;
-	IntegratorAbstract::printInfo();
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
@@ -363,12 +379,13 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	// cout<<"*******************"<<endl;
-	// cout<< "New Pos"<<simTime<<endl;
-	// cout<<x_old<<endl<<endl;
-	// cout<< "New Vels"<<simTime<<endl;
-	// cout<<v_old<<endl;
-	// cout<<"*****************"<<endl<<endl;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<simTime<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<simTime<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
+	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);
 
