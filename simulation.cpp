@@ -26,7 +26,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.resize(3*TV.rows());
 	force.setZero();
 
-	setInitPosition(force, fixVertices, moveVertices);
+	//setInitPosition(force, fixVertices, moveVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		//cout << "DOING STUFFS" << endl;
@@ -100,8 +100,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
-		int ignorePastIndex = newTV.rows() - newfixIndices.size();
-		staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
+		// int ignorePastIndex = newTV.rows() - newfixIndices.size();
+		// staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
 
 
 	}else{
