@@ -22,7 +22,7 @@ public:
 	MatrixXd TV;
 	MatrixXi TT;
 
-	VectorXd x_old, v_old, f, massVector;
+	VectorXd x_old, v_old, f, massVector, external_f;
 	int width;
 	int height;
 

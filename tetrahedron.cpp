@@ -170,13 +170,10 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     }else if(material_model.compare("svk") == 0){
         //SVK
         //TODO: Spring Constant value
-        cout<<"energyDensity"<<endl;
         Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
         P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff   
         this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
-        cout<<mu*(E*E).trace()<<endl;
-        cout<<(lambda/2)*E.trace()*E.trace()<<endl;
-        cout<<this->energyDensity<<endl;
+
     }else{
         cout<<"Material model not specified properly"<<endl;
         exit(0);

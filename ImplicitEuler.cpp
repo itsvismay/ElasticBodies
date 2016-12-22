@@ -7,22 +7,30 @@ typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
 static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgsfloatval_t *g, const int n, const lbfgsfloatval_t step){
+	// forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+	// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
+	// VectorXd g_block = g.head(ignorePastIndex*3);
+	// grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
+
 	ImplicitEuler* in = (ImplicitEuler*) impe;
 	//from x to x_k
-	cout<<"Vector of stuff"<<endl;
+	// cout<<"Vector of stuff"<<endl;
 	for(int i=0; i< n; i++){
-		cout<<x[i]<<endl;
 		in->x_k(i) = x[i];
 	}
-	cout<<"v old"<<endl;
-	cout<<in->v_old<<endl;
-
 
 	in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
 	int ignorePast = in->TVk.rows() - in->fixedVerts.size();
 	in->ImplicitCalculateElasticForceGradient(in->TVk, in->forceGradient); 
 	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+	// for(int k=0; k< in->f.rows(); k++){
+	// 	if(abs(in->external_f(k))>0.0001){
+	// 		in->f(k) = in->external_f(k);
+	// 	}
+	// }
 	lbfgsfloatval_t fx = 0.0;
+	// cout<<"size of n"<<endl;
+	// cout<<n<<endl<<endl;
 	for(int i=0; i<n; i++){
 		fx+= 1*(
 			0.5*x[i]*in->massVector(i)*x[i] 
@@ -33,48 +41,23 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 		-in->massVector(i)*in->x_old(i) 
 		-in->massVector(i)*in->h*in->v_old(i) 
 		- in->h*in->h*in->f(i));
-		////
-		////
-		//RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 	}
-	double gnorm = 0;
-	for(int i=0; i<n; i++){
-		gnorm += g[i]*g[i];
-	}
-	cout<<"gnorm"<<endl;
-	cout<<gnorm<<endl;
-	cout<<"ignorepast"<<endl;
-	cout<<ignorePast<<endl;
-	cout<<"x_k"<<endl;
-	cout<<in->x_k<<endl;
-	cout<<"forces"<<endl;
-	cout<<in->f<<endl;
-	cout<<"g"<<endl;
-	for(int i=0; i<n; i++){
-		cout<<g[i]<<endl;
-	}
+
+	// cout<<"ignorepast"<<endl;
+	// cout<<ignorePast<<endl;
+	// cout<<"x_k"<<endl;
+	// cout<<in->x_k<<endl;
+	// cout<<"forces"<<endl;
+	// cout<<in->f<<endl;
+	// cout<<"g"<<endl;
+	// for(int i=0; i<n; i++){
+	// 	cout<<g[i]<<endl;
+	// }
 	//force anti-derivative
 	double strainE=0;
 	for(unsigned int i=0; i<in->M.tets.size(); i++){
 		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
 	}
-
-	// ////////////////
-	// double gnorm =0;
-	// for(int i=0; i<n; i++){
-	// 	gnorm+=g[i]*g[i];
-	// }
-	// // cout<<"Gnorm "<<sqrt(gnorm)<<endl;
-	// // double xnorm =0;
-	// // for(int i=0; i<n; i++){
-	// // 	xnorm+=x[i]*x[i];
-	// // }
-	// // cout<<"xnorm "<<sqrt(xnorm)<<endl;
-
-	// // for(int i=0; i<n; i++){
-	// // 	xnorm+=x[i]*x[i];
-	// // }
-	// ////////////////
 
 	fx+= in->h*in->h*(strainE);
 	//damping anti-derivative
@@ -114,6 +97,8 @@ void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV
 	grad_g.resize(3*vertsNum, 3*vertsNum);
 	x_k.resize(3*vertsNum);
 	v_k.resize(3*vertsNum);
+	external_f.resize(3*vertsNum);
+	external_f.setZero();
 	x_k.setZero();
 	v_k.setZero();
 	TVk = TV;
@@ -246,7 +231,11 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-		f = f+ext_force;
+		for(int k=0; k<f.rows(); k++){
+			if(abs(ext_force(k))>0.0001){
+				f(k) = 0.1*ext_force(k);
+			}
+		}
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
@@ -257,9 +246,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		cout<<"newton g"<<endl;
-		cout<<g_block<<endl;
-	
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
@@ -291,8 +277,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			break;
 		}
 		if(g_block.squaredNorm()<1e-9){
-			cout<<"g norm"<<endl;
-			cout<<g_block.squaredNorm()<<endl;
 			break;
 		}
 	}
@@ -312,9 +296,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 }
 
 void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
-
+	external_f = ext_force;
 	//LBFGS
-	int N=3*vertsNum;
+	int N=3*vertsNum - 3*fixedVerts.size();
 	int i, ret = 0;
     lbfgsfloatval_t fx;
     lbfgsfloatval_t *x = lbfgs_malloc(N);
@@ -337,7 +321,7 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
     //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
     param.gtol = 0.0001;
     param.ftol = 0.000001;
-    param.epsilon = 1e-9;
+    param.epsilon = 1e-11;
     /*
         Start the L-BFGS optimization; this will invoke the callback functions
         evaluateEuler() and progress() when necessary.
@@ -379,12 +363,12 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);

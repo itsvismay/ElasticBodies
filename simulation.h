@@ -10,7 +10,6 @@
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 
-
 class Simulation{
 
 public:

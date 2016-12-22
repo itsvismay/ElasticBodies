@@ -1,16 +1,16 @@
-.0001
+.00001
 f
 i
-1
+5
 0.00
--10
-0
+-10000
+1
 69000000
 .35
 -pR
 svk
 newton
-spring
+lowDetailBeam
 
 #1 timestep
 #2 headless t/f

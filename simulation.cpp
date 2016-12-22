@@ -1,12 +1,12 @@
 #include "simulation.h"
 
+
 Simulation::Simulation(void){}
 
 int staticSolveDirection = 0;
 
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
-
 	if (method =='e'){
 		integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;	
@@ -25,7 +25,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
-	//setInitPosition(force, fixVertices);
+	TV_k = TV;
+	setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
