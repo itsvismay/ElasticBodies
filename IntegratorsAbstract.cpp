@@ -17,7 +17,7 @@ void IntegratorAbstract::printInfo(){
 	double TotalEnergy = 0;
 	double gravityE =0;
 	double kineticE =0;
-	double strainE = 0;
+	double strainE = 0.0;
 	for(int i=0; i<vertsNum; i++){
 		if(!isFixed(i)){
 			int k=3*i;
@@ -33,7 +33,7 @@ void IntegratorAbstract::printInfo(){
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 		}		
 	}
-	
+
 	for(int i=0; i< M.tets.size(); i++){
 		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
 	}
@@ -114,8 +114,6 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	// v_old(0) =1;
-	// v_old(1) =1;
 	// // v_old(2) =1;
 	// v_old(3) =1;
 }

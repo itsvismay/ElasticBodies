@@ -1,53 +1,6 @@
 FROM ubuntu:16.04
 MAINTAINER zack441@mac.com
 
-##ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
-
-# a few minor docker-specific tweaks
-# see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
-##RUN set -xe \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L40-L48
-##	&& echo '#!/bin/sh' > /usr/sbin/policy-rc.d \
-##	&& echo 'exit 101' >> /usr/sbin/policy-rc.d \
-##	&& chmod +x /usr/sbin/policy-rc.d \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L54-L56
-##	&& dpkg-divert --local --rename --add /sbin/initctl \
-##	&& cp -a /usr/sbin/policy-rc.d /sbin/initctl \
-##	&& sed -i 's/^exit.*/exit 0/' /sbin/initctl \
-##	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L71-L78
-##	&& echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L85-L105
-##	&& echo 'DPkg::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' > /etc/apt/apt.conf.d/docker-clean \
-##	&& echo 'APT::Update::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' >> /etc/apt/apt.conf.d/docker-clean \
-##	&& echo 'Dir::Cache::pkgcache ""; Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/docker-clean \
-##	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L109-L115
-##	&& echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/docker-no-languages \
-##	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L118-L130
-##	&& echo 'Acquire::GzipIndexes "true"; Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/docker-gzip-indexes \
-##	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L134-L151
-##	&& echo 'Apt::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/docker-autoremove-suggests
-
-# delete all the apt list files since they're big and get stale quickly
-##RUN rm -rf /var/lib/apt/lists/*
-# this forces "apt-get update" in dependent images, which is also good
-
-# enable the universe
-##RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
-
-# make systemd-detect-virt return "docker"
-# See: https://github.com/systemd/systemd/blob/aa0c34279ee40bce2f9681b496922dedbadfca19/src/basic/virt.c#L434
-##RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
-
-# overwrite this with 'CMD []' in a dependent Dockerfile
-# CMD ["/bin/bash"]
-
 # required libraries
 RUN echo 'apt-get update'
 RUN apt-get update
@@ -117,11 +70,7 @@ RUN echo 'install libqt4-dev'
 RUN apt-get install -y libqt4-dev
 RUN echo 'install wget'
 RUN apt-get install -y wget
-#RUN echo 'install qt4-dev-tool'
-#RUN apt-get install -y qt4-dev-tool
 RUN echo 'INSTALLED EVERYTHING'
-#RUN echo 'install libcgal-qt5-dev'
-#RUN apt install libcgal-qt5-dev
 RUN apt install libgmp3-dev
 RUN apt install libmpfr-dev
 
@@ -134,67 +83,121 @@ RUN git clone https://github.com/jluttine/suitesparse.git
 RUN git clone https://github.com/itsvismay/ElasticBodies.git
 RUN git clone --recursive https://github.com/CGAL/cgal.git
 
-RUN ls
-
-# required downloads - use wget
 # Anaconda
+RUN echo ‘wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh’
 RUN wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh
+RUN echo ‘Anaconda2-4.2.0-Linux-x86_64.sh -b’
 RUN bash Anaconda2-4.2.0-Linux-x86_64.sh -b
-# CGAL
-#RUN wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.9/CGAL-4.9.tar.xz
-#RUN tar xf CGAL-4.9.tar.xz
+
+# Needed for PyMesh
+RUN echo ‘wget https://bootstrap.pypa.io/ez_setup.py -O - | python’
+RUN wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+
+# Moving Files Around
+RUN echo ‘cp -r ElasticBodies/Pipeline/3dUnion libigl/tutorial’
+cp -r ElasticBodies/Pipeline/3dUnion libigl/tutorial
+# TODO :: IMPORT CMAKELISTS.TXT FROM ELSEWHERE
 
 RUN ls
 
 # Set up CGAL
+RUN echo ‘cd cgal’
 RUN cd cgal
+RUN echo ‘cmake .’
 RUN cmake .
+RUN echo ‘make’
 RUN make
+RUN echo ‘make install’
 RUN make install
+RUN echo ‘cd ..’
 RUN cd ..
 
 # Set up Suitesparse
+RUN echo ‘cd suitesparse’
 RUN cd suitesparse
+RUN echo ‘make’
 RUN make
+RUN echo ‘make install’
 RUN make install
+RUN echo ‘cd ..’
 RUN cd ..
 
 # Set up libigl
+RUN echo ‘cd libigl’
 RUN cd libigl
+RUN echo ‘cd external’
 RUN cd external
+RUN echo ‘cd nanogui’
 RUN cd nanogui
+RUN echo ‘mkdir build’
 RUN mkdir build
+RUN echo ‘cd build’
 RUN cd build
+RUN echo ‘cmake ..’
 RUN cmake ..
+RUN echo ‘make’
 RUN make
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd tutorial’
 RUN cd tutorial
-# TODO :: IMPORT CMAKELISTS.TXT FROM ELSEWHERE
-# TODO :: MOVE 3dUnion TO THIS FOLDER
+RUN echo ‘mkdir build’
 RUN mkdir build
+RUN echo ‘cd build’
 RUN cd build
+RUN echo ‘cmake ..’
 RUN cmake ..
+RUN echo ‘make’
 RUN make
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd ..’
 RUN cd ..
 
 # Set up PyMesh
+RUN echo ‘cd PyMesh’
 RUN cd PyMesh
+RUN echo ‘export PYMESH_PATH=$(pwd)’
+RUN export PYMESH_PATH=$(pwd)
+RUN echo ‘cd third_party’
 RUN cd third_party
+RUN echo ‘mkdir build’
 RUN mkdir build
+RUN echo ‘cd build’
 RUN cd build
+RUN echo ‘cmake ..’
 RUN cmake ..
+RUN echo ‘make’
 RUN make
+RUN echo ‘make install’
 RUN make install
+RUN echo ‘cd ..’
 RUN cd ..
+RUN echo ‘cd ..’
 RUN cd ..
-RUN mkdir build
-RUN cd build
+RUN echo ‘cmake ..’
 RUN cmake ..
+RUN echo ‘make’
 RUN make
+RUN echo ‘make src_tests’
 RUN make src_tests
+RUN echo ‘make tools’
 RUN make tools
+RUN echo ‘make tools_tests’
 RUN make tools_tests
+RUN echo ‘./setup.py build’
+RUN ./setup.py build
+RUN echo ‘./setup.py install’
+RUN ./setup.py install
+RUN echo ‘cd ..’
+RUN cd ..
+
+# Set up liblbfgs
+
+# Set up ElasticBodies

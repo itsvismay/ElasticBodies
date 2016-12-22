@@ -32,7 +32,8 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 
 // Tetrahedralized interior
-Eigen::MatrixXd ForcesTV, FixedTV;
+Eigen::MatrixXd ForcesTV; 
+Eigen::MatrixXd FixedTV;
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
 Eigen::MatrixXi TF;
@@ -112,24 +113,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
+	
 
-	// ForcesTV.setZero();
-	int totalRows = Sim.integrator->TV.rows();
-	for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
-	 	ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
-	// 	// ForcesTV.row(i) = Sim.integrator->TV.row(0);
-	// 	cout<<Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i))<<endl;
-	// 	cout<<Sim.putForceOnTheseVerts(i)<<endl;
-	}
-
-
-	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
-		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
-	}
-	// cout<<"----"<<endl;
-	// cout<<Sim.integrator->TV.row(0)<<endl;
-	// cout<<Sim.integrator->TV.row(1)<<endl;
-	// cout<<Sim.integrator->TV.row(2)<<endl;
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	viewer.data.set_mesh(V_temp,F_temp);
@@ -144,54 +129,38 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 
 	
-	// cout<<"2222222222"<<endl;
-	// cout<<V<<endl;
-	// cout<<"2222222222"<<endl;
-
-	// cout<<"8888888888"<<endl;
-	// cout<<TV<<endl;
-	// cout<<"8888888888"<<endl;
-	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
-	//*********BEAM******************
-	//move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	//  	if(TV.row(i)[0]>=180){
-	//  		moveVertices.push_back(i);
-	//  	}
-	// }
-
-	// //fix vertices
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[0]<=30){
-	// 		fixedVertices.push_back(i);
-	// 	}
-	// }
-	//***************************
-
-	//********SPRING*******************	
-	//move vertices
-	// for(int i=0; i<TV.rows(); i++){
-	//  	if(TV.row(i)[1]>=-40 && TV.row(i)[1]<-30){
-	//  		moveVertices.push_back(i);
-	//  	}
-	// }
 
 	// fix vertices
-	//for(int i=0; i<TV.rows(); i++){
-	//	if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
-	//		fixedVertices.push_back(i);
-	//	}
-	//}
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
+			fixedVertices.push_back(i);
+		}
+	}
 
 	//***************************
-	//cout << "Fixed Size :: " << fixedVertices.size() << endl;
-	//cout << "Move Size :: " << moveVertices.size() << endl;
-
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
+	cout<<Sim.putForceOnTheseVerts.rows()<<endl;
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
+	ForcesTV.setZero();
+	FixedTV.setZero();
+	for(int i=0; i<Sim.external_force.rows()/3; i++){
+		if(abs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
+		{	ForcesTV.row(i) = Sim.integrator->TV.row(i);
+			cout<<Sim.integrator->TV.row(i)<<endl;
+		}
+	}
+	cout<<"Forces"<<endl;
+	cout<<ForcesTV<<endl;
+
+
+	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
+		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	}
+	// cout<<"Fixed"<<endl;
+	// cout<<FixedTV<<endl;
 	if(headless){
 		Sim.headless();
 	}else{
@@ -236,7 +205,6 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	//moveVertices.push_back(0);
 
 	// fix vertices
-	fixedVertices.push_back(1);
 	// fixedVertices.push_back(1);
 
 				
@@ -333,12 +301,12 @@ int main(int argc, char *argv[])
 	if(runHeadless=='t'){
 		headless = true;
 	}
-	momentumFile.open("Scripts/momentum.txt");
-	energyFile.open("Scripts/energy.txt");
-	strainEnergyFile.open("Scripts/senergy.txt");
-	kineticEnergyFile.open("Scripts/kenergy.txt");
-	gravityEnergyFile.open("Scripts/genergy.txt");
-	optimizationFile.open("TestsResults/opt.txt");
+	momentumFile.open("../Scripts/momentum.txt");
+	energyFile.open("../Scripts/energy.txt");
+	strainEnergyFile.open("../Scripts/senergy.txt");
+	kineticEnergyFile.open("../Scripts/kenergy.txt");
+	gravityEnergyFile.open("../Scripts/genergy.txt");
+	optimizationFile.open("../TestsResults/opt.txt");
 	
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);	

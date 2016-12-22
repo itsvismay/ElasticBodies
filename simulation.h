@@ -10,7 +10,6 @@
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 
-
 class Simulation{
 
 public:
@@ -27,6 +26,7 @@ public:
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
 	
+	void staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, int ignorePastIndex);
 	void binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
 	void staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 	void syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
@@ -42,7 +42,7 @@ public:
 	
 	void staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 
-	void setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices);
+	void setInitPosition(VectorXd& force, vector<int>& fixVertices);
 	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
 	void xToTV(VectorXd& x, MatrixXd& TV);
