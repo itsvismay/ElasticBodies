@@ -236,7 +236,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	//moveVertices.push_back(0);
 
 	// fix vertices
-	fixedVertices.push_back(1);
+	// fixedVertices.push_back(1);
 	// fixedVertices.push_back(1);
 
 				

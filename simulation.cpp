@@ -25,13 +25,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
-	//if (fixVertices.size() > 0) cout << "PreInit Count" << endl;
-	setInitPosition(force, fixVertices, moveVertices);
-	//if (fixVertices.size() > 0) cout << "PostInit Count" << endl;
 
-	//cout << "POINTS POST INIT ::" << endl;
-        //for (int i = 0; i < this->putForceOnTheseVerts.rows(); i++)
-        //        cout << "X:" << TV.row(this->putForceOnTheseVerts(i))(0) << " Y:" << TV.row(this->putForceOnTheseVerts(i))(1) << " Z:" << TV.row(this->putForceOnTheseVerts(i))(2) << endl;
+	//setInitPosition(force, fixVertices, moveVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		//cout << "DOING STUFFS" << endl;
@@ -105,11 +100,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
-		//cout << "Printing New Move Indices" << endl;
-		//for (int i = 0; i < putForceOnTheseVerts.rows(); i++) {
-		//	putForceOnTheseVerts(i) = newMoveIndices[i];
-		//	cout << newMoveIndices[i] << endl;
-		//}
+		// int ignorePastIndex = newTV.rows() - newfixIndices.size();
+		// staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
 
 
 	}else{
@@ -121,7 +113,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->fixVertices(fixVertices);
 	}
 
-	
 	return 1;
 }
 
@@ -208,7 +199,6 @@ void Simulation::reIndexTVandTT(
 		newTV.row(i) = TV.row(newVertsIndices[i]);
 		new_force.segment<3>(3*i) = force.segment<3>(3*newVertsIndices[i]);
 	}
-
 	//create map out of newVertsIndex
 	//map keys = newVertsIndex values = old indices in TV
 	//map vals = newVertsIndex index = new indices in TV
@@ -314,9 +304,104 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 	return;
 }
 
+void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, int ignorePastIndex){
+	cout<<"----------------Static Solve Newtons, Fix Forces-------------"<<endl;
+	//Newtons method static solve for minimum Strain E
+	SparseMatrix<double> forceGradient;
+	forceGradient.resize(3*TV.rows(), 3*TV.rows());
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	VectorXd f, x;
+	f.resize(3*TV.rows());
+	f.setZero();
+	x.resize(3*TV.rows());
+	x.setZero();
+	setTVtoX(x, TV);
+	cout<<x<<endl;
+	int NEWTON_MAX = 100, k=0;
+	for(k=0; k<NEWTON_MAX; k++){
+		xToTV(x, TV);
+
+		calculateForceGradient(TV, forceGradient);
+		calculateElasticForces(f, TV);
+		for(unsigned int i=0; i<fixed_forces.rows(); i++){
+			if(abs(fixed_forces(i))>0.000001){
+				if(i>3*ignorePastIndex){
+					cout<<"Problem Check simulation.cpp file"<<endl;
+					cout<<ignorePastIndex<<endl;
+					cout<<i<<" - "<<fixed_forces(i)<<endl;
+					exit(0);
+				}
+				f(i) = fixed_forces(i);
+			}
+		}
+		
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd fblock = f.head(ignorePastIndex*3);
+
+		//Sparse QR 
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*sqr.solve(fblock);
+
+		// Conj Grad
+		ConjugateGradient<SparseMatrix<double>> cg;
+		cg.compute(forceGradientStaticBlock);
+		if(cg.info() == Eigen::NumericalIssue){
+			cout<<"ConjugateGradient numerical issue"<<endl;
+			exit(0);
+		}
+		VectorXd deltaX = -1*cg.solve(fblock);
+
+		// // Sparse Cholesky LL^T
+		// SimplicialLLT<SparseMatrix<double>> llt;
+		// llt.compute(forceGradientStaticBlock);
+		// if(llt.info() == Eigen::NumericalIssue){
+		// 	cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+		// 	exit(0);
+		// }
+		// VectorXd deltaX = -1*llt.solve(fblock);
+
+		x.segment(0,3*(ignorePastIndex))+=deltaX;
+		cout<<"		Newton Iter "<<k<<endl;
+
+		if(x != x){
+			cout<<"NAN"<<endl;
+			exit(0);
+		}
+		cout<<"fblock square norm"<<endl;
+		cout<<fblock.squaredNorm()/fblock.size()<<endl;
+		double strainE = 0;
+		for(int i=0; i< M.tets.size(); i++){
+			strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		}
+		cout<<strainE<<endl;
+		if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			break;
+		}
+
+	}
+	if(k== NEWTON_MAX){
+		cout<<"ERROR Static Solve: Newton max reached"<<endl;
+		cout<<k<<endl;
+		exit(0);
+	}
+	double strainE = 0;
+	for(int i=0; i< M.tets.size(); i++){
+		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+	}
+	cout<<"strain E"<<strainE<<endl;
+	cout<<"x[0] "<<x(0)<<endl;
+	cout<<"x[1] "<<x(1)<<endl;
+	exit(0);				
+
+	cout<<"-------------------"<<endl;
+}
+
 void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices){
 	vector<int> temp;
-	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/lowBeamForce.txt");
+	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/"+objectName+".txt");
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
@@ -557,6 +642,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 		if (fblock.squaredNorm()/fblock.size() < 0.00001){
 			break;
 		}
+		
 	}
 
 	if(k== NEWTON_MAX){
@@ -1099,7 +1185,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 }
 
 void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B){
-
+	cout<<printToHere<<endl;
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
 
