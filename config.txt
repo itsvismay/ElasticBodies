@@ -1,16 +1,16 @@
-.00001
-t
+.0001
+f
 i
 1000
 0.00
--10000
+-0
 1
 6900000
 .35
 -pR
 svk
 newton
-cgal-remeshed
+lowDetailBeam
 
 #1 timestep
 #2 headless t/f

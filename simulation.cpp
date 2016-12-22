@@ -125,7 +125,8 @@ void Simulation::headless(){
 		cout<<"Min Displacement (called maxDisp in code)"<<endl;
 		double disp =0;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-			disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 		}
 		if(disp < maxDisp){
 			maxDisp = disp;
@@ -145,7 +146,8 @@ void Simulation::render(){
 	cout<<"Max Displacement (called maxDisp in code)"<<endl;
 	double disp =0;
 	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-		disp += integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+		if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+			disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 	}
 	if(disp < maxDisp){
 		maxDisp = disp;
@@ -363,22 +365,22 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
+		int fixedIndex=0;
 		while(getline(forceInputFile, line)){
 			istringstream iss(line);
 			double fx, fy, fz;
 			int fixedOrNot; //1 is fixed, 0 not fixed
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(abs(fx + fy + fz)>0){
-				temp.push_back(index);
+				temp.push_back(index - fixedIndex);
 				cout<<index<<endl;
 			}
 			force(3*index) = fx;
 			force(3*index+1) = fy;
 			force(3*index+2) = fz;
 			if(fixedOrNot == 1){
-				// cout<<fx<<" "<<fy<<" "<<fz<<" "<<fixedOrNot<<endl;
-				// cout<<index<<endl;
 				fixVertices.push_back(index);
+				fixedIndex++;
 			}
 			index+=1;
 		}

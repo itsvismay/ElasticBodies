@@ -28,14 +28,14 @@ RUN echo 'install libmpfr4 and libmpfr4-dbg'
 RUN apt-get install -y libmpfr4 libmpfr4-dbg
 RUN echo 'install libopenlbas-dev'
 RUN apt-get install -y libopenblas-dev
-RUN echo 'install libpng12-dec'
+RUN echo 'install libpng12-dev'
 RUN apt-get install -y libpng12-dev
 RUN echo 'install python-matplotlib'
 RUN apt-get install -y python-matplotlib
 RUN echo 'install python-scipy'
 RUN apt-get install -y python-scipy
 RUN echo 'install python3-dev'
-RUN apt-get install python3-dev
+RUN apt-get install -y python3-dev
 RUN echo 'install swig'
 RUN apt-get install -y swig
 RUN echo 'install zlib1g-dev'
@@ -70,9 +70,14 @@ RUN echo 'install libqt4-dev'
 RUN apt-get install -y libqt4-dev
 RUN echo 'install wget'
 RUN apt-get install -y wget
-RUN echo 'INSTALLED EVERYTHING'
-RUN apt install libgmp3-dev
-RUN apt install libmpfr-dev
+RUN echo ‘install libgmp3-dev’
+RUN apt-get install -y libgmp3-dev
+RUN echo ‘install libmpfr-dev’
+RUN apt-get install -y libmpfr-dev
+RUN echo ‘install m4’
+RUN apt-get install -y m4
+RUN echo ‘install autoconf’
+RUN apt-get install -y autoconf
 
 
 # git clones
@@ -199,5 +204,28 @@ RUN echo ‘cd ..’
 RUN cd ..
 
 # Set up liblbfgs
+RUN echo ‘cd liblbfgs’
+RUN cd liblbfgs
+RUN echo ‘cd ..’
+RUN cd ..
 
 # Set up ElasticBodies
+RUN echo ‘cd ElasticBodies’
+RUN cd ElasticBodies
+RUN echo ’cmake .’
+RUN cmake .
+RUN echo ‘make’
+RUN make
+RUN echo ‘cd Pipeline/SimPrep’
+RUN cd Pipeline/SimPrep
+RUN echo ‘make’
+RUN make
+RUN echo ‘cd ..’
+RUN cd ..
+RUN echo ‘cd ..’
+RUN cd ..
+RUN echo ‘cd ..’
+RUN cd ..
+
+# Run the Simulation
+
