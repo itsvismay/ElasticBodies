@@ -233,7 +233,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 		for(int k=0; k<f.rows(); k++){
 			if(abs(ext_force(k))>0.0001){
-				f(k) = 0.1*ext_force(k);
+				f(k) = 0.01*ext_force(k);
 			}
 		}
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
