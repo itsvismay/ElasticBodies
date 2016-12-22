@@ -81,6 +81,8 @@ RUN echo 'install python-matplotlib'
 RUN apt-get install -y python-matplotlib
 RUN echo 'install python-scipy'
 RUN apt-get install -y python-scipy
+RUN echo 'install python3-dev'
+RUN apt-get install python3-dev
 RUN echo 'install swig'
 RUN apt-get install -y swig
 RUN echo 'install zlib1g-dev'
@@ -113,11 +115,16 @@ RUN echo 'install libtbb-dev'
 RUN apt-get install -y libtbb-dev
 RUN echo 'install libqt4-dev'
 RUN apt-get install -y libqt4-dev
+RUN echo 'install wget'
+RUN apt-get install -y wget
 #RUN echo 'install qt4-dev-tool'
 #RUN apt-get install -y qt4-dev-tool
 RUN echo 'INSTALLED EVERYTHING'
 #RUN echo 'install libcgal-qt5-dev'
 #RUN apt install libcgal-qt5-dev
+RUN apt install libgmp3-dev
+RUN apt install libmpfr-dev
+
 
 # git clones
 RUN git clone --recursive https://github.com/qnzhou/PyMesh.git
@@ -125,15 +132,69 @@ RUN git clone https://github.com/chokkan/liblbfgs.git
 RUN git clone --recursive https://github.com/libigl/libigl.git
 RUN git clone https://github.com/jluttine/suitesparse.git
 RUN git clone https://github.com/itsvismay/ElasticBodies.git
+RUN git clone --recursive https://github.com/CGAL/cgal.git
 
 RUN ls
 
 # required downloads - use wget
 # Anaconda
 RUN wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh
-##RUN bash Anaconda2-4.2.0-Linux-x86_64.sh -b
+RUN bash Anaconda2-4.2.0-Linux-x86_64.sh -b
 # CGAL
-RUN wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.9/CGAL-4.9.tar.xz
-##RUN tar xf CGAL-4.9.tar.xz
+#RUN wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.9/CGAL-4.9.tar.xz
+#RUN tar xf CGAL-4.9.tar.xz
 
 RUN ls
+
+# Set up CGAL
+RUN cd cgal
+RUN cmake .
+RUN make
+RUN make install
+RUN cd ..
+
+# Set up Suitesparse
+RUN cd suitesparse
+RUN make
+RUN make install
+RUN cd ..
+
+# Set up libigl
+RUN cd libigl
+RUN cd external
+RUN cd nanogui
+RUN mkdir build
+RUN cd build
+RUN cmake ..
+RUN make
+RUN cd ..
+RUN cd ..
+RUN cd ..
+RUN cd tutorial
+# TODO :: IMPORT CMAKELISTS.TXT FROM ELSEWHERE
+# TODO :: MOVE 3dUnion TO THIS FOLDER
+RUN mkdir build
+RUN cd build
+RUN cmake ..
+RUN make
+RUN cd ..
+RUN cd ..
+RUN cd ..
+
+# Set up PyMesh
+RUN cd PyMesh
+RUN cd third_party
+RUN mkdir build
+RUN cd build
+RUN cmake ..
+RUN make
+RUN make install
+RUN cd ..
+RUN cd ..
+RUN mkdir build
+RUN cd build
+RUN cmake ..
+RUN make
+RUN make src_tests
+RUN make tools
+RUN make tools_tests

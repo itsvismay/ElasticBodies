@@ -50,10 +50,13 @@ void Mesh::writeToFile(ProgramSettings* settings) {
   if (true) {
     cout << "THIS SHOULD BE WORKING" << endl;
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-      if ((*it)->fixed)
-        forceFileWrite << 0 << " " << 0 << " " << 0 << " " << 1 << endl;
+      if ((*it)->fixed) {
+        //forceFileWrite << 0 << " " << 0 << " " << 0 << " " << 1 << endl;
+        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 1 << endl;
+        
+      }
       else
-        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * -1 << " " << (*it)->force * 0 << " " << 0 << endl;
+        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 0 << endl;
     }
   }
 
@@ -163,13 +166,13 @@ BoundingVolume* Mesh::createLineBound(double x, double y, double z, bool alongX,
   if (alongX) {
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
       dvec3 vert = (*it)->vert;
-      if (vert[1] == y && vert[2] == z)
+      if (vert[1] >= y -.01 && vert[1] <= y + .01 && vert[2] >= z - .01 && vert[2] <= z + .01)
         volume->addVert(*it);
     }
   } else if (alongY) {
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
       dvec3 vert = (*it)->vert;
-      if (vert[0] == x && vert[2] == z)
+      if (vert[0] >= x -.01 && vert[0] <= x + .01 && vert[2] >= z - .01 && vert[2] <= z + .01)
         volume->addVert(*it);
     }
   } else if (alongZ) {

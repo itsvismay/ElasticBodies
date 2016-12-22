@@ -173,7 +173,7 @@ except OSError as e:
 #  print 'There was a System Error ', e, '\n'
 
 # run sim prep to set up the mesh for simulation
-force = 100000;
+force = 1000000;
 prepedMesh = 'prepedMesh.obj'
 forceData = 'forcedata.txt'
 

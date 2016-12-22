@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     //else if (settings->frontCubeAlign) volume = mesh->createFrontBound(settings->depth);
     //else if (settings->backCubeAlign) volume = mesh->createBackBound(settings->depth);
     cout << "Creating Fixed Volume" << endl;
-    volume = mesh->createFrontBound(0.0);
+    volume = mesh->createLeftBound(0.0);
     cout << "Created Fixed Volume" << endl;
     // translate the object to the origin
     //vec3 newOrigin = volume->getNewOrigin(settings->corner);
@@ -225,8 +225,8 @@ int main(int argc, char* argv[]) {
     cout << "MESH XBNDS :: " << mesh->xBnds()[0] << " " << mesh->xBnds()[1] << endl;
     cout << "MESH YBNDS :: " << mesh->yBnds()[0] << " " << mesh->yBnds()[1] << endl;
     cout << "MESH ZBNDS :: " << mesh->zBnds()[0] << " " << mesh->zBnds()[1] << endl;
-    //forceVolume = mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
-    forceVolume = mesh->createBackBound(0.01);
+    forceVolume = mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
+    //forceVolume = mesh->createBackBound(0.01);
     // distribute force per vert in volume
     cout << "Distributing Max Force" << endl;
     cout << "MAX FORCE :: " << settings->maxForce << endl;
