@@ -1,15 +1,15 @@
-.0001
+.000000001
 f
 i
-1000
+1
 0.00
 -0
-1
-6900000
+0
+69000000
 .35
 -pR
 svk
-newton
+lbfgs
 lowDetailBeam
 
 #1 timestep

@@ -22,11 +22,12 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
+	
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
 	TV_k = TV;
-	setInitPosition(force, fixVertices);
+	// setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
