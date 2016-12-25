@@ -21,8 +21,9 @@ lowDetailBeam
 #7 object
 #8 youngs
 #9 poissons
-#10 tetgen code -pRq7
+#10 neo or svk
 #11 solver netwon or lbfgs
 #12 object name (in shared file)
+
 -pqa15000
 -pRq1.18

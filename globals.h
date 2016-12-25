@@ -7,8 +7,9 @@
 // #define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
 // #define OUTPUT_SAVED_PATH "/scratch/cluster/vismay/"
 
-#define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
-#define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"
+
+#define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"//All the same
+#define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"//Just copy paste for now. I'll refactor later.
 
 // #define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
 // #define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
