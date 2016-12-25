@@ -114,14 +114,15 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	v_old(2) =10;
+	v_old(0) = 10;
+	// v_old(2) =100;
 	// v_old(3) =1;
 }
 
 void IntegratorAbstract::initMassMatrices(){
 	InvMass.resize(3*vertsNum, 3*vertsNum);
 	RegMass.resize(3*vertsNum, 3*vertsNum);
-
+	vector<double> tempForMedian;
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		double vol = (M.tets[i].undeformedVol/4)*9.7e-7; //UNITS: THIS ACTUALLY DENSITY
 		Vector4i indices = M.tets[i].verticesIndex;
@@ -146,9 +147,18 @@ void IntegratorAbstract::initMassMatrices(){
 	for(int i=0; i<3*vertsNum; i++){
 		InvMass.coeffRef(i,i) = 1/massVector(i);
 		RegMass.coeffRef(i,i) = massVector(i);
+		tempForMedian.push_back(massVector(i));
 	}
-	// cout<<"Mass Vector"<<endl;
-	// cout<<massVector<<endl;
+	sort(tempForMedian.begin(), tempForMedian.end());
+	if(tempForMedian.size()%2 == 0){
+		this->convergence_scaling_paramter = 0.5*(tempForMedian[tempForMedian.size()/2-1]+tempForMedian[tempForMedian.size()/2]);
+	}else{
+		this->convergence_scaling_paramter = tempForMedian[tempForMedian.size()/2];
+	}
+	cout<<"MEDIAN"<<endl;
+	cout<<this->convergence_scaling_paramter<<endl;
+	cout<<"Mass Vector"<<endl;
+
 	// cout<<"INV Mass"<<endl;
 	// cout<<InvMass<<endl;
 	// cout<<"Reg Mass"<<endl;

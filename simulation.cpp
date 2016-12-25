@@ -27,6 +27,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.resize(3*TV.rows());
 	force.setZero();
 	TV_k = TV;
+
 	// setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){

@@ -181,7 +181,6 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
 
 
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
-
     Matrix<double, 3, 4> Forces;
     Forces.col(0) = H.col(0);
     Forces.col(1) = H.col(1);

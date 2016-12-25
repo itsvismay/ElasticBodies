@@ -6,12 +6,15 @@
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 #include <lbfgs.h>
+#include "../../alglib-cpp/src/optimization.h"
 
 class IntegratorAbstract{
 
 public:
 	int simTime =0;
+	double prevfx;
 	double h; //timestep
+	double convergence_scaling_paramter = 1.0;
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
 	
@@ -34,6 +37,7 @@ public:
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);
 	void createXFromTet();
+
 };
 
 #endif

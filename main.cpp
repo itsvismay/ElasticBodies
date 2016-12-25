@@ -113,12 +113,21 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
-	
-	int totalRows = Sim.integrator->TV.rows();
-	for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
+
+	ForcesTV.setZero();
+	for(int i=0; i<Sim.putForceOnTheseVerts.rows(); i++){
 		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+		// ForcesTV.row(i) = Sim.integrator->TV.row(0);
 	}
 
+
+	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
+		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	}
+	// cout<<"----"<<endl;
+	// cout<<Sim.integrator->TV.row(0)<<endl;
+	// cout<<Sim.integrator->TV.row(1)<<endl;
+	// cout<<Sim.integrator->TV.row(2)<<endl;
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	viewer.data.set_mesh(V_temp,F_temp);
