@@ -36,9 +36,11 @@ build/*
 Scripts/BeamTestOpenCV/build/*
 Scripts/BeamTestOpenCV/*.mp4
 Scripts/BeamTestOpenCV/*.jpg
+
 WolframAndProfilerandHoudini/HoudiniRender/*
 WolframAndProfilerandHoudini/backup/*.hipnc
 TestsResults/*
 3dUnion/build/*
 local_temp/*
 Condor/TestsResults/*
+

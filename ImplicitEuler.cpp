@@ -32,14 +32,14 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 	in->findgBlock(g_block, in->x_k, in->x_old, n/3);
 
 	cout<<"printing the middle val"<<endl;
-	// double fx0 = 0.5*in->x_k.transpose()*in->RegMass*in->x_k;
-	// double fx1 = in->x_old.transpose()*in->RegMass*in->x_k;
-	// double fx2 = in->h*in->v_old.transpose()*in->RegMass*in->x_k; 
+	double fx0 = 0.5*in->x_k.transpose()*in->RegMass*in->x_k;
+	double fx1 = in->x_old.transpose()*in->RegMass*in->x_k;
+	double fx2 = in->h*in->v_old.transpose()*in->RegMass*in->x_k; 
 	// cout<<fx0<<endl;
 	// cout<<fx1<<endl;
 	// cout<<fx2<<endl;
-	// func= fx0 - fx1 - fx2;  //big G function, anti-deriv of g
-	func = 0.5*in->h*((in->x_k - in->x_old)/in->h - in->v_old).transpose()*in->RegMass*((in->x_k - in->x_old)/in->h - in->v_old);
+	func= fx0 - fx1 - fx2;  //big G function, anti-deriv of g
+	// func = 0.5*in->h*((in->x_k - in->x_old)/in->h - in->v_old).transpose()*in->RegMass*((in->x_k - in->x_old)/in->h - in->v_old);
 	double lastTerm = 0.0;
 
 	for(int i=0; i<n; i++){
@@ -119,7 +119,8 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 
 
 void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast){
-	VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
+	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
+	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
 	g_block = g.head(ignorePast*3);
 	cout<<"		First Term"<<endl;
 	cout<<	RegMass*x<<endl;
