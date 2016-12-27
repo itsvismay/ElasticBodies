@@ -148,19 +148,9 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
 	cout<<Sim.putForceOnTheseVerts.rows()<<endl;
+	
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
-	ForcesTV.setZero();
 	FixedTV.setZero();
-	for(int i=0; i<Sim.external_force.rows()/3; i++){
-		if(abs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
-		{	ForcesTV.row(i) = Sim.integrator->TV.row(i);
-			cout<<Sim.integrator->TV.row(i)<<endl;
-		}
-	}
-	cout<<"Forces"<<endl;
-	cout<<ForcesTV<<endl;
-
-
 	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
 		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
 	}

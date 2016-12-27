@@ -250,10 +250,10 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		cout<<"force"<<endl;
-		cout<<f<<endl;
-		cout<<"grad g"<<endl;
-		cout<<g<<endl;
+		// cout<<"force"<<endl;
+		// cout<<f<<endl;
+		// cout<<"grad g"<<endl;
+		// cout<<g<<endl;
 
 		//solve for delta x
 		// Conj Grad
@@ -378,12 +378,12 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);
