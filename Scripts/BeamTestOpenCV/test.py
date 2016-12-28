@@ -1,12 +1,13 @@
 import cv2
+import numpy as np
 
-
-y_ref = 350
+y_ref = 485
+curr_vals = []
 num = 0
 def mouse_cap(event, x, y, flags, param):
 	if event == cv2.EVENT_LBUTTONDOWN:
 		cv2.circle(img, (x,y), 10, (255, 255, 255), 1)
-		print("time ", num, y-y_ref)
+		curr_vals.append(y-y_ref)
 		ix, iy = x, y
 
 cap = cv2.VideoCapture("./beam_vid.mp4")
@@ -19,10 +20,13 @@ else:
 		flag, frame = cap.read()
 		cv2.namedWindow('video')
 		cv2.setMouseCallback('video', mouse_cap)
-		if flag and num>300:
+		if flag:
 			img = frame[100:, 300:1800]
 			cv2.line(img, (0, y_ref), (1150, y_ref), (255, 255, 255), 2)
 			cv2.imshow('video', img)
+			#print(num, np.mean(curr_vals)*(35/440.0))
+			print(num)
+			curr_vals = []
 			cv2.waitKey()
 		num+=1
 		
