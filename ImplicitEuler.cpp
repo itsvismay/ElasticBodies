@@ -43,16 +43,16 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 		- in->h*in->h*in->f(i));
 	}
 
-	// cout<<"ignorepast"<<endl;
-	// cout<<ignorePast<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<in->x_k<<endl;
-	// cout<<"forces"<<endl;
-	// cout<<in->f<<endl;
-	// cout<<"g"<<endl;
-	// for(int i=0; i<n; i++){
-	// 	cout<<g[i]<<endl;
-	// }
+	cout<<"ignorepast"<<endl;
+	cout<<ignorePast<<endl;
+	cout<<"x_k"<<endl;
+	cout<<in->x_k<<endl;
+	cout<<"forces"<<endl;
+	cout<<in->f<<endl;
+	cout<<"g"<<endl;
+	for(int i=0; i<n; i++){
+		cout<<g[i]<<endl;
+	}
 	//force anti-derivative
 	double strainE=0;
 	for(unsigned int i=0; i<in->M.tets.size(); i++){
@@ -63,9 +63,13 @@ static lbfgsfloatval_t evaluateEuler(void *impe, const lbfgsfloatval_t *x, lbfgs
 	//damping anti-derivative
 	// //fx += in->h*rayleighCoeff*((in->x_k.dot(in->f) - strainE) - in->f.dot(in->x_old));
 	//TODO Add gravity potential
+	double grav =0;
 	for(unsigned int i=0; i<in->x_k.size()/3; i++){
+		 grav -= in->h*in->h*in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
 		fx -= in->h*in->h*in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
 	}
+	cout<<"Gravity anti"<<endl;
+	cout<<grav<<endl;
 	return fx;
 }
 
@@ -248,6 +252,11 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
+		// cout<<"force"<<endl;
+		// cout<<f<<endl;
+		// cout<<"grad g"<<endl;
+		// cout<<g<<endl;
+
 		//solve for delta x
 		// Conj Grad
 		// ConjugateGradient<SparseMatrix<double>> cg;
@@ -278,7 +287,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			Nan = true;
 			break;
 		}
-		if(g_block.squaredNorm()<1e-9){
+		if(g_block.squaredNorm()<1e-15){
+			cout<<"gblock sq norm"<<endl;
+			cout<<g_block.squaredNorm()<<endl;
 			break;
 		}
 	}
@@ -324,7 +335,7 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
     //param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
     param.gtol = 0.0001;
     param.ftol = 0.000001;
-    param.epsilon = 1e-11;
+    param.epsilon = 1e-15;
     /*
         Start the L-BFGS optimization; this will invoke the callback functions
         evaluateEuler() and progress() when necessary.
@@ -334,7 +345,11 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
     	cout<<"ERROR: Liblbfgs did not converge, code "<<ret<<endl;
     	exit(0);
     }
-
+    for(i =0; i<N; i++){
+    	x_k(i) = x[i];
+    }
+    cout<<"New x"<<endl;
+    cout<<x_k<<endl;
     v_old = (x_k - x_old)/h;
     x_old = x_k;
     ImplicitXtoTV(x_old, TV);

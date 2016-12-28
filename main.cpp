@@ -158,8 +158,8 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
 	cout<<Sim.putForceOnTheseVerts.rows()<<endl;
+	
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
-	ForcesTV.setZero();
 	FixedTV.setZero();
 	// ReSetting Forces
 	
