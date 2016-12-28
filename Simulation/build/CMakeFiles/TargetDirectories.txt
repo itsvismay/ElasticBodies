@@ -1,0 +1,13 @@
+/home/vismay/ElasticBodies/Simulation/build/CMakeFiles/edit_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/CMakeFiles/rebuild_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/CMakeFiles/elastic.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/CMakeFiles/rebuild_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/CMakeFiles/nanogui.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/CMakeFiles/edit_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/CMakeFiles/bin2c.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/CMakeFiles/edit_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/CMakeFiles/rebuild_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/src/CMakeFiles/edit_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/src/CMakeFiles/glfw.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/src/CMakeFiles/rebuild_cache.dir
+/home/vismay/ElasticBodies/Simulation/build/nanogui/ext_build/glfw/src/CMakeFiles/glfw_objects.dir
