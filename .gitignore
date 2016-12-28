@@ -33,6 +33,8 @@
 
 build/*
 Simulation/build/*
+StaticSolve/build/*
+Consistency/build/*
 Scripts/BeamTestOpenCV/build/*
 Scripts/BeamTestOpenCV/*.mp4
 Scripts/BeamTestOpenCV/*.jpg
