@@ -77,7 +77,7 @@ RUN echo 'apt-get update' && \
     echo ‘install m4’ && \
     apt-get install -y m4 && \
     echo ‘install autoconf’ && \
-    apt-get install -y autoconf && \
+    apt-get install -y autoconf
 
 
 # git clones
@@ -116,20 +116,21 @@ RUN echo ‘cd cgal’ && \
     echo ‘make install’ && \
     make install && \
     echo ‘cd ..’ && \
-    cd ..
+    cd .. && \
 
 # Set up Suitesparse
-RUN echo ‘cd suitesparse’ && \
+    echo ‘cd suitesparse’ && \
     cd suitesparse && \
+    ls && \
     echo ‘make’ && \
     make && \
     echo ‘make install’ && \
     make install && \
     echo ‘cd ..’ && \
-    cd ..
+    cd .. && \
 
 # Set up libigl
-RUN echo ‘cd libigl’ && \
+    echo ‘cd libigl’ && \
     cd libigl && \
     echo ‘cd external’ && \
     cd external && \
@@ -143,6 +144,8 @@ RUN echo ‘cd libigl’ && \
     cmake .. && \
     echo ‘make’ && \
     make && \
+    echo 'make install' && \
+    make install && \
     echo ‘cd ..’ && \
     cd .. && \
     echo ‘cd ..’ && \
@@ -153,6 +156,7 @@ RUN echo ‘cd libigl’ && \
     cd tutorial && \
     echo ‘mkdir build’ && \
     mkdir build && \
+    ls && \
     echo ‘cd build’ && \
     cd build && \
     echo ‘cmake ..’ && \
@@ -164,10 +168,10 @@ RUN echo ‘cd libigl’ && \
     echo ‘cd ..’ && \
     cd .. && \
     echo ‘cd ..’ && \
-    cd ..
+    cd .. && \
 
 # Set up PyMesh
-RUN echo ‘cd PyMesh’ && \
+    echo ‘cd PyMesh’ && \
     cd PyMesh && \
     echo ‘export PYMESH_PATH=$(pwd)’ && \
     export PYMESH_PATH=$(pwd) && \
@@ -187,8 +191,8 @@ RUN echo ‘cd PyMesh’ && \
     cd .. && \
     echo ‘cd ..’ && \
     cd .. && \
-    echo ‘cmake ..’ && \
-    cmake .. && \
+    echo ‘cmake .’ && \
+    cmake . && \
     echo ‘make’ && \
     make && \
     echo ‘make src_tests’ && \
@@ -202,21 +206,21 @@ RUN echo ‘cd PyMesh’ && \
     echo ‘./setup.py install’ && \
     ./setup.py install && \
     echo ‘cd ..’ && \
-    cd ..
+    cd .. && \
 
 # Set up liblbfgs
-RUN echo ‘cd liblbfgs’ && \
+    echo ‘cd liblbfgs’ && \
     cd liblbfgs && \
     echo ‘cd ..’ && \
-    cd ..
+    cd .. && \
 
 # Set up ElasticBodies
-RUN echo ‘cd ElasticBodies’ && \
+    echo ‘cd ElasticBodies’ && \
     cd ElasticBodies && \
     echo ’cmake .’ && \
     cmake . && \
     echo ‘make’ && \
-    make && \
+    make -j4 && \
     echo ‘cd Pipeline/SimPrep’ && \
     cd Pipeline/SimPrep && \
     echo ‘make’ && \
@@ -227,6 +231,4 @@ RUN echo ‘cd ElasticBodies’ && \
     cd .. && \
     echo ‘cd ..’ && \
     cd ..
-
-# Run the Simulation
 

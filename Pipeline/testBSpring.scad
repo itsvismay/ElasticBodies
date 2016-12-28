@@ -18,8 +18,8 @@ module bezierSpring(x3,y3) {
 	height=40.0;
 	union() {
 		bezierCurve();
-		lowerPart();
-		translate([0,height+dia1-thk/2.0]) upperPart();
+		//lowerPart();
+		//translate([0,height+dia1-thk/2.0]) upperPart();
 	}
 
 	module bezierCurve() {

@@ -93,7 +93,7 @@ forceData = ''
 #  # add generated stl file to list for next step
 #  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
-initialSTLFiles.append("test_spring.stl")
+initialSTLFiles.append("ASTMD638_specimen.stl")
 
 for i in range(len(initialSTLFiles)):
   # run slic3r initialSTLFiles[i] --load sConfig
@@ -164,7 +164,7 @@ doubleMeshedFile = "doubleFixed.obj"
 
 try:
   print 'python fix_mesh.py', meshedFile
-  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', meshedFile, fixedMeshedFile])
+  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'high', meshedFile, fixedMeshedFile])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 

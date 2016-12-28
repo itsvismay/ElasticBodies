@@ -92,10 +92,11 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			// syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 		
 		}
-		
+		cout << "Almost Done" << endl;	
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
+		cout << "Done Initializing :: " << newfixIndices.size() << endl;
 		// int ignorePastIndex = TV.rows() - newfixIndices.size();
 		// staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
 
@@ -124,6 +125,7 @@ void Simulation::headless(){
 		integrator->render(this->external_force);
 		cout<<"Min Displacement (called maxDisp in code)"<<endl;
 		double disp =0;
+		double oldDisp = maxDisp;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
 				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
@@ -132,6 +134,7 @@ void Simulation::headless(){
 			maxDisp = disp;
 		}
 		cout<<maxDisp<<"\n";
+		cout<<"Changte :: "<<maxDisp-oldDisp<<endl;
 	}
 	optimizationFile<<maxDisp<<endl;
 

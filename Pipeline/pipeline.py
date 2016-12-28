@@ -173,13 +173,13 @@ except OSError as e:
 #  print 'There was a System Error ', e, '\n'
 
 # run sim prep to set up the mesh for simulation
-force = 20000;
+force = 45000;
 prepedMesh = 'prepedMesh.obj'
 forceData = 'forcedata.txt'
 
 # temp for beam
 prepedMesh = '../shared/lowDetailBeam.obj'
-forceData = '../shared/lowBeamForce.txt'
+forceData = '../shared/lowDetailBeam.txt'
 resultMeshes = '../PipelineTests/'
 
 try:

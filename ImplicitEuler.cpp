@@ -142,6 +142,7 @@ void ImplicitEuler::ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk){
 void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
 	// //gravity
 	f.setZero();
+	cout << "In Calculate Forces" << endl;
 	for(unsigned int i=0; i<f.size()/3; i++){
 		double vertex_mass = massVector(3*i+1);
 		f(3*i+1) += vertex_mass*gravity;
@@ -165,7 +166,7 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 
 void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 	forceGradient.setZero();
-	
+	cout << "In Calculate Force Gradiant" << endl;
 	vector<Trip> triplets1;
 	triplets1.reserve(12*12*M.tets.size());	
 	for(unsigned int i=0; i<M.tets.size(); i++){
@@ -204,6 +205,7 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 }
 void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
+	cout << "In Render" << endl;
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
@@ -296,6 +298,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 }
 
 void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
+	cout << "In Render LBFGS" << endl;
 	external_f = ext_force;
 	//LBFGS
 	int N=3*vertsNum - 3*fixedVerts.size();
@@ -348,6 +351,7 @@ void ImplicitEuler::renderLBFGS(VectorXd& ext_force){
 }
 
 void ImplicitEuler::render(VectorXd& ext_force){
+	cout << "In Render TOo" << endl;
 	simTime+=1;
 	cout<<"i"<<simTime<<endl;
 

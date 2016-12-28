@@ -46,8 +46,10 @@ Simulation Sim;
 
 
 bool drawLoopTest(igl::viewer::Viewer& viewer){
+	cout << "In Draw Loop Test" << endl;
 	viewer.data.clear();
 	Sim.render();
+	cout << "Post Render" << endl;
 	
 
 	viewer.data.add_points(Sim.integrator->TV, RowVector3d(1,0,0));
@@ -79,7 +81,9 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
+	cout << "In Draw Loop" << endl;
 	Sim.render();
+	cout << "Post Render" << endl;
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -119,6 +123,12 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
 	}
 
+	//for (int i=0;i<Sim.integrator->fixedVerts.size(); i++) {
+	//	FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	//	//Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	//	//FixedTV.row(i);
+	//}
+
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	viewer.data.set_mesh(V_temp,F_temp);
@@ -128,8 +138,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
-        //igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
+	//igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+        igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 
@@ -138,11 +148,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> fixedVertices;
 
 	// fix vertices
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
-			fixedVertices.push_back(i);
-		}
-	}
+	//for(int i=0; i<TV.rows(); i++){
+	//	if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
+	//		fixedVertices.push_back(i);
+	//	}
+	//}
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
@@ -151,6 +161,8 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
 	ForcesTV.setZero();
 	FixedTV.setZero();
+	// ReSetting Forces
+	
 	for(int i=0; i<Sim.external_force.rows()/3; i++){
 		if(abs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
 		{	ForcesTV.row(i) = Sim.integrator->TV.row(i);
@@ -160,15 +172,18 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	cout<<"Forces"<<endl;
 	cout<<ForcesTV<<endl;
 
-
-	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
-		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
-	}
+	// this for loop causes segfault
+	//for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
+	//	FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
+	//}
 	// cout<<"Fixed"<<endl;
 	// cout<<FixedTV<<endl;
+
 	if(headless){
+		cout << "Running Headless" << endl;
 		Sim.headless();
 	}else{
+		cout << "RUNNING VIEW" << endl;
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.launch();
