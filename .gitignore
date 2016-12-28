@@ -32,7 +32,7 @@
 *.swp
 
 build/*
-
+Simulation/build/*
 Scripts/BeamTestOpenCV/build/*
 Scripts/BeamTestOpenCV/*.mp4
 Scripts/BeamTestOpenCV/*.jpg
