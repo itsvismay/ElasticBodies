@@ -1,16 +1,16 @@
 .00001
-f
+t
 i
-1
+10
 0.00
--0
-1
-69000000
+-1000
+0
+6900000
 .35
 -pR
-svk
+neo
 newton
-standard_spring/spring
+test_obj/testObject
 
 #1 timestep
 #2 headless t/f
@@ -26,3 +26,5 @@ standard_spring/spring
 #12 object name (in shared file)
 -pqa15000
 -pRq1.18
+low_detail_beam/lowDetailBeam
+test_obj/testObject

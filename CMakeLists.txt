@@ -82,7 +82,7 @@ if(UNIX AND NOT APPLE)
   set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama -ldl")
 endif(UNIX AND NOT APPLE)
 
-FILE(GLOB HEADFILES *.h)
+FILE(GLOB HEADFILES *.h "${PROJECT_SOURCE_DIR}/../alglib-cpp/src/*.h" "${PROJECT_SOURCE_DIR}/../alglib-cpp/src/*.cpp")
 FILE(GLOB SRCFILES *.cpp)
 add_executable(elastic ${HEADFILES} ${SRCFILES} ${GLEW_SOURCES} ${TETGEN_SOURCES})
 target_link_libraries(elastic ${LIBS})

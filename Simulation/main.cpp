@@ -134,13 +134,6 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
-	// fix vertices
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1]<=41 && TV.row(i)[1]>30){
-			fixedVertices.push_back(i);
-		}
-	}
-
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);

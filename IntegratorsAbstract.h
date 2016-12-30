@@ -6,6 +6,7 @@
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 #include <lbfgs.h>
+#include "../../../alglib-cpp/src/optimization.h"
 
 class IntegratorAbstract{
 
@@ -25,6 +26,7 @@ public:
 	VectorXd x_old, v_old, f, massVector, external_f;
 	int width;
 	int height;
+	double convergence_scaling_paramter = 1.0;
 
 	bool isFixed(int vert);
 	void printInfo();
@@ -34,6 +36,7 @@ public:
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);
 	void createXFromTet();
+	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 };
 
 #endif

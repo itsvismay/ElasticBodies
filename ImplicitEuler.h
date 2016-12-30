@@ -32,6 +32,8 @@ public:
 	void ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);
 	void ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk);
+	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
+
 
 
 };
