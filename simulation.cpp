@@ -227,7 +227,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 		cout<<f<<endl;
 		//--------------
 		for(int i=0; i<fixed_forces.rows(); i++){
-			if(abs(fixed_forces(i))>0.00001){
+			if(fabs(fixed_forces(i))>0.00001){
 				f(i) = fixed_forces(i);
 				//cout<<f(i)<<endl;
 			}
@@ -373,7 +373,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			double fx, fy, fz;
 			int fixedOrNot; //1 is fixed, 0 not fixed
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
-			if(abs(fx + fy + fz)>0){
+			if(fabs(fx + fy + fz)>0){
 				temp.push_back(index - fixedIndex);
 				cout<<index<<endl;
 			}
@@ -1012,11 +1012,11 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		M.setNewYoungsPoissons(1000000, 0.35);
 
 		//Newton Solve for positions
-		while(reals_index<realLoads.size() && (dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5))){
+		while(reals_index<realLoads.size() && (dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-5))){
 			cout<<"	Move next step"<<endl;
 			dist_moved += move_amount/number_of_moves;//move step
 			cout<<"distance moved"<<dist_moved<<endl;
-			cout<<(dist_moved<realLoads[reals_index].first && (abs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
+			cout<<(dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
 			// staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
 			staticSolveStepLBFGS(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 			count++;
@@ -1028,11 +1028,11 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		double max_youngs = 60000000;
 		load_scalar = 0;
 		Vector3d load(0,0,0);
-		while(abs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
+		while(fabs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
 			load_scalar =0;
 			curr_youngs = (min_youngs+max_youngs)/2; //just a guess
 			
-			if(abs(curr_youngs - max_youngs)<0.0000001 || abs(curr_youngs - min_youngs)<0.0000001){
+			if(fabs(curr_youngs - max_youngs)<0.0000001 || fabs(curr_youngs - min_youngs)<0.0000001){
 				cout<<"Error: Young's Modulus did not converge."<<endl;
 				cout<<"Current y: "<<curr_youngs<<endl;
 				cout<<"Max y: "<<max_youngs<<endl;
@@ -1056,7 +1056,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			}
 
 			//BELOW: dividing loads by 1000 because we measure forces in Newtons(real data), but calculate in mm based force
-			load_scalar = abs(load(staticSolveDirection)/1000);
+			load_scalar = fabs(load(staticSolveDirection)/1000);
 			
 			if((load_scalar - realLoads[reals_index].second)>0){
 				cout<<"too high"<<endl;
@@ -1075,7 +1075,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<"----------------"<<endl;
 		}
-		distvLoadFile<<dist_moved<<", "<<abs(load(0)/1000)<<", "<<abs(load(1)/1000)<<", "<<abs(load(2)/1000)<<endl;
+		distvLoadFile<<dist_moved<<", "<<fabs(load(0)/1000)<<", "<<fabs(load(1)/1000)<<", "<<fabs(load(2)/1000)<<endl;
 		youngsFile<<dist_moved<<", "<<curr_youngs<<", "<<min_youngs<<", "<<max_youngs <<endl;
 		reals_index+=1;
 	}
@@ -1127,7 +1127,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 				i++;
 			}
 
-			load_scalar = abs(load(staticSolveDirection)/1000);
+			load_scalar = fabs(load(staticSolveDirection)/1000);
 
 			cout<<dist_moved<<", "<<load_scalar<<endl;
 			generateLoadsFile<<dist_moved<<", "<<load_scalar<<endl;

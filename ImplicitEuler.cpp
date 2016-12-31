@@ -6,17 +6,24 @@ using namespace alglib;
 
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
+void rep_grad(const real_1d_array &x, double func, void *impe){
+	cout<<"*********FUNC***********"<<endl;
+	cout<<func<<endl;
+}
 
-void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, void *impe) 
+void function1_grad(const real_1d_array &y, double &func, void *impe) 
 {	
 	ImplicitEuler* in = (ImplicitEuler*) impe;
-	cout<<"-----------"<<endl;
+	// cout<<"-----------"<<endl;
     // this callback calculates f(x0,x1) = 100*(x0+3)^4 + (x1-3)^4
     // and its derivatives df/d0 and df/dx1
     //
     int n = 3*(in->vertsNum - in->fixedVerts.size());
+    VectorXd y_vec;
+    y_vec.resize(in->x_k.rows());
     for(int i=0; i<n; i++){
-    	in->x_k(i) = x[i];
+    	in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
+    	y_vec(i) = y[i];
     }
     // in->x_k(0)+=2.1898e-09;
 
@@ -30,16 +37,24 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 	g_block.resize(n);
 	g_block.setZero();
 	in->findgBlock(g_block, in->x_k, in->x_old, n/3);
-
-	cout<<"printing the middle val"<<endl;
-	double fx0 = 0.5*in->x_k.transpose()*in->RegMass*in->x_k;
-	double fx1 = in->x_old.transpose()*in->RegMass*in->x_k;
-	double fx2 = in->h*in->v_old.transpose()*in->RegMass*in->x_k; 
+	// cout<<"gblock"<<endl;
+	// cout<<g_block.squaredNorm/in->convergence_scaling_paramter<<endl;
+	// cout<<"printing the middle val"<<endl;
+	// double fx0 = 0.5*in->x_k.transpose()*in->RegMass*in->x_k;
+	// double fx1 = in->x_old.transpose()*in->RegMass*in->x_k;
+	// double fx2 = in->h*in->v_old.transpose()*in->RegMass*in->x_k; 
 	// cout<<fx0<<endl;
 	// cout<<fx1<<endl;
 	// cout<<fx2<<endl;
-	func= fx0 - fx1 - fx2;  //big G function, anti-deriv of g
-	// func = 0.5*in->h*((in->x_k - in->x_old)/in->h - in->v_old).transpose()*in->RegMass*((in->x_k - in->x_old)/in->h - in->v_old);
+	// func= fx0 - fx1 - fx2;  //big G function, anti-deriv of g
+	// cout<<(in->x_k - in->x_old)/in->h - in->v_old<<endl;
+	// cout<<((in->x_k - in->x_old)/in->h - in->v_old).transpose()*in->RegMass*((in->x_k - in->x_old)/in->h - in->v_old)<<endl;
+	func = (0.5*in->h*y_vec.transpose()*in->RegMass*y_vec);
+	func = func/in->convergence_scaling_paramter;
+    cout<<"lbfgs x_k"<<endl;
+	cout<<in->x_k<<endl;
+	cout<<"Print kinetic"<<endl;
+	cout<<func<<endl;
 	double lastTerm = 0.0;
 
 	for(int i=0; i<n; i++){
@@ -47,12 +62,12 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 		// 	(0.5*in->x_k(i)*in->massVector(i)*in->x_k(i) 
 		// 	- in->massVector(i)*in->x_old(i)*in->x_k(i) 
 		// 	- in->massVector(i)*in->h*in->v_old(i)*in->x_k(i));
-		grad[i] = (1/in->convergence_scaling_paramter)*(g_block(i));
+		// grad[i] = (1/in->convergence_scaling_paramter)*(g_block(i));
 	}
 	// cout<<lastTerm<<endl;
 	// cout<<(lastTerm)-in->prevfx<<endl;
 	// in->prevfx = lastTerm;
-	cout<<func/in->convergence_scaling_paramter<<endl;
+	// cout<<func/in->convergence_scaling_paramter<<endl;
 	double funcForce = 0;
 	//force anti-derivative
 	double strainE=0;
@@ -60,7 +75,7 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 		strainE += in->M.tets[i].undeformedVol*in->M.tets[i].energyDensity;		
 	}
 
-	func+= in->h*(strainE);
+	func+= in->h*(strainE)/in->convergence_scaling_paramter;
 	//damping anti-derivative
 	// //func += in->h*rayleighCoeff*((in->x_k.dot(in->f) - strainE) - in->f.dot(in->x_old));
 	//TODO Add gravity potential
@@ -70,50 +85,45 @@ void function1_grad(const real_1d_array &x, double &func, real_1d_array &grad, v
 		func -= in->h*in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
 	}
 
-	//This is the return value **
-	func = (func/in->convergence_scaling_paramter);
-	//****
+
 
 	//******Lots of Logging***
-    cout<<"n size"<<endl;
-    cout<<n<<endl;
-    cout<<"lbfgs x_k"<<endl;
-	cout<<in->x_k<<endl;
-	cout<<"x vals"<<endl;
-	cout<<x.tostring(3)<<endl;
-	cout<<"xold"<<endl;
-	cout<<in->x_old<<endl;
-    cout<<"lbfgs x_k- x_old"<<endl;
-	cout<<in->x_k - in->x_old<<endl;
-	cout<<"lbfgs force"<<endl;
-	cout<<in->f<<endl;
+ //    cout<<"n size"<<endl;
+ //    cout<<n<<endl;
+	// cout<<"x vals"<<endl;
+	// cout<<x.tostring(3)<<endl;
+	// cout<<"xold"<<endl;
+	// cout<<in->x_old<<endl;
+ //    cout<<"lbfgs x_k- x_old"<<endl;
+	// cout<<in->x_k - in->x_old<<endl;
+	// cout<<"lbfgs force"<<endl;
+	// cout<<in->f<<endl;
 	cout<<"lbfgs g"<<endl;
 	double normgrad = 0;
 	for(int i=0; i<n; i++){
-		cout<<grad[i]<<endl;
-		normgrad+=grad[i]*grad[i];
+		// cout<<grad[i]<<endl;
+		// normgrad+=grad[i]*grad[i];
 	}
-	cout<<sqrt(normgrad)<<endl;
-	cout<<"g norm/ scaling factor"<<endl;
-	cout<<g_block.squaredNorm()/in->convergence_scaling_paramter<<endl;
-	cout<<"Manually Computer G"<<endl;
-	for(int i=0; i<1; i++){
-		//RegMass*x - RegMass*x_old - h*RegMass*v_old - h*h*f;
-		cout<<"Term 1: "<<(in->massVector(i)*in->x_k(i))/in->convergence_scaling_paramter<<endl;
-		cout<<"Term 2: -"<< (in->massVector(i)*in->x_old(i))/in->convergence_scaling_paramter<<endl;
-		cout<<"Term 3: -"<<(in->h*in->massVector(i)*in->v_old(i))/in->convergence_scaling_paramter<<endl;
-		cout<<"term 4: -"<<(in->h*in->h*in->f(i))/in->convergence_scaling_paramter<<endl;
-	}
+	cout<<sqrt(g_block.squaredNorm()/in->convergence_scaling_paramter)<<endl;
+	// cout<<"g norm/ scaling factor"<<endl;
+	// cout<<g_block.squaredNorm()/in->convergence_scaling_paramter<<endl;
+	// cout<<"Manually Computer G"<<endl;
+	// for(int i=0; i<1; i++){
+	// 	//RegMass*x - RegMass*x_old - h*RegMass*v_old - h*h*f;
+	// 	cout<<"Term 1: "<<(in->massVector(i)*in->x_k(i))/in->convergence_scaling_paramter<<endl;
+	// 	cout<<"Term 2: -"<< (in->massVector(i)*in->x_old(i))/in->convergence_scaling_paramter<<endl;
+	// 	cout<<"Term 3: -"<<(in->h*in->massVector(i)*in->v_old(i))/in->convergence_scaling_paramter<<endl;
+	// 	cout<<"term 4: -"<<(in->h*in->h*in->f(i))/in->convergence_scaling_paramter<<endl;
+	// }
 	
-	cout<<"func"<<endl;
-	cout<<func<<endl;
-	cout<<"grav"<<endl;
-	cout<<grav<<endl;
-	cout<<"Strain term"<<endl;
-	cout<<in->h*in->h*strainE<<endl;
 
+	cout<<"Strain term"<<endl;
+	cout<<in->h*strainE/in->convergence_scaling_paramter<<endl;
+
+	cout<<"Full energy term"<<endl;
+	cout<<func<<endl<<endl;;
 	//Using this to keep track of number of line search iterations
-	in->simTime+=1;// not really "simulation time". 
+	// in->simTime+=1;// not really "simulation time". 
 }
 
 
@@ -122,17 +132,17 @@ void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, 
 	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
 	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
 	g_block = g.head(ignorePast*3);
-	cout<<"		First Term"<<endl;
-	cout<<	RegMass*x<<endl;
-	cout<<"--"<<endl;
-	cout<<x <<endl;
-	cout<<RegMass<<endl;
-	cout<<"		Second Term"<<endl;
-	cout<<	RegMass*x_old<<endl;
-	cout<<"		Third Term"<<endl;
-	cout<<	h*RegMass*v_old<<endl;
-	cout<<"		Fourth Term"<<endl;
-	cout<<	h*h*f<<endl;
+	// cout<<"		First Term"<<endl;
+	// cout<<	RegMass*x<<endl;
+	// cout<<"--"<<endl;
+	// cout<<x <<endl;
+	// cout<<RegMass<<endl;
+	// cout<<"		Second Term"<<endl;
+	// cout<<	RegMass*x_old<<endl;
+	// cout<<"		Third Term"<<endl;
+	// cout<<	h*RegMass*v_old<<endl;
+	// cout<<"		Fourth Term"<<endl;
+	// cout<<	h*h*f<<endl;
 }
 
 
@@ -151,24 +161,42 @@ int ImplicitEuler::alglibLBFGS(VectorXd& ext_force){
     real_1d_array x;
     double *positions= new double[N];
    	for(int i=0; i<N; i++){
-   		positions[i] = x_old(i);
+   		positions[i] = 0;//x_old(i);
    	}
 
     x.setcontent(N, positions);
     double epsg = sqrt(1e-11)/sqrt(convergence_scaling_paramter);
+    cout<<"EPSG"<<endl;
+    cout<<epsg<<endl;
     double epsf = 0;
     double epsx = 0;
     double stpmax = 0;
     ae_int_t maxits = 0;
     minlbfgsstate state;
     minlbfgsreport rep;
+    double teststep = 0;
+    // function1_grad(x, teststep, this);
+    // cout<<"v-old"<<endl;
+    // cout<<v_old<<endl;
+    // cout<<"x"<<endl;
+    // cout<<x_old<<endl;
+    //cout<<"first term"<<endl;
+    //cout<<(((x_old+h*v_old) - x_old)/h) - v_old<<endl;
+    // x[0]+= h*0.0000001;
+    // x[3]+= h*1;
+    // x[6]+= h*1;
+    // x[9]+= h*1;
+    // x[12]+= h*1;
+    // function1_grad(x, teststep, this);
 
     // first run
-    minlbfgscreate(1, x, state);
+    minlbfgscreatef(6, x, 1e-4, state);
     minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+    minlbfgssetgradientcheck(state, teststep);
     // minlbfgssetstpmax(state, stpmax);
-    alglib::minlbfgsoptimize(state, function1_grad,NULL, this);
+    alglib::minlbfgsoptimize(state, function1_grad, rep_grad, this);
     minlbfgsresults(state, x, rep);
+    minlbfgssetxrep(state, true);
 
     printf("TERMINATION TYPE: %d\n", int(rep.terminationtype)); // EXPECTED: 4
     cout<<epsg<<endl;
@@ -212,7 +240,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 		for(int k=0; k<f.rows(); k++){
-			if(abs(ext_force(k))>0.0001){
+			if(fabs(ext_force(k))>0.0001){
 				f(k) = 0.01*ext_force(k);
 			}
 		}
@@ -296,15 +324,15 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
 	// //gravity
 	f.setZero();
-	cout<<">>>>>>>>>>>>>>>>"<<endl;
-	cout<<"TVK"<<endl;
-	cout<<TVk-TV<<endl;
+	// cout<<">>>>>>>>>>>>>>>>"<<endl;
+	// cout<<"TVK"<<endl;
+	// cout<<TVk-TV<<endl;
 	for(unsigned int i=0; i<f.size()/3; i++){
 		double vertex_mass = massVector(3*i+1);
 		f(3*i+1) += vertex_mass*gravity;
 	}
-	cout<<"force after grav"<<endl;
-	cout<<f<<endl;
+	// cout<<"force after grav"<<endl;
+	// cout<<f<<endl;
 
 	//elastic
 	for(unsigned int i=0; i<M.tets.size(); i++){
@@ -319,7 +347,7 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	//damping
 	f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	// cout<<f<<endl<<endl;
-	cout<<">>>>>>>>>>>>>>>>"<<endl;
+	// cout<<">>>>>>>>>>>>>>>>"<<endl;
 	return;
 }
 
@@ -380,12 +408,12 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);
@@ -527,7 +555,7 @@ void ImplicitEuler::ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk){
 // 	// cout<<"lbfgs Masses"<<endl;
 // 	// cout<<in->RegMass<<endl;
 // 	// for(int k=0; k< in->f.rows(); k++){
-// 	// 	if(abs(in->external_f(k))>0.0001){
+// 	// 	if(fabs(in->external_f(k))>0.0001){
 // 	// 		in->f(k) = in->external_f(k);
 // 	// 	}
 // 	// }

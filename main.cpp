@@ -161,7 +161,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	ForcesTV.setZero();
 	FixedTV.setZero();
 	for(int i=0; i<Sim.external_force.rows()/3; i++){
-		if(abs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
+		if(fabs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
 		{	ForcesTV.row(i) = Sim.integrator->TV.row(i);
 			cout<<Sim.integrator->TV.row(i)<<endl;
 		}
