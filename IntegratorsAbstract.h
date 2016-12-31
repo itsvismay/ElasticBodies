@@ -6,7 +6,7 @@
 #include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 #include <lbfgs.h>
-#include "../../../alglib-cpp/src/optimization.h"
+
 
 class IntegratorAbstract{
 

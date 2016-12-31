@@ -1,15 +1,15 @@
-.00001
+.001
 t
 i
 10
 0.00
--1000
+-000
 0
 6900000
 .35
 -pR
 neo
-newton
+lbfgs
 test_obj/testObject
 
 #1 timestep

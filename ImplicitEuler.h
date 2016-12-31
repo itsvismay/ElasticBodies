@@ -1,8 +1,8 @@
-
 #ifndef implicit_euler_h
 #define implicit_euler_h
 
 #include "IntegratorsAbstract.h"
+#include "../alglib-cpp/src/optimization.h"
 
 using namespace Eigen;
 using namespace std;
@@ -26,14 +26,14 @@ public:
 	void render(VectorXd& ext_force);
 	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS(VectorXd& ext_force);
+	int alglibLBFGS(VectorXd& ext_force);
+	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 	
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);
 	void ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk);
-	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
-
 
 
 };

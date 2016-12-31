@@ -114,7 +114,7 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	// v_old(2) =10;
+	v_old(0) =10;
 	// v_old(3) =1;
 }
 
@@ -142,8 +142,8 @@ void IntegratorAbstract::initMassMatrices(){
 		massVector(3*indices(3)+1) += vol;
 		massVector(3*indices(3)+2) += vol;
 	}
-
-		for(int i=0; i<3*vertsNum; i++){
+	vector<double>tempForMedian;
+	for(int i=0; i<3*vertsNum; i++){
 		InvMass.coeffRef(i,i) = 1/massVector(i);
 		RegMass.coeffRef(i,i) = massVector(i);
 		tempForMedian.push_back(massVector(i));
