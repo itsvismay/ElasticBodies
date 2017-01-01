@@ -13,7 +13,7 @@ using namespace std;
 class Loader {
 public:
 
-  static void loadMesh(Mesh* mesh, const char* file) {
+  static void loadMeshOBJ(Mesh* mesh, const char* file) {
     ifstream ifs(file, ifstream::in);
     char line[MAX_LINE_LENGTH];
 
@@ -27,6 +27,50 @@ public:
     }
 
     ifs.close();
+  }
+
+  static void loadMeshOFF(Mesh* mesh, const char* file) {
+    ifstream ifs(file, ifstream::in);
+    char line[MAX_LINE_LENGTH];
+
+    int* numberOfVerts = new int();
+    int* numberOfFaces = new int();
+    int* numberOfNorms = new int(); // ignored because not used
+
+    ifs.getline(line, sizeof(line), '\n');
+    char* token = line + strspn(line, " \t");
+
+    if (token[0] == 'O' && token[1] == 'F' && token[2] == 'F' && isSpace(token[3])) parseOffData(mesh, token += 4, numberOfVerts, numberOfFaces, numberOfNorms);
+
+    for (int i = 0; i < (*numberOfVerts); i++) {
+      ifs.getline(line, sizeof(line), '\n');
+      char* token = line + strspn(line, " \t");
+      parseVert(mesh, token);
+    }
+
+    for (int i = 0; i < (*numberOfFaces); i++) {
+      ifs.getline(line, sizeof(line), '\n');
+      char* token = line + strspn(line, " \t");
+      parseFace(mesh, token += 2);
+    }
+
+    delete numberOfVerts;
+    delete numberOfFaces;
+    delete numberOfNorms;
+  }
+
+  static void parseOffData(Mesh* mesh, char* token, int* verts, int* faces, int* norms) {
+    dvec3 vert(0.0,0.0,0.0);
+    int ind = 0;
+    char* tok = strtok(token, " ");
+
+    *verts = atoi(tok);
+    tok = strtok(NULL, " ");
+    *faces = atoi(tok);
+    tok = strtok(NULL, " ");
+    *norms = atoi(tok);
+
+    cout << "Verts: " << *verts << " Faces: " << *faces << " Norms: " << *norms << endl;
   }
 
   static bool isSpace(char token) {
@@ -43,7 +87,6 @@ public:
       ind++;
       tok = strtok(NULL, " ");
     }
-    cout << "ADDING VERT:: " << vert[0] << " " << vert[1] << " " << vert[2] << endl;
     mesh->addVert(vert);
   }
 
@@ -57,7 +100,6 @@ public:
       ind++;
       tok = strtok(NULL, " ");
     }
-    //cout << "ADDING FACE:: " << face[0] << " " << face[1] << " " << face[2] << endl;
     mesh->addFace(face);
   }
 };

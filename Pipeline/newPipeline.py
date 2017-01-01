@@ -138,11 +138,11 @@ for i in range(len(layerSTLFiles)):
   #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
   print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'
   try:
-    result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'])
+    result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'])
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
-  layerObjFiles.append(layerSTLFiles[i][:-4]+'.obj')
+  layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
 
 # combine obj files into one file
 for i in range(len(initialGCodeFiles)):
@@ -156,7 +156,7 @@ for i in range(len(initialGCodeFiles)):
     print 'There was a System Error: ', e, '\n'
 
 # fix mesh
-meshedFile = "unioned.obj"
+meshedFile = "unioned.off"
 fixedMeshedFile = "fixedUnion.off"
 doubleMeshedFile = "doubleFixed.obj"
 largestOff = "largest.off"

@@ -10,87 +10,86 @@ using namespace glm;
 
 class ProgramSettings {
 public:
-  string mesh;
-  string outputMesh;
+  string inputMeshObj;
+  string inputMeshOff;
+  string outputMeshObj;
+  string outputMeshOff;
   string config;
   string outputForce;
   string bezierForceFile;
-  string domainBezierFile;
 
-  // steps
-  bool needsAlignment;
-  bool cubeAlign;
-  bool topCubeAlign;
-  bool botCubeAlign;
-  bool rightCubeAlign;
-  bool leftCubeAlign;
-  bool frontCubeAlign;
-  bool backCubeAlign;
-  bool needsForce;
-  bool cubeForce;
-  bool topCubeForce;
-  bool botCubeForce;
-  bool rightCubeForce;
-  bool leftCubeForce;
-  bool frontCubeForce;
-  bool backCubeForce;
-  bool domainForce;
-  bool domainXTrace;
-  bool domainYTrace;
-  bool domainZTrace;
-  bool domainBezier;
-  bool domainPlane;
+  bool obj;
+  bool off;
+
+  bool topForce;
+  bool botForce;
+  bool rightForce;
+  bool leftForce;
+  bool frontForce;
+  bool backForce;
+
+  bool topFixed;
+  bool botFixed;
+  bool rightFixed;
+  bool leftFixed;
+  bool frontFixed;
+  bool backFixed;
+
   bool constantForce;
   bool impulseForce;
   bool bezierForce;
 
   int corner; // +x+y+z = 0, -x+y+z = 1, -x-y+z = 2, -x+y+z = 3 ...
-  float depth;
-  float forceDepth;
-  float maxForce;
-  vec2 domainX;
-  vec2 domainY;
-  vec2 domainZ;
-  vec3 direction;
+
+  double fixedDepth;
+  double forceDepth;
+  double maxForce;
+
+  //dvec2 boundsX;
+  //dvec2 boundsY;
+  //dvec2 boundsZ;
+  dvec3 forceDirection;
 
   ProgramSettings() {
-    mesh = "";
+    inputMeshObj = "";
+    inputMeshOff = "";
+    outputMeshObj = "";
+    outputMeshOff = "";
     config = "";
     outputForce = "test.txt";
     bezierForceFile = "";
-    domainBezierFile = "";
-    needsAlignment = false;
-    cubeAlign = false;
-    topCubeAlign = false;
-    botCubeAlign = false;
-    rightCubeAlign = false;
-    leftCubeAlign = false;
-    frontCubeAlign = false;
-    backCubeAlign = false;
-    cubeForce = false;
-    topCubeForce = false;
-    botCubeForce = false;
-    rightCubeForce = false;
-    leftCubeForce = false;
-    frontCubeForce = false;
-    backCubeForce = false;
-    domainForce = false;
-    domainXTrace = false;
-    domainYTrace = false;
-    domainZTrace = false;
-    domainBezier = false;
-    domainPlane = false;
+
+    obj = false;
+    off = false;
+
+    topForce = false;
+    botForce = false;
+    rightForce = false;
+    leftForce = false;
+    frontForce = false;
+    backForce = false;
+
+    topFixed = false;
+    botFixed = false;
+    rightFixed = false;
+    leftFixed = false;
+    frontFixed = false;
+    backFixed = false;
+
     constantForce = false;
     impulseForce = false;
     bezierForce = false;
+
     corner = -1;
-    depth = 0.0f;
-    forceDepth = 0.0f;
-    maxForce = 0.0f;
-    domainX = vec2(0.0f, 0.0f);
-    domainY = vec2(0.0f, 0.0f);
-    domainZ = vec2(0.0f, 0.0f);
-    direction = vec3(0.0f, 0.0f, 0.0f);
+
+    fixedDepth = 0.0;
+    forceDepth = 0.0;
+    maxForce = 0.0;
+
+    //boundsX = dvec2(0.0, 0.0);
+    //boundsY = dvec2(0.0, 0.0);
+    //boundsZ = dvec2(0.0, 0.0);
+    forceDirection = dvec3(0.0, 0.0, 0.0);
   }
 
   ~ProgramSettings() { }
