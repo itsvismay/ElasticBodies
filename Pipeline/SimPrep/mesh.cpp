@@ -46,11 +46,12 @@ void Mesh::writeObjToFile(ProgramSettings* settings) {
   }
 
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    dvec3 dir = settings->forceDirection;
     if ((*it)->fixed) {
-      forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 1 << endl;
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 1 << endl;
     }
     else
-      forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 0 << endl;
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 0 << endl;
   }
 
   objFileWrite.close();
@@ -72,10 +73,10 @@ void Mesh::writeOffToFile(ProgramSettings* settings) {
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 dir = settings->forceDirection;
     if ((*it)->fixed) {
-      forceFileWrite << (*it)->force * -dir[0] << " " << (*it)->force * -dir[1] << " " << (*it)->force * -dir[2] << " " << 1 << endl;
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 1 << endl;
     }
     else
-      forceFileWrite << (*it)->force * -dir[0] << " " << (*it)->force * -dir[1] << " " << (*it)->force * -dir[2] << " " << 0 << endl;
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 0 << endl;
   }
 
   offFileWrite.close();
