@@ -313,7 +313,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<i<<endl;
 		exit(0);
 	}
-	v_old.setZero();
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
 }
@@ -405,12 +404,12 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	// cout<<"*******************"<<endl;
-	// cout<< "New Pos"<<simTime<<endl;
-	// cout<<x_old<<endl<<endl;
-	// cout<< "New Vels"<<simTime<<endl;
-	// cout<<v_old<<endl;
-	// cout<<"*****************"<<endl<<endl;
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<simTime<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<simTime<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);

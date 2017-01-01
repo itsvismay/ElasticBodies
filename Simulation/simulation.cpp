@@ -589,6 +589,8 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 			exit(0);
 		}
 		
+		cout<<"Fblock/size"<<endl;
+		cout<<fblock.squaredNorm()/fblock.size()<<endl;
 		if (fblock.squaredNorm()/fblock.size() < 0.00001){
 			break;
 		}

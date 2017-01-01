@@ -19,10 +19,10 @@ public:
 	double beta =0.25;
 	
 	void render(VectorXd& ext_force);
-	void renderNewtonsMethod();
+	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS();
 	
-	
+	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta);
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);

@@ -412,12 +412,14 @@ void Simulation::staticSolveInitialPosition(vector<int> moveVertices, MatrixXd& 
  	dt.erase('\n');
  	replace(dt.begin(), dt.end(), ' ', '-');
  	//-----------------
- 	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/InitPositionsSolve10moves/"+objectName+"/"+to_string(TT.rows())+"tets@"+tetgen_code+"@"+material_model+"/";
+ 	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/InitPositionsSolve20moves/"+objectName+"/"+to_string(TT.rows())+"tets@"+tetgen_code+"@"+material_model+"/";
+	cout<<"Static Solve initial position"<<endl;
+	cout<<saveTestToHere<<endl;
 	system(("mkdir -p "+saveTestToHere).c_str());
 	system(("(git log -1; echo ''; echo 'Ran Test On:'; date;) >>"+saveTestToHere+"log.txt").c_str());
 
 	double move_amount = 3.5;
-	int number_of_moves = 10;
+	int number_of_moves = 20;
 	double dist_moved = 0;
 	double curr_youngs = 6.9e6;
 	int ignorePastIndex = TV.rows() - moveVertices.size() - fv;

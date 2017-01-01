@@ -164,20 +164,47 @@ void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	return;
 }
 
-void ImplicitNewmark::renderNewtonsMethod(){
+void ImplicitNewmark::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta){
+	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
+
+	VectorXd g = RegMass*x_k - RegMass*x_old - RegMass*h*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
+	g_block = g.head(ignorePast*3);
+	cout<<"HELLO"<<endl;
+	// cout<<"		First Term"<<endl;
+	// cout<<	RegMass*x<<endl;
+	// cout<<"		Second Term"<<endl;
+	// cout<<	RegMass*x_old<<endl;
+	// cout<<"		Third Term"<<endl;
+	// cout<<	h*RegMass*v_old<<endl;
+	// cout<<"		Fourth Term"<<endl;
+	// cout<<	(h*h/2)*(1-2*beta)*f_old<<endl;
+	// cout<<"		Fifth Term"<<endl;
+	// cout<<(h*h*beta)*f<<endl;
+}
+
+void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
 	v_k = v_old;
-	VectorXd f_old = f;
+	f_old = f;
+
+	int ignorePastIndex = TV.rows() - fixedVerts.size();
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
+	
+	SparseMatrix<double> RegMassBlock;
+	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+
 
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
+	
 	double gamma = 0.5;
 	double beta =0.25;
-
 	// cout<<"--------"<<simTime<<"-------"<<endl;
 	// cout<<"x_k"<<endl;
 	// cout<<x_k<<endl<<endl;
@@ -186,19 +213,24 @@ void ImplicitNewmark::renderNewtonsMethod(){
 	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
-	
 		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
 		NewmarkCalculateElasticForceGradient(TVk, forceGradient); 
 		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
-
+		for(int k=0; k<f.rows(); k++){
+			if(fabs(ext_force(k))>0.0001){
+				f(k) = 0.01*ext_force(k);
+			}
+		}
 		VectorXd g = x_k - x_old - h*v_old - (h*h/2)*(1-2*beta)*InvMass*f_old - (h*h*beta)*InvMass*f;
-		grad_g = Ident - h*h*beta*InvMass*(forceGradient+(rayleighCoeff/h)*forceGradient);
+		// grad_g = Ident - h*h*beta*InvMass*(forceGradient+(rayleighCoeff/h)*forceGradient);
 
-		// VectorXd g = RegMass*x_k - RegMass*x_old - RegMass*h*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
-		// grad_g = RegMass - h*h*beta*(forceGradient+(rayleighCoeff/h)*forceGradient);
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd g_block;
+		findgBlock(g_block, x_k, x_old, ignorePastIndex, gamma, beta);
+		grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock);
 	
-		// cout<<"G"<<t<<endl;
-		// cout<<g<<endl<<endl;
+		// cout<<"re-arr g"<<endl;
+		// cout<<g_block<<endl<<endl;
 		// cout<<"G Gradient"<<t<<endl;
 		// cout<<grad_g<<endl;
 
@@ -209,14 +241,19 @@ void ImplicitNewmark::renderNewtonsMethod(){
 		// VectorXd deltaX = -1*cg.solve(g);
 
 		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// VectorXd deltaX = -1* llt.solve(g);
+		SimplicialLLT<SparseMatrix<double>> llt;
+		llt.compute(grad_g);
+		if(llt.info() == Eigen::NumericalIssue){
+			cout<<"Possibly using a non- pos def matrix in the Newmark newton LLT method"<<endl;
+			exit(0);
+		}
+		VectorXd deltaX = -1* llt.solve(g_block);
+		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 
 		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g);
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(grad_g);
+		// VectorXd deltaX = -1*sqr.solve(g);
 
 		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
 		// cholmodllt.compute(grad_g);
@@ -228,9 +265,15 @@ void ImplicitNewmark::renderNewtonsMethod(){
 			Nan = true;
 			break;
 		}
-		if(g.squaredNorm()<.00000001){
+
+		cout<<"g norm"<<endl;
+		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
+		if(g_block.squaredNorm()/convergence_scaling_paramter < 1e-11){
+			cout<<"g norm"<<endl;
+			cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 			break;
 		}
+		// exit(0);
 	}
 	if(Nan){
 		cout<<"ERROR NEWMARK: Newton's method doesn't converge"<<endl;
@@ -294,8 +337,14 @@ void ImplicitNewmark::render(VectorXd& ext_force){
 	cout<<"n"<<simTime<<endl;
 	IntegratorAbstract::printInfo();
 	// renderLBFGS();
-	renderNewtonsMethod();
+	renderNewtonsMethod(ext_force);
 
 	NewmarkXtoTV(x_old, TV);
+	cout<<"*******************"<<endl;
+	cout<< "New Pos"<<simTime<<endl;
+	cout<<x_old<<endl<<endl;
+	cout<< "New Vels"<<simTime<<endl;
+	cout<<v_old<<endl;
+	cout<<"*****************"<<endl<<endl;
 	return;
 }
