@@ -1,9 +1,9 @@
 .001
-t
+f
 n
-10
+1000
 0.00
--000
+-10
 0
 6900000
 .35
@@ -17,7 +17,7 @@ test_obj/testObject
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity
+#6 gravity UNIT: mm/s^2
 #7 object
 #8 youngs
 #9 poissons

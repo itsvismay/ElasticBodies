@@ -123,7 +123,7 @@ void IntegratorAbstract::initMassMatrices(){
 	RegMass.resize(3*vertsNum, 3*vertsNum);
 
 	for(unsigned int i=0; i<M.tets.size(); i++){
-		double vol = (M.tets[i].undeformedVol/4)*9.7e-7; //UNITS: THIS ACTUALLY DENSITY
+		double vol = (M.tets[i].undeformedVol/4)*1.05e-3; //UNITS: g/cubic mm
 		Vector4i indices = M.tets[i].verticesIndex;
 
 		massVector(3*indices(0)) += vol;
