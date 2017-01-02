@@ -2,9 +2,10 @@
 #include "loader.h"
 #include <iostream>
 
-Mesh::Mesh(string f) {
+Mesh::Mesh(string f, ProgramSettings* settings) {
   file = f.c_str();
-  readFromFile();
+  if (settings->off) readOffFromFile();
+  else readObjFromFile();
 }
 
 Mesh::~Mesh() {
@@ -13,54 +14,72 @@ Mesh::~Mesh() {
   }
 }
 
-void Mesh::readFromFile() {
-  xExtremes[0] = 1000.0;
-  xExtremes[1] = -1000.0;
-  yExtremes[0] = 1000.0;
-  yExtremes[1] = -1000.0;
-  zExtremes[0] = 1000.0;
-  zExtremes[1] = -1000.0;
-  Loader::loadMesh(this, file);
+void Mesh::readObjFromFile() {
+  xBounds[0] = 1000.0;
+  xBounds[1] = -1000.0;
+  yBounds[0] = 1000.0;
+  yBounds[1] = -1000.0;
+  zBounds[0] = 1000.0;
+  zBounds[1] = -1000.0;
+  Loader::loadMeshOBJ(this, file);
 }
 
-void Mesh::writeToFile(ProgramSettings* settings) {
-  ofstream objFileWrite(settings->outputMesh);
+void Mesh::readOffFromFile() {
+  xBounds[0] = 1000.0;
+  xBounds[1] = -1000.0;
+  yBounds[0] = 1000.0;
+  yBounds[1] = -1000.0;
+  zBounds[0] = 1000.0;
+  zBounds[1] = -1000.0;
+  Loader::loadMeshOFF(this, file);
+}
+
+void Mesh::writeObjToFile(ProgramSettings* settings) {
+  ofstream objFileWrite(settings->outputMeshObj);
   ofstream forceFileWrite(settings->outputForce);
 
-  // write geometry data
-  //if (settings->needsAlignment) {
-  if (true) {
-    for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-      objFileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " << (*it)->vert[2] << endl;
-    }
-    for (vector<ivec3>::iterator it = faces.begin(); it != faces.end(); ++it) {
-      objFileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << endl;
-    }
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    objFileWrite << "v " << (*it)->vert[0] << " " << (*it)->vert[1] << " " << (*it)->vert[2] << endl;
+  }
+  for (vector<ivec3>::iterator it = faces.begin(); it != faces.end(); ++it) {
+    objFileWrite << "f " << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << endl;
   }
 
-  // write force data
-  //if (settings->needsForce) {
-  //if (true) {
-  //  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-  //    forceFileWrite << (*it)->force * settings->direction[0] << " " << (*it)->force * settings->direction[1] << " " << (*it)->force * settings->direction[2] << endl;
-  //  }
-  //}
-
-  //if (settings->needsForce) {
-  if (true) {
-    cout << "THIS SHOULD BE WORKING" << endl;
-    for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
-      if ((*it)->fixed) {
-        //forceFileWrite << 0 << " " << 0 << " " << 0 << " " << 1 << endl;
-        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 1 << endl;
-        
-      }
-      else
-        forceFileWrite << (*it)->force * 0 << " " << (*it)->force * 0 << " " << (*it)->force * -1 << " " << 0 << endl;
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    dvec3 dir = settings->forceDirection;
+    if ((*it)->fixed) {
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 1 << endl;
     }
+    else
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 0 << endl;
   }
 
   objFileWrite.close();
+  forceFileWrite.close();
+}
+
+void Mesh::writeOffToFile(ProgramSettings* settings) {
+  ofstream offFileWrite(settings->outputMeshOff);
+  ofstream forceFileWrite(settings->outputForce);
+
+  offFileWrite << "OFF " << verts.size() << " " << faces.size() << " 0" << endl;
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    offFileWrite << (*it)->vert[0] << " " << (*it)->vert[1] << " " << (*it)->vert[2] << endl;
+  }
+  for (vector<ivec3>::iterator it = faces.begin(); it != faces.end(); ++it) {
+    offFileWrite << "3 " << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << endl;
+  }
+
+  for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
+    dvec3 dir = settings->forceDirection;
+    if ((*it)->fixed) {
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 1 << endl;
+    }
+    else
+      forceFileWrite << (*it)->force * dir[0] << " " << (*it)->force * dir[1] << " " << (*it)->force * dir[2] << " " << 0 << endl;
+  }
+
+  offFileWrite.close();
   forceFileWrite.close();
 }
 
@@ -68,21 +87,21 @@ void Mesh::translate(double x, double y, double z) {
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     (*it)->translate(x,y,z);
   }
-  xExtremes[0] += x;
-  xExtremes[1] += x;
-  yExtremes[0] += y;
-  yExtremes[1] += y;
-  zExtremes[0] += z;
-  zExtremes[1] += z;
+  xBounds[0] += x;
+  xBounds[1] += x;
+  yBounds[0] += y;
+  yBounds[1] += y;
+  zBounds[0] += z;
+  zBounds[1] += z;
 }
 
 void Mesh::addVert(dvec3 vert) {
-  if (vert[0] < xExtremes[0]) xExtremes[0] = vert[0];
-  if (vert[0] > xExtremes[1]) xExtremes[1] = vert[0];
-  if (vert[1] < yExtremes[0]) yExtremes[0] = vert[1];
-  if (vert[1] > yExtremes[1]) yExtremes[1] = vert[1];
-  if (vert[2] < zExtremes[0]) zExtremes[0] = vert[2];
-  if (vert[2] > zExtremes[1]) zExtremes[1] = vert[2];
+  if (vert[0] < xBounds[0]) xBounds[0] = vert[0];
+  if (vert[0] > xBounds[1]) xBounds[1] = vert[0];
+  if (vert[1] < yBounds[0]) yBounds[0] = vert[1];
+  if (vert[1] > yBounds[1]) yBounds[1] = vert[1];
+  if (vert[2] < zBounds[0]) zBounds[0] = vert[2];
+  if (vert[2] > zBounds[1]) zBounds[1] = vert[2];
   verts.push_back(new FVert(vert, verts.size()));
 }
 
@@ -90,17 +109,11 @@ void Mesh::addFace(ivec3 face) {
   faces.push_back(face);
 }
 
-BoundingVolume* Mesh::createCubeBound(double height) {
-  // will be implemented in a future iteration if needed
-  cout << "Mesh::createCubeBound not implemented" << endl;
-  return 0x0;
-}
-
 BoundingVolume* Mesh::createTopBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[2] >= zExtremes[1] - depth)
+    if (vert[2] >= zBounds[1] - depth)
       volume->addVert(*it);
   }
   return volume;
@@ -110,7 +123,7 @@ BoundingVolume* Mesh::createBotBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[2] <= zExtremes[0] + depth)
+    if (vert[2] <= zBounds[0] + depth)
       volume->addVert(*it);
   }
   return volume;
@@ -120,19 +133,17 @@ BoundingVolume* Mesh::createRightBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[0] >= xExtremes[1] - depth)
+    if (vert[0] >= xBounds[1] - depth)
       volume->addVert(*it);
   }
   return volume;
 }
 
 BoundingVolume* Mesh::createLeftBound(double depth) {
-  cout << "ZExtreemes :: " << zExtremes[0] << endl;
   BoundingVolume* volume = new BoundingVolume();
-  cout << "DEPTH: " << depth << endl;
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[0] <= xExtremes[0] + depth)
+    if (vert[0] <= xBounds[0] + depth)
       volume->addVert(*it);
   }
   return volume;
@@ -142,7 +153,7 @@ BoundingVolume* Mesh::createFrontBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[1] <= yExtremes[0] + depth)
+    if (vert[1] <= yBounds[0] + depth)
       volume->addVert(*it);
   }
   return volume;
@@ -152,7 +163,7 @@ BoundingVolume* Mesh::createBackBound(double depth) {
   BoundingVolume* volume = new BoundingVolume();
   for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
     dvec3 vert = (*it)->vert;
-    if (vert[1] >= yExtremes[1] - depth)
+    if (vert[1] >= yBounds[1] - depth)
       volume->addVert(*it);
   }
   return volume;
@@ -160,9 +171,6 @@ BoundingVolume* Mesh::createBackBound(double depth) {
 
 BoundingVolume* Mesh::createLineBound(double x, double y, double z, bool alongX, bool alongY, bool alongZ) {
   BoundingVolume* volume = new BoundingVolume();
-  cout << "BOUNDING X: " << x << endl;
-  cout << "BOUNDING Y: " << y << endl;
-  cout << "BOUNDING Z: " << z << endl;
   if (alongX) {
     for (vector<FVert*>::iterator it = verts.begin(); it != verts.end(); ++it) {
       dvec3 vert = (*it)->vert;
@@ -182,10 +190,9 @@ BoundingVolume* Mesh::createLineBound(double x, double y, double z, bool alongX,
         volume->addVert(*it);
     }
   }
-  //cout << "SIZE: " volume->verts.size();
   return volume;
 }
 
-dvec2 Mesh::xBnds() { return xExtremes; }
-dvec2 Mesh::yBnds() { return yExtremes; }
-dvec2 Mesh::zBnds() { return zExtremes; }
+dvec2 Mesh::xBnds() { return xBounds; }
+dvec2 Mesh::yBnds() { return yBounds; }
+dvec2 Mesh::zBnds() { return zBounds; }

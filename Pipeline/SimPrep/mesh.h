@@ -11,25 +11,26 @@ using namespace std;
 using namespace glm;
 
 class Mesh {
-private:
+public:
   const char* file;
   vector<ivec3> faces;
   vector<FVert*> verts;
   // should these be properties of mesh or bounding volumes
 
-  void readFromFile();
+  void readObjFromFile();
+  void readOffFromFile();
 public:
-  dvec2 xExtremes;
-  dvec2 yExtremes;
-  dvec2 zExtremes;
-  
-  Mesh(string f);
+  dvec2 xBounds;
+  dvec2 yBounds;
+  dvec2 zBounds;
+
+  Mesh(string f, ProgramSettings* settings);
   ~Mesh();
   void translate(double x, double y, double z);
   void addVert(dvec3 vert);
   void addFace(ivec3 face);
-  void writeToFile(ProgramSettings* settings);
-  BoundingVolume* createCubeBound(double height);
+  void writeObjToFile(ProgramSettings* settings);
+  void writeOffToFile(ProgramSettings* settings);
   BoundingVolume* createTopBound(double depth);   // +z
   BoundingVolume* createBotBound(double depth);   // -z
   BoundingVolume* createRightBound(double depth); // +x
