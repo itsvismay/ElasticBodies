@@ -1,16 +1,16 @@
 ///////////////////////////////////////////////////////
 // PARAMETERS
 thkInPlane = 2.0; //mm Thickness of the circular section before scaling
-widthInPlane = 40; //width of spring in mm
+widthInPlane = 30; //width of spring in mm
 thkOutOfPlane = 10; //mm
 
-$fn=40;
+$fn=100;
 diaExt = 30;
 scaleX1 = 2.0;
 scaleY1 = 1.0;
 scaleX2 = 1.85;
 scaleY2 = 1.0;
-overlap = 0.5;
+overlap = 1.0;
 
 diaInt = diaExt - 2*thkInPlane;
 
@@ -30,44 +30,50 @@ difference() {
 
 
 // 1.SECTION
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+union() {
+    translate([0.0, -3.5, 0.0]) cube([widthInPlane,4,thkOutOfPlane], center=false);
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
 
-// 2.SECTION
-translate([0,1*(diaExt-overlap),0]){
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
-}
+    // 2.SECTION
+    translate([0,1*(diaExt-overlap),0]){
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    }
 
-// 3.SECTION
-translate([0,2*(diaExt-overlap),0]){
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
-}
+    // 3.SECTION
+    translate([0,2*(diaExt-overlap),0]){
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([0.0, diaExt-1, 0.0]) cube([widthInPlane,4,thkOutOfPlane], center=false);
+    }
 
-// MIRROR
+    // MIRROR
 
-mirror([1,0,0]){
-// 1.SECTION
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    mirror([1,0,0]){
+    // 1.SECTION
+    translate([0.0, -3.5, 0.0]) cube([widthInPlane,4,thkOutOfPlane], center=false);
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
 
-// 2.SECTION
-translate([0,1*(diaExt-overlap),0]){
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
-}
+    // 2.SECTION
+    translate([0,1*(diaExt-overlap),0]){
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    }
 
-// 3.SECTION
-translate([0,2*(diaExt-overlap),0]){
-cube([lengthOfCube,2,thkOutOfPlane], center=false);
-translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
-translate([0,diaExt-2,0]) cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    // 3.SECTION
+    translate([0,2*(diaExt-overlap),0]){
+    cube([lengthOfCube,2,thkOutOfPlane], center=false);
+    translate([lengthOfCube,0,0]) scaled_half_circle(thkOutOfPlane, diaExt, diaInt, scaleX1, scaleY1, scaleX2, scaleY2);
+    translate([0,diaExt-2,0]) cube([lengthOfCube,2, thkOutOfPlane], center=false);
+    translate([0.0, diaExt-1, 0.0]) cube([widthInPlane,4,thkOutOfPlane], center=false);
+    }
 }
 
 }
