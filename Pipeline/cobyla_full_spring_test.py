@@ -28,31 +28,31 @@ results_write = open(resultsName, 'w')
 
 # min-bounds
 def g0(x):
-    if x[0] < -.04:
+    if x[0] < -.04: # x1
       return -1
-    if x[1] < -.04:
+    if x[1] < -.04: # x2
       return -1
-    if x[2] < -.04:
+    if x[2] < -.04: # y2
       return -1
-    if x[3] < -.04:
+    if x[3] < -.04: # x3
       return -1
-    if x[4] < -.04:
+    if x[4] < -.04: # y3
       return -1
-    if x[5] < -.04:
+    if x[5] < -.04: # x4
       return -1
-    if x[6] < -.04:
+    if x[6] < -.04: # y4
       return -1
-    if x[7] < -.04:
+    if x[7] < -.04: # x5
       return -1
-    if x[8] < 0.1:
+    if x[8] < 0.001: # w2
       return -1
-    if x[9] < 0.1:
+    if x[9] < 0.001: # w3
       return -1
-    if x[10] < 0.1:
+    if x[10] < 0.001: # w4
       return -1
-    if x[11] < 0.1:
+    if x[11] < 0.001: # thk
       return -1
-    if x[12] < 0.1:
+    if x[12] < 0.001: # hei
       return -1
     return 1
 
@@ -133,43 +133,43 @@ def objective(x):
 # max-bounds
 def g1(x):
     # height > 0.01 m (10 mm)
-    if x[0] > 0.04:
+    if x[0] > 0.04: # x1
       return -1
-    if x[1] > 0.04:
+    if x[1] > 0.04: # x2
       return -1
-    if x[2] > 0.04:
+    if x[2] > 0.04: # y2
       return -1
-    if x[3] > 0.04:
+    if x[3] > 0.04: # x3
       return -1
-    if x[4] > 0.04:
+    if x[4] > 0.04: # y3
       return -1
-    if x[5] > 0.04:
+    if x[5] > 0.04: # x4
       return -1
-    if x[6] > 0.04:
+    if x[6] > 0.04: # y4
       return -1
-    if x[7] > 0.04:
+    if x[7] > 0.04: # x5
       return -1
-    if x[8] > 10.0:
+    if x[8] > 0.01: # w2
       return -1
-    if x[9] > 10.0:
+    if x[9] > 0.01: # w3
       return -1
-    if x[10] > 10.0:
+    if x[10] > 0.01: # w4
       return -1
-    if x[11] > 10.0:
+    if x[11] > 0.01: # thk
       return -1
-    if x[12] > 100.0:
+    if x[12] > 0.1: # hei
       return -1
     return 1
 
 # overlap    
 def g2(x):
-    if x[2] <= 0.0:
+    if x[2] <= 0.0: # y2 <= 0
       return -1
-    if x[4] <= x[2]:
+    if x[4] <= x[2]: # y3 <= y2
       return -1
-    if x[6] <= x[4]:
+    if x[6] <= x[4]: # y4 <= y3
       return -1
-    if x[12] <= x[6]:
+    if x[12] <= x[6]: # hei <= y4
       return -1
     return 1
     
@@ -177,6 +177,5 @@ h0 = [0.0, 0.02, 0.01, -0.04, 0.02, 0.01, 0.03, 0.0, 0.0013, 0.0052, 0.0013, 0.0
 constraints = [g0, g1, g2]
 h_opt = fmin_cobyla(objective, h0, constraints, rhoend=1e-6, maxfun=100, catol=1e-6)
 results_write.write(str(h_opt))
-#results_write.write(objective(h_opt))
 results_write.close()
 print h_opt, objective(h_opt), g0(h_opt)
