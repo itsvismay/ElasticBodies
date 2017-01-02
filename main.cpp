@@ -138,11 +138,15 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	//igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
-        igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
+	cout << "PRE TET" << endl;
+	cout << objectName << endl;
+	igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+        cout << "Off Verts" << V.size() << endl;
+	//igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-
+	cout << "TV Verts" << TV.size() << endl;
+	cout << "POST TET" << endl;
 	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
@@ -166,11 +170,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	for(int i=0; i<Sim.external_force.rows()/3; i++){
 		if(abs(Sim.external_force(3*i)+ Sim.external_force(3*i+1)+ Sim.external_force(3*i+2))>0.001)
 		{	ForcesTV.row(i) = Sim.integrator->TV.row(i);
-			cout<<Sim.integrator->TV.row(i)<<endl;
+			//cout<<Sim.integrator->TV.row(i)<<endl;
 		}
 	}
-	cout<<"Forces"<<endl;
-	cout<<ForcesTV<<endl;
+	//cout<<"Forces"<<endl;
+	//cout<<ForcesTV<<endl;
 
 	// this for loop causes segfault
 	//for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
@@ -185,8 +189,11 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	}else{
 		cout << "RUNNING VIEW" << endl;
 		igl::viewer::Viewer viewer;
+		cout << "WHAT" << endl;
 		viewer.callback_pre_draw = &drawLoop;
+		cout << "PRE LAUNCH" << endl;
 		viewer.launch();
+		cout << "FINISHED LAUNCHING" << endl;
 	}
 
 }

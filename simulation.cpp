@@ -7,6 +7,7 @@ int staticSolveDirection = 0;
 
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
+	sB = B;
 	if (method =='e'){
 		integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;	
@@ -104,6 +105,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 
 
 	}else{
+		cout << "BAAAADDD" << endl;
 		igl::barycenter(TV, TT, B);
 		M.initializeMesh(TT, TV, youngs, poissons);
 		integrator->initializeIntegrator(deltaT, M, TV, TT);
@@ -135,8 +137,10 @@ void Simulation::headless(){
 			maxDisp = disp;
 		}
 		cout<<maxDisp<<"\n";
-		cout<<"Changte :: "<<maxDisp-oldDisp<<endl;
+		cout<<"Change :: "<<maxDisp-oldDisp<<endl;
 	}
+	cout << "FINISHED SIM" << endl;
+	printObj(OUTPUT_SAVED_PATH"final.txt", 1, integrator->TV, integrator->TT, sB);
 	optimizationFile<<maxDisp<<endl;
 
 	clock_t end = clock();
@@ -377,7 +381,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(abs(fx + fy + fz)>0){
 				temp.push_back(index - fixedIndex);
-				cout<<index<<endl;
+				//cout<<index<<endl;
 			}
 			force(3*index) = fx;
 			force(3*index+1) = fy;
@@ -391,7 +395,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 		this->putForceOnTheseVerts.resize(temp.size());
 		for(int i=0; i<temp.size(); i++){
 			this->putForceOnTheseVerts(i) = temp[i];
-			cout<<TV_k.row(temp[i])<<endl;
+			//cout<<TV_k.row(temp[i])<<endl;
 		}
 	}else{
 		cout<<"Check yo self: Force input error, file not found"<<endl;

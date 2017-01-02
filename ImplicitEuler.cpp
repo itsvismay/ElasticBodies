@@ -215,13 +215,25 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	x_k = x_old;
 	v_k = v_old;
 
+	cout << "Post Set Zero" << endl;
+
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
-	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
+	cout << "ONE" << endl;
+	cout << "TWO" << endl;
+	cout << "IPI :: " << ignorePastIndex << endl;
+	cout << "TV.rows :: " << TV.rows() << endl;
+	cout << "fixed.size :: " << fixedVerts.size() << endl;
+	cout << 3 * ignorePastIndex << endl;
+	SparseMatrix<double> forceGradientStaticBlock(3*ignorePastIndex, 3*ignorePastIndex);
+	//forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
 	
+	cout << "Post Resize" << endl;
+
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+
+	cout << "HERE THIS IS" << endl;
 
 	forceGradient.setZero();
 	bool Nan=false;
@@ -232,6 +244,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	// cout<<"v_k"<<endl;
 	// cout<<v_k<<endl<<endl;
 	// cout<<"--------------------"<<endl;
+	cout << "BEFORE NEw" << endl;
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
