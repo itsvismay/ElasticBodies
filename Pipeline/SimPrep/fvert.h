@@ -8,7 +8,7 @@ class FVert {
 public:
   dvec3 vert;
   int index;
-  float force;
+  double force;
   bool fixed;
 
   FVert();

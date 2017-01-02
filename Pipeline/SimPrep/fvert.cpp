@@ -3,14 +3,14 @@
 FVert::FVert() {
   vert = dvec3(0.0, 0.0, 0.0);
   index = -1;
-  force = 0.0f;
+  force = 0.0;
   fixed = false;
 }
 
 FVert::FVert(dvec3 v, int i) {
   vert = v;
   index = i;
-  force = 0.0f;
+  force = 0.0;
   fixed = false;
 }
 
