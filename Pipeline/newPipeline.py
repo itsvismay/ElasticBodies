@@ -49,9 +49,9 @@ for opt, arg in opts:
   if opt == "--name":
     name = arg
   if opt == "--gen":
-    generation = int(arg)
+    generation = int(float(arg))
   if opt == "--ind":
-    individual = int(arg)
+    individual = int(float(arg))
   if opt == "-c":
     cleanAll = True
   if opt == "sConfig":
