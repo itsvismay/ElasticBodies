@@ -111,10 +111,10 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
 	
-	int totalRows = Sim.integrator->TV.rows();
-	for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
-		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
-	}
+	// int totalRows = Sim.integrator->TV.rows();
+	// for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
+	// 	ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+	// }
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
@@ -125,8 +125,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
-    // igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
+	// igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+    igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// Tetrahedralize the interior
 	igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 

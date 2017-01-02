@@ -3,7 +3,7 @@
 
 Simulation::Simulation(void){}
 
-int staticSolveDirection = 2;
+int staticSolveDirection = 0;
 
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
@@ -22,12 +22,26 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
+	//*********BEAM******************
+	// move vertices
+	for(int i=0; i<TV.rows(); i++){
+	 	if(TV.row(i)[0]>=180){
+	 		moveVertices.push_back(i);
+	 	}
+	}
 
+	//fix vertices
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0]<=30){
+			fixVertices.push_back(i);
+		}
+	}
+	//***************************
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
 	TV_k = TV;
-	setInitPosition(force, fixVertices, moveVertices);
+	// setInitPosition(force, fixVertices, moveVertices);
 	cout<<"Fixed and moving"<<endl;
 	cout<<fixVertices.size()<<endl;
 	cout<<moveVertices.size()<<endl;
@@ -93,9 +107,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			// cout<<"Move vertices "<<moveVertices.size()<<endl;
 			// cout<<"fix verts "<<fixVertices.size()<<endl;
-			// binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			binarySearchYoungs(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 			// syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
-			staticSolveInitialPosition(newMoveIndices, newTV, newTT, fixVertices.size(), B);
+			// staticSolveInitialPosition(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 			exit(0);
 		
 		}
@@ -764,8 +778,8 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	vector<double> derivedYoungs;
 
 	//size of move
-	double move_amount = 2.1;
-	int number_of_moves = 500;
+	double move_amount = 3.1;
+	int number_of_moves = 62;
 	double dist_moved = 0;
 	double curr_youngs = 1;
 	double load_scalar = 0;
@@ -780,11 +794,11 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		M.setNewYoungsPoissons(1000000, 0.35);
 
 		//Newton Solve for positions
-		while(reals_index<realLoads.size() && (dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-5))){
+		while(reals_index<realLoads.size() && (dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-3))){
 			cout<<"	Move next step"<<endl;
 			dist_moved += move_amount/number_of_moves;//move step
 			cout<<"distance moved"<<dist_moved<<endl;
-			cout<<(dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-5) )<<endl;
+			cout<<(dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-3) )<<endl;
 			staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
 			// staticSolveStepLBFGS(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 			count++;
@@ -792,8 +806,8 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		printObj(saveTestToHere,  count, TV, TT, B);
 
 		//binary search for youngs
-		double min_youngs = 800000;
-		double max_youngs = 60000000;
+		double min_youngs = 8e7;
+		double max_youngs = 6e10;
 		load_scalar = 0;
 		Vector3d load(0,0,0);
 		while(fabs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
@@ -824,7 +838,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			}
 
 			//BELOW: dividing loads by 1000 because we measure forces in Newtons(real data), but calculate in mm based force
-			load_scalar = fabs(load(staticSolveDirection)/1000);
+			load_scalar = fabs(load(staticSolveDirection)/1e6);
 			
 			if((load_scalar - realLoads[reals_index].second)>0){
 				cout<<"too high"<<endl;
@@ -843,7 +857,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<"----------------"<<endl;
 		}
-		distvLoadFile<<dist_moved<<", "<<fabs(load(0)/1000)<<", "<<fabs(load(1)/1000)<<", "<<fabs(load(2)/1000)<<endl;
+		distvLoadFile<<dist_moved<<", "<<fabs(load(0)/1e6)<<", "<<fabs(load(1)/1e6)<<", "<<fabs(load(2)/1e6)<<endl;
 		youngsFile<<dist_moved<<", "<<curr_youngs<<", "<<min_youngs<<", "<<max_youngs <<endl;
 		reals_index+=1;
 	}

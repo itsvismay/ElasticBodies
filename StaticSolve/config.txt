@@ -7,10 +7,10 @@ i
 1
 6900000
 .35
--pR
+-pRa0.12
 svk
 newton
-tensile_beam/tensileTest
+tensile_beam/rawTensile
 
 #1 timestep
 #2 headless t/f
