@@ -113,9 +113,6 @@ void IntegratorAbstract::initVectors(){
 	v_old.setZero();
 	f.setZero();
 	massVector.setZero();
-
-	v_old(0) =10;
-	// v_old(3) =1;
 }
 
 void IntegratorAbstract::initMassMatrices(){
@@ -171,17 +168,17 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 	fixedVerts.insert(fixedVerts.end(), fixMe.begin(), fixMe.end());
 
 	for(int i=0; i<fixMe.size(); i++){
-		massVector(3*fixMe[i]) = 1000000000000;
-		massVector(3*fixMe[i]+1) = 1000000000000;
-		massVector(3*fixMe[i]+2) = 1000000000000;
+		massVector(3*fixMe[i]) = 1e20;
+		massVector(3*fixMe[i]+1) = 1e20;
+		massVector(3*fixMe[i]+2) = 1e20;
 
 		InvMass.coeffRef(3*fixMe[i], 3*fixMe[i]) = 0;
 		InvMass.coeffRef(3*fixMe[i]+1, 3*fixMe[i]+1) = 0;
 		InvMass.coeffRef(3*fixMe[i]+2, 3*fixMe[i]+2) = 0;
 
-		RegMass.coeffRef(3*fixMe[i], 3*fixMe[i]) = 1000000000000;
-		RegMass.coeffRef(3*fixMe[i]+1, 3*fixMe[i]+1) = 1000000000000;
-		RegMass.coeffRef(3*fixMe[i]+2, 3*fixMe[i]+2) = 1000000000000;
+		RegMass.coeffRef(3*fixMe[i], 3*fixMe[i]) = 1e20;
+		RegMass.coeffRef(3*fixMe[i]+1, 3*fixMe[i]+1) = 1e20;
+		RegMass.coeffRef(3*fixMe[i]+2, 3*fixMe[i]+2) = 1e20;
 
 		//set vels to 0
 		v_old.segment<3>(3*fixMe[i])*=0;
