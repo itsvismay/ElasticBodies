@@ -22,11 +22,11 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
-
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();
 	TV_k = TV;
+	cout<<TV.rows()<<endl;
 	setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
@@ -202,7 +202,7 @@ void Simulation::reIndexTVandTT(
 
 void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, int ignorePastIndex){
 	cout<<"------------I am here----------------"<<endl;
-	cout<<ignorePastIndex<<endl;
+	// cout<<ignorePastIndex<<endl;
 	//Newtons method static solve for minimum Strain E
 	SparseMatrix<double> forceGradient;
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
@@ -363,6 +363,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 	vector<int> temp;
 	//cout<<force.rows()<<endl;
 	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/"+objectName+".txt");
+	cout<<TUTORIAL_SHARED_PATH "shared/"+objectName+".txt"<<endl;
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
@@ -374,14 +375,14 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(fabs(fx + fy + fz)>0){
 				temp.push_back(index - fixedIndex);
-				cout<<index<<endl;
+				// cout<<index<<endl;
 			}
 			force(3*index) = fx;
 			force(3*index+1) = fy;
 			force(3*index+2) = fz;
 			if(fixedOrNot == 1){
 				fixVertices.push_back(index);
-				cout<<"fix "<<index<<endl;
+				// cout<<"fix "<<index<<endl;
 				fixedIndex++;
 			}
 			index+=1;
@@ -389,11 +390,16 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 		this->putForceOnTheseVerts.resize(temp.size());
 		for(int i=0; i<temp.size(); i++){
 			this->putForceOnTheseVerts(i) = temp[i];
-			cout<<TV_k.row(temp[i])<<endl;
+			// cout<<TV_k.row(temp[i])<<endl;
 		}
 	}else{
 		cout<<"Check yo self: Force input error, file not found"<<endl;
 	}
+	cout<<"Fixed Verts"<<endl;
+	cout<<fixVertices.size()<<endl;
+	cout<<"Moving Verts"<<endl;
+	cout<<putForceOnTheseVerts.size()<<endl;
+
 	// exit(0);
 }
 

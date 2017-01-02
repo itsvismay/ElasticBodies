@@ -1,16 +1,16 @@
-.001
-f
-n
+.00001
+t
+i
 1000
 0.00
--10
-0
+-000
+1
 6900000
 .35
 -pR
 neo
 newton
-test_obj/testObject
+beam/beam
 
 #1 timestep
 #2 headless t/f

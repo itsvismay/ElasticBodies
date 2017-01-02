@@ -253,12 +253,12 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		cout<<"newton f"<<endl;
-		cout<<f<<endl;
-		cout<<"newton g"<<endl;
-		cout<<g_block/convergence_scaling_paramter<<endl;
-		cout<<"newton x_k"<<endl;
-		cout<<x_k<<endl;
+		// cout<<"newton f"<<endl;
+		// cout<<f<<endl;
+		// cout<<"newton g"<<endl;
+		// cout<<g_block/convergence_scaling_paramter<<endl;
+		// cout<<"newton x_k"<<endl;
+		// cout<<x_k<<endl;
 	
 		//solve for delta x
 		// Conj Grad
@@ -291,9 +291,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			break;
 		}
 
+		cout<<"g norm"<<endl;
+		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 		if(g_block.squaredNorm()/convergence_scaling_paramter < 1e-11){
-			cout<<"g norm"<<endl;
-			cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 			break;
 		}
 		// exit(0);
@@ -404,12 +404,12 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);
