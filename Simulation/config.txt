@@ -1,16 +1,16 @@
 .0001
-f
+t
 i
-1000
+10
 0.00
--000000
+-100000
 1
 3000000000
 .35
--pRa10
+pR
 neo
-newton
-beam/beam
+lbfgsvismay
+tensile_beam/tensileTest
 
 #1 timestep
 #2 headless t/f

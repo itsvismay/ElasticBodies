@@ -106,16 +106,12 @@ void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double
 
 	//elastic
 	for(unsigned int i=0; i<M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		MatrixXd F_tet = M.tets[i].computeElasticForces(TVk, simTime%2);
-		f.segment<3>(3*indices(0)) += F_tet.col(0);
-		f.segment<3>(3*indices(1)) += F_tet.col(1);
-		f.segment<3>(3*indices(2)) += F_tet.col(2);
-		f.segment<3>(3*indices(3)) += F_tet.col(3);
+		M.tets[i].computeElasticForces(TVk, f);
+
 	}
 	// cout<<f<<endl<<endl;
 	//damping
-	f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
+	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	// cout<<f<<endl<<endl;
 	return;
 }

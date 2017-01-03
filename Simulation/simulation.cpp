@@ -27,7 +27,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.setZero();
 	TV_k = TV;
 	cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices);
+	// setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -267,7 +267,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	}
 	double strainE = 0;
 	for(int i=0; i< M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		strainE += M.tets[i].energy;
 	}
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;
@@ -308,11 +308,11 @@ void Simulation::calculateElasticForces(VectorXd &f, MatrixXd& TV){
 	//elastic
 	for(unsigned int i=0; i< M.tets.size(); i++){
 		Vector4i indices = M.tets[i].verticesIndex;
-		MatrixXd F_tet = M.tets[i].computeElasticForces(TV, 1);
-		f.segment<3>(3*indices(0)) += F_tet.col(0);
-		f.segment<3>(3*indices(1)) += F_tet.col(1);
-		f.segment<3>(3*indices(2)) += F_tet.col(2);
-		f.segment<3>(3*indices(3)) += F_tet.col(3);
+		// MatrixXd F_tet = M.tets[i].computeElasticForces(TV, 1);
+		// f.segment<3>(3*indices(0)) += F_tet.col(0);
+		// f.segment<3>(3*indices(1)) += F_tet.col(1);
+		// f.segment<3>(3*indices(2)) += F_tet.col(2);
+		// f.segment<3>(3*indices(3)) += F_tet.col(3);
 	}
 	return;
 }
@@ -426,7 +426,7 @@ static lbfgsfloatval_t evaluateStaticSolveLBFGS(void *s, const lbfgsfloatval_t *
 
 	double strainE = 0;
 	for(i=0; i< sim->M.tets.size(); i++){
-		strainE += sim->M.tets[i].undeformedVol*sim->M.tets[i].energyDensity;
+		strainE += sim->M.tets[i].energy;
 	}
 
 	double fdstrainE = 0;
@@ -436,7 +436,7 @@ static lbfgsfloatval_t evaluateStaticSolveLBFGS(void *s, const lbfgsfloatval_t *
 	sim->calculateElasticForces(sim->f_k, sim->TV_k);
 
 	for(i=0; i< sim->M.tets.size(); i++){
-		fdstrainE += sim->M.tets[i].undeformedVol*sim->M.tets[i].energyDensity;
+		fdstrainE += sim->M.tets[i].energy;
 	}
 	cout<<"finite diff E "<<(fdstrainE-strainE)/diffVal<<endl;
 	cout<<"real g"<<g[4]<<endl;
@@ -609,7 +609,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	}
 	double strainE = 0;
 	for(int i=0; i< M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		strainE += M.tets[i].energy;
 	}
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;

@@ -8,10 +8,10 @@ class Tetrahedron
 public:
     Matrix3d DeformedShapeMatrix, ReferenceShapeMatrix, InvRefShapeMatrix;
     VectorXi verticesIndex;
-    double undeformedVol, energyDensity, currentVol;
+    double undeformedVol, energy, currentVol;
     double mu, lambda;
     Tetrahedron(VectorXi k, double mu, double lambda);
-    MatrixXd computeElasticForces(MatrixXd& TV, int e);
+    void computeElasticForces(MatrixXd& TV, VectorXd& f);
     void precomputeForces(MatrixXd& TV);
     MatrixXd computeForceDifferentials(MatrixXd& TV, Vector12d& dx);
     Matrix3d computeDeltaDs(const Vector12d& dx);

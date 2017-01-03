@@ -38,7 +38,6 @@ void Tetrahedron::precomputeForces(MatrixXd& TV){
     this->ReferenceShapeMatrix = Dm;
     this->InvRefShapeMatrix = Dm.inverse();
     this->undeformedVol = (1.0/6)*fabs(Dm.determinant());
-    // cout<<this->undeformedVol<<endl;
 }
 
 Matrix3d Tetrahedron::computeDeltaDs(const Vector12d& dx){
@@ -148,14 +147,17 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
     return dForces;
 }
 
-MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
-    Vector12d x;
-    x.segment<3>(0) = TV.row(this->verticesIndex(0));
-    x.segment<3>(3) = TV.row(this->verticesIndex(1));
-    x.segment<3>(6) = TV.row(this->verticesIndex(2));
-    x.segment<3>(9) = TV.row(this->verticesIndex(3));
+void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
+    // Vector12d x;
+    // x.segment<3>(0) = TV.row(this->verticesIndex(0));
+    // x.segment<3>(3) = TV.row(this->verticesIndex(1));
+    // x.segment<3>(6) = TV.row(this->verticesIndex(2));
+    // x.segment<3>(9) = TV.row(this->verticesIndex(3));
 
-    Matrix3d Ds = computeDs(x);
+    Matrix3d Ds; 
+    for(int i=0; i<3; i++){
+        Ds.col(i) = TV.row(verticesIndex(i)) - TV.row(verticesIndex(3));
+    }
 
     Matrix3d F = Ds*this->InvRefShapeMatrix;
 
@@ -164,36 +166,44 @@ MatrixXd Tetrahedron::computeElasticForces(MatrixXd &TV, int e){
     this->currentVol = (1.0/6)*fabs(Ds.determinant());
     if(material_model.compare("neo") == 0){
         //Neo
-        P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
-        double firstTerm = ((mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()));
-        if(firstTerm<0 ){
-            firstTerm = 0;
-        }
-        this->energyDensity = firstTerm + (lambda/2)*log(F.determinant())*log(F.determinant());
-        //double alternateEd = (mu/2.0)*((F.transpose()*F).trace() - log(F.determinant()*F.determinant()) -3) +(lambda/8)*log(F.determinant()*F.determinant())*log(F.determinant()*F.determinant());
+        
+        double J = F.determinant();     
+        double I1 = (F.transpose()*F).trace();
+        double powj = pow(J, -2.0/3.0);
+        double I1bar = powj*I1;
+
+        P = mu*(powj * F) +
+        (- mu/3.0 * I1 * powj + lambda*(J-1.0)*J)*F.inverse().transpose();
+ 
+        this->energy = this->undeformedVol*(mu/2.0 * (I1bar - 3) + lambda/2.0 * (J-1.0) * (J-1.0));
+
 
     }else if(material_model.compare("svk") == 0){
         //SVK
         //TODO: Spring Constant value
         Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
         P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff   
-        this->energyDensity = mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace();
+        this->energy = (mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace())*this->undeformedVol;
 
     }else{
         cout<<"Material model not specified properly"<<endl;
         exit(0);
     }
     if(F.determinant()<0){
-        this->energyDensity = 1e40;
+        this->energy = 1e40;
+        cout<<"ERROR: F determinant is 0"<<endl;
+    }
+    if(this->energy != this->energy){
+        //NANS
+        cout<<"ENERGY nans"<<endl;
+        exit(0);
     }
 
     Matrix3d H = -1*this->undeformedVol*P*((this->InvRefShapeMatrix).transpose());
 
-    Matrix<double, 3, 4> Forces;
-    Forces.col(0) = H.col(0);
-    Forces.col(1) = H.col(1);
-    Forces.col(2) = H.col(2);
-    Forces.col(3) = -1*H.col(0) - H.col(1) - H.col(2);
+    f.segment<3>(verticesIndex(0)) += H.col(0);
+    f.segment<3>(verticesIndex(1)) += H.col(1);
+    f.segment<3>(verticesIndex(2)) += H.col(2);
+    f.segment<3>(verticesIndex(3)) += -1*H.col(0) - H.col(1) - H.col(2);
 
-    return Forces;
 }
