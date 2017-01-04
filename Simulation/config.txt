@@ -1,16 +1,16 @@
-.001
+.000001
 f
 i
 1
 0.00
 -10000
-0
+1
 4000000000
 .35
 pR
 neo
 lbfgsvismay
-test_obj/testObject
+tensile_beam/rawTensile
 
 
 #1 timestep

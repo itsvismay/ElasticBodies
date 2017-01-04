@@ -140,16 +140,12 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	} else if (objFile.good()) {
 		igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
+		// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
 	} else {
 		cout << "ERROR :: MESH FILE WAS NOT FOUND" << endl;
 		exit(0);
 	}
     
-        //igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
-	// Tetrahedralize the interior
-	//igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-	// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName, TV, TT, TF);
 	// exit(0);	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;

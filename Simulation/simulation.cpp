@@ -26,6 +26,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.resize(3*TV.rows());
 	force.setZero();
 	TV_k = TV;
+	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
 	setInitPosition(force, fixVertices);
 
@@ -120,7 +121,7 @@ void Simulation::applyExternalForces(){
 
 void Simulation::headless(){
 	clock_t begin = clock();
-
+	integrator->external_f = this->external_force;
 	while(integrator->simTime<iters){
 		integrator->render(this->external_force);
 		cout<<"Min Displacement (called maxDisp in code)"<<endl;
@@ -375,6 +376,7 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices){
 			if(!(iss >> fx >> fy >> fz >> fixedOrNot)){break;}
 			if(fabs(fx + fy + fz)>0){
 				temp.push_back(index - fixedIndex);
+				// cout<<"move"<<endl;
 				// cout<<index<<endl;
 			}
 			force(3*index) = fx;

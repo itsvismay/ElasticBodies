@@ -20,11 +20,11 @@ struct VougaGeometryInfo
 };
 
 void rep_grad(const real_1d_array &x, double func, void *impe){
-	cout<<"*********FUNC***********"<<endl;
-	cout<<func<<endl;
-	for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
-		cout << x[i] << " ";
-	cout << endl;
+	// cout<<"*********FUNC***********"<<endl;
+	// cout<<func<<endl;
+	// for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
+	// 	cout << x[i] << " ";
+	// cout << endl;
 }
 
 void rep_grad_vouga(const real_1d_array &x, double func, void *impe){
@@ -123,7 +123,6 @@ void function_grad_vouga(const real_1d_array &y, double &func, real_1d_array &gr
 }
 
 int ImplicitEuler::alglibLBFGSVouga(VectorXd& ext_force){
-	external_f = ext_force;
     int N = 3*(vertsNum);
     // This example demonstrates minimization of f(x,y) = 100*(x+3)^4+(y-3)^4
     // using LBFGS method.
@@ -211,8 +210,7 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 	ImplicitEuler* in = (ImplicitEuler*) impe;
 
     int n = 3*(in->vertsNum - in->fixedVerts.size());
-    cout<<"value of n"<<endl;
-    cout<<n<<endl;
+
     VectorXd y_vec; y_vec.resize(in->vertsNum*3); y_vec.setZero();
     for(int i=0; i<n; i++){
     	in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
@@ -255,26 +253,26 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 	// cout<<func<<endl;
 	// cout<<"GRAD"<<endl;
 	// cout<<g<<endl;
-	cout<<"-----End of run---------------------"<<endl;
-	cout<<"-----"<<"Positions"<<endl;
-	cout<<y_vec<<endl;
-	cout<<"kinetic term"<<endl;
-	cout<<kineticE/in->convergence_scaling_paramter<<endl;
-	cout<<"potential term"<<endl;
-	cout<<strainE/in->convergence_scaling_paramter<<endl;
-	cout<<"gravity term"<<endl;
-	cout<<gravE/in->convergence_scaling_paramter<<endl;
-	// cout<<"Masses"<<endl;
-	// cout<<in->RegMass<<endl;
-	cout<<"--**---"<<func<<endl;
-	cout<<"--**---"<<g<<endl;
+	// cout<<"-----End of run---------------------"<<endl;
+	// cout<<"-----"<<"Positions"<<endl;
+	// cout<<y_vec<<endl;
+	// cout<<"kinetic term"<<endl;
+	// cout<<kineticE/in->convergence_scaling_paramter<<endl;
+	// cout<<"potential term"<<endl;
+	// cout<<strainE/in->convergence_scaling_paramter<<endl;
+	// cout<<"gravity term"<<endl;
+	// cout<<gravE/in->convergence_scaling_paramter<<endl;
+	// // cout<<"Masses"<<endl;
+	// // cout<<in->RegMass<<endl;
+	// cout<<"--**---"<<func<<endl;
+	// cout<<"--**---"<<g<<endl;
 }
 
 int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
   	external_f = ext_force;
     int N = 3*(vertsNum - fixedVerts.size());
-    cout<<"N value"<<endl;
-    cout<<N<<endl;
+    // cout<<"N value"<<endl;
+    // cout<<N<<endl;
     real_1d_array x;
     double *positions= new double[N];
    	for(int i=0; i<N; i++){
@@ -304,7 +302,6 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     minlbfgsresults(state, x, rep);
 
     // printf("TERMINATION TYPE: %d\n", int(rep.terminationtype)); // EXPECTED: 4
-    cout<<epsg<<endl;
     // cout << "final x ";
     for(int i=0; i<N; i++){
     	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
@@ -357,11 +354,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		// ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-		for(int k=0; k<f.rows(); k++){
-			if(fabs(ext_force(k))>0.0001){
-				f(k) += ext_force(k);
-			}
-		}
+		
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
@@ -435,11 +428,11 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 		// f.segment<3>(3*indices(3)) += F_tet.col(3);
 		M.tets[i].computeElasticForces(TVk, f);
 	}
-	cout<<"TVk"<<endl;
-	cout<<TVk<<endl;
-
-	cout<<"f"<<endl;
-	cout<<f<<endl;
+	for(int k=0; k<f.rows(); k++){
+		if(fabs(external_f(k))>0.0001){
+			f(k) += external_f(k);
+		}
+	}
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }

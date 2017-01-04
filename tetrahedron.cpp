@@ -165,6 +165,8 @@ void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
     if(F.determinant()<0){
         this->energy = 1e40;
         cout<<"ERROR: F determinant is 0"<<endl;
+        cout<<"Decrease timestep maybe - instantaneous force is too much with this timestep"<<endl;
+        exit(0);
     }
     if(this->energy != this->energy){
         //NANS
