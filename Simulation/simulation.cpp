@@ -133,7 +133,7 @@ void Simulation::headless(){
 			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
 				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
 		}
-		int printThisManyPerSec =1/integrator->h/1000;
+		int printThisManyPerSec = 100;
 		if(integrator->simTime%(printThisManyPerSec) == 0){
 			printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 			cout<<integrator->simTime<<endl;

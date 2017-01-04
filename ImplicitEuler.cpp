@@ -318,9 +318,6 @@ void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, 
 	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
 	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
 	g_block = g.head(ignorePast*3);
-	cout<<"g"<<endl;
-	cout<<g<<endl;
-	exit(0);
 
 }
 

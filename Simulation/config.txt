@@ -1,17 +1,16 @@
-.000001
-f
+.00001
+t
 i
-100000
+1000
 0.00
 -100000000
 1
 3000000000
 .35
-pRa10
+pR
 neo
-lbfgsvismay
+newton
 tensile_beam/rawTensile
-
 
 #1 timestep
 #2 headless t/f
@@ -23,8 +22,10 @@ tensile_beam/rawTensile
 #8 youngs UNIT: g/mm*s^2
 #9 poissons
 #10 tetgen code -pRq7
-#11 solver netwon or lbfgs
-#12 object name (in shared file)
+#11 material model
+#12 solver netwon or lbfgs
+#13 object name (in shared file)
+#14 print every x seconds
 -pqa15000
 -pRq1.18
 low_detail_beam/lowDetailBeam
