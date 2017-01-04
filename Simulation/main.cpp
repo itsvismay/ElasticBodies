@@ -146,12 +146,12 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		exit(0);
 	}
     
-	// exit(0);	
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
+	exit(0);	
 	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
 	cout<<Sim.putForceOnTheseVerts.rows()<<endl;
 	
