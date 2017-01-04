@@ -1,16 +1,17 @@
-.0001
-t
+.001
+f
 i
-10
+100
 0.00
--100000
-1
-3000000000
+-00000
+0
+4000000000
 .35
 pR
 neo
 lbfgsvismay
-tensile_beam/tensileTest
+test_obj/testObject
+
 
 #1 timestep
 #2 headless t/f
@@ -30,3 +31,4 @@ low_detail_beam/lowDetailBeam
 test_obj/testObject
 beam/beam
 bezier_spring/spring
+tensile_beam/tensileTest

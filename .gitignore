@@ -31,6 +31,8 @@
 *.swo
 *.swp
 
+*.mesh
+
 build/*
 Simulation/build/*
 StaticSolve/build/*

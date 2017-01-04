@@ -19,19 +19,12 @@ struct VougaGeometryInfo
 	double s;
 };
 
-void rep_grad(const real_1d_array &y, double func, void *impe){
+void rep_grad(const real_1d_array &x, double func, void *impe){
 	cout<<"*********FUNC***********"<<endl;
-	ImplicitEuler* in  = (ImplicitEuler*) impe;
-	cout<<"energy"<<endl;
 	cout<<func<<endl;
-	 VectorXd y_vec; y_vec.resize(in->x_k.rows());
-    for(int i=0; i<in->x_k.rows(); i++){
-    	y_vec(i) = y[i];
-    }
-	//GRADIENT VECTcout<<"potential term"<<endl;OR
-    VectorXd g = (in->RegMass*y_vec - in->h*in->f)/in->convergence_scaling_paramter;
-    cout<<"gnorm"<<endl;
-    cout<<g.norm()/in->convergence_scaling_paramter<<endl;
+	for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
+		cout << x[i] << " ";
+	cout << endl;
 }
 
 void rep_grad_vouga(const real_1d_array &x, double func, void *impe){
@@ -102,6 +95,7 @@ void function_grad_vouga(const real_1d_array &y, double &func, real_1d_array &gr
 			func += 0.5*geom->masses[i]*y[3*i+j]*y[3*i+j]/geom->s;
 		}
 	kineticE += func;
+	// func = 0.0;
 	func += energy/geom->s;
 	for(int i=0; i<nverts; i++)
 		for(int j=0; j<3; j++)
@@ -167,7 +161,7 @@ int ImplicitEuler::alglibLBFGSVouga(VectorXd& ext_force){
     // x[9]+= h*1;
     // x[12]+= h*1;
     // first run
-    minlbfgscreate(6, x, state);
+    minlbfgscreate(12, x, state);
     minlbfgssetcond(state, epsg, epsf, epsx, maxits);
     //minlbfgssetgradientcheck(state, 1e-8);
     // minlbfgssetstpmax(state, stpmax);
@@ -202,7 +196,7 @@ int ImplicitEuler::alglibLBFGSVouga(VectorXd& ext_force){
     cout << "final x ";
     for(int i=0; i<N; i++){
     	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
-	cout << x_k(i) << " ";
+	cout << x_k(i) <<endl;
     }
     cout << endl;
     v_old = (x_k - x_old)/h;
@@ -213,7 +207,6 @@ int ImplicitEuler::alglibLBFGSVouga(VectorXd& ext_force){
 
 void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, void *impe) 
 {	
-	clock_t time0 = clock();
 	ImplicitEuler* in = (ImplicitEuler*) impe;
 
     int n = 3*(in->vertsNum - in->fixedVerts.size());
@@ -223,79 +216,51 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
     	in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
     	y_vec(i) = y[i];
     }
-    clock_t time1 = clock();
-    cout<<"		time1 - time0"<<endl;
-    cout<<"		"<<double(time1 - time0)/CLOCKS_PER_SEC<<endl;
 
     in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
 	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
-	clock_t time2 = clock();
-    cout<<"		time2 - time1"<<endl;
-    cout<<"		"<<double(time2 - time1)/CLOCKS_PER_SEC<<endl;
 
 	//ENERGY SCALAR
 	double kineticE =0.0;
 	func = 0.0;
 	func = (0.5*y_vec.transpose()*in->RegMass*y_vec);
 	kineticE += func;
-	clock_t time3 = clock();
-    cout<<"		time3 - time2"<<endl;
-    cout<<"		"<<double(time3 - time2)/CLOCKS_PER_SEC<<endl;
+	// func =0.0;
 	double strainE=0;
 	for(unsigned int i=0; i<in->M.tets.size(); i++){
 		strainE += in->M.tets[i].energy;		
 	}
+
     func += strainE;
-    clock_t time4 = clock();
-    cout<<"		time4 - time3"<<endl;
-    cout<<"		"<<double(time4 - time3)/CLOCKS_PER_SEC<<endl;
-	double grav =0;
-	for(unsigned int i=0; i<in->x_k.size()/3; i++){
-		 grav += in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
-	}
-	func -= grav;
     func = func/in->convergence_scaling_paramter;
-    
-    clock_t time5 = clock();
-    cout<<"		time5 - time4"<<endl;
-    cout<<"		"<<double(time5 - time4)/CLOCKS_PER_SEC<<endl;
    
     //GRADIENT VECTcout<<"potential term"<<endl;OR
     VectorXd g = (in->RegMass*y_vec - in->h*in->f)/in->convergence_scaling_paramter;
 	for(int i=0; i<n; i++){
 		grad[i] = g(i);
 	}
-	clock_t time6 = clock();
-    cout<<"		time6 - time5"<<endl;
-    cout<<"		"<<double(time6 - time5)/CLOCKS_PER_SEC<<endl;
 
 	// cout<<"Func"<<endl;
 	// cout<<func<<endl;
 	// cout<<"GRAD"<<endl;
 	// cout<<g<<endl;
-	// cout<<"-----End of run---------------------"<<endl;
-	// cout<<"-----"<<"Positions"<<endl;
-	// cout<<y_vec<<endl;
-	cout<<"----kinetic term"<<endl;
-	cout<<"----"<<kineticE/in->convergence_scaling_paramter<<endl;
-	cout<<"----potential term"<<endl;
-	cout<<"----"<<strainE/in->convergence_scaling_paramter<<endl;
-	cout<<"----gravity term"<<endl;
-	cout<<"----"<<grav/in->convergence_scaling_paramter<<endl;
-	// cout<<"--**---"<<func<<endl;
-	// cout<<"--**---"<<g<<endl;
+	cout<<"-----End of run---------------------"<<endl;
+	cout<<"-----"<<"Positions"<<endl;
+	cout<<y_vec<<endl;
+	cout<<"kinetic term"<<endl;
+	cout<<kineticE<<endl;
+	cout<<"potential term"<<endl;
+	cout<<strainE/in->convergence_scaling_paramter<<endl;
+	// cout<<"Masses"<<endl;
+	// cout<<in->RegMass<<endl;
+	cout<<"--**---"<<func<<endl;
+	cout<<"--**---"<<g<<endl;
 }
 
 int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
   	external_f = ext_force;
     int N = 3*(vertsNum);
-    // This example demonstrates minimization of f(x,y) = 100*(x+3)^4+(y-3)^4
-    // using LBFGS method.
-    //
-    // Several advanced techniques are demonstrated:
-    // * upper limit on step size
-    // * restart from new point
-    //
+
     real_1d_array x;
     double *positions= new double[N];
    	for(int i=0; i<N; i++){
@@ -323,13 +288,13 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     minlbfgsresults(state, x, rep);
 
     printf("TERMINATION TYPE: %d\n", int(rep.terminationtype)); // EXPECTED: 4
-	  //   cout<<epsg<<endl;
-	  //   cout << "final x ";
-	  //   for(int i=0; i<N; i++){
-	  //   	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
-			// cout << x_k(i) << " ";
-	  //   }
-	  //   cout << endl;
+    cout<<epsg<<endl;
+    cout << "final x ";
+    for(int i=0; i<N; i++){
+    	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
+		cout << x_k(i) <<endl;
+    }
+    cout << endl;
     v_old = (x_k - x_old)/h;
     x_old = x_k;
     ImplicitXtoTV(x_old, TV);
@@ -340,17 +305,7 @@ void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, 
 	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
 	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
 	g_block = g.head(ignorePast*3);
-	// cout<<"		First Term"<<endl;
-	// cout<<	RegMass*x<<endl;
-	// cout<<"--"<<endl;
-	// cout<<x <<endl;
-	// cout<<RegMass<<endl;
-	// cout<<"		Second Term"<<endl;
-	// cout<<	RegMass*x_old<<endl;
-	// cout<<"		Third Term"<<endl;
-	// cout<<	h*RegMass*v_old<<endl;
-	// cout<<"		Fourth Term"<<endl;
-	// cout<<	h*h*f<<endl;
+
 }
 
 void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
@@ -401,19 +356,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		// cout<<"newton f"<<endl;
-		// cout<<f<<endl;
-		// cout<<"newton g"<<endl;
-		// cout<<g_block/convergence_scaling_paramter<<endl;
-		// cout<<"newton x_k"<<endl;
-		// cout<<x_k<<endl;
-	
-		//solve for delta x
-		// Conj Grad
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// VectorXd deltaX = -1*cg.solve(g);
-
 		// Sparse Cholesky LL^T
 		SimplicialLLT<SparseMatrix<double>> llt;
 		llt.compute(grad_g);
@@ -430,10 +372,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd deltaX = -1*sqr.solve(g_block);
 		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 
-		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g_block);
-
 		if(x_k != x_k){
 			Nan = true;
 			break;
@@ -443,12 +381,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
 			break;
-		}
-		// exit(0);
-
-
-
-		
+		}	
 
 	}
 	if(Nan){
@@ -476,8 +409,13 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 
 	//elastic
 	for(unsigned int i=0; i<M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+		// MatrixXd F_tet = M.tets[i].oldComputeElasticForces(TVk, simTime%2);
+		// f.segment<3>(3*indices(0)) += F_tet.col(0);
+		// f.segment<3>(3*indices(1)) += F_tet.col(1);
+		// f.segment<3>(3*indices(2)) += F_tet.col(2);
+		// f.segment<3>(3*indices(3)) += F_tet.col(3);
 		M.tets[i].computeElasticForces(TVk, f);
-
 	}
 
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;

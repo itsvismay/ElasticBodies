@@ -129,7 +129,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
     
     // igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
-	igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName, TV, TT, TF);
+	igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	// Tetrahedralize the interior
 	// igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 	// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName, TV, TT, TF);

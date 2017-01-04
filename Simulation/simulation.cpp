@@ -27,7 +27,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.setZero();
 	TV_k = TV;
 	cout<<TV.rows()<<endl;
-	// setInitPosition(force, fixVertices);
+	setInitPosition(force, fixVertices);
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
