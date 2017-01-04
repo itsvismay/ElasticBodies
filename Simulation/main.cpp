@@ -5,6 +5,7 @@
 #include <igl/barycenter.h>
 #include <igl/slice.h>
 #include <igl/readMESH.h>
+#include <igl/writeMESH.h>
 
 ofstream momentumFile;
 ofstream energyFile;
@@ -126,12 +127,28 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	// igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+	ifstream offFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".off");
+	ifstream objFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj");
+	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
+
+	if (meshFile.good()) {
+		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+	} else if (offFile.good()) {
+		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
+		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
+	} else if (objFile.good()) {
+		igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
+		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
+		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
+	} else {
+		cout << "ERROR :: MESH FILE WAS NOT FOUND LOADED" << endl;
+		exit(0);
+	}
     
-    // igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
-	igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+        //igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 	// Tetrahedralize the interior
-	// igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
+	//igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 	// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName, TV, TT, TF);
 	// exit(0);	
 	vector<int> moveVertices;
@@ -147,7 +164,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
 		FixedTV.row(i) = Sim.integrator->TV.row(Sim.integrator->fixedVerts[i]);
 	}
-	// cout<<"Fixed"<<endl;
+	//cout<<"Fixed"<<endl;
 	// cout<<FixedTV<<endl;
 	if(headless){
 		Sim.headless();
