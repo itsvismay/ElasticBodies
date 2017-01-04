@@ -142,7 +142,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
 	} else {
-		cout << "ERROR :: MESH FILE WAS NOT FOUND LOADED" << endl;
+		cout << "ERROR :: MESH FILE WAS NOT FOUND" << endl;
 		exit(0);
 	}
     
