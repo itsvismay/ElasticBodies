@@ -22,6 +22,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		cout<<"Method not supported yet"<<endl;
 		exit(0);
 	}
+	cout<<tetgen_code<<endl;
 	VectorXd force;
 	force.resize(3*TV.rows());
 	force.setZero();

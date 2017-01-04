@@ -435,11 +435,11 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	}
 
 
-	for(int k=0; k<f.rows(); k++){
-		if(fabs(external_f(k))>0.0001){
-			f(k) += external_f(k);
-		}
-	}
+	// for(int k=0; k<f.rows(); k++){
+	// 	if(fabs(external_f(k))>0.0001){
+	// 		f(k) += external_f(k);
+	// 	}
+	// }
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }
