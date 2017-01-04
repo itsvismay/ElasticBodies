@@ -10,7 +10,7 @@ i
 pR
 neo
 newton
-tensile_beam/rawTensile
+tensile_beam/tensileTest
 
 #1 timestep
 #2 headless t/f
