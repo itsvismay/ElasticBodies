@@ -1,5 +1,5 @@
 .000001
-f
+t
 i
 100000
 0.00
@@ -7,7 +7,7 @@ i
 1
 4000000000
 .35
-pR10
+pRa10
 neo
 lbfgsvismay
 tensile_beam/rawTensile
