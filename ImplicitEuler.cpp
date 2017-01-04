@@ -109,7 +109,7 @@ void function_grad_vouga(const real_1d_array &y, double &func, real_1d_array &gr
 		cout<<y[i]<<endl;
 	}
 	cout<<"kinetic term for func"<<endl;
-	cout<<kineticE<<endl;
+	cout<<kineticE/geom->s<<endl;
 	cout<<"potential term"<<endl;
 	cout<<energy/geom->s<<endl;
 	// cout<<"kinetic term for g"<<endl;
@@ -226,12 +226,18 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 	func = (0.5*y_vec.transpose()*in->RegMass*y_vec);
 	kineticE += func;
 	// func =0.0;
-	double strainE=0;
+	double strainE=0.0;
 	for(unsigned int i=0; i<in->M.tets.size(); i++){
 		strainE += in->M.tets[i].energy;		
 	}
 
     func += strainE;
+
+    double gravE =0.0;
+    for(unsigned int i=0; i<in->x_k.size()/3; i++){
+    	gravE += in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
+    }
+    func -=gravE;
     func = func/in->convergence_scaling_paramter;
    
     //GRADIENT VECTcout<<"potential term"<<endl;OR
@@ -248,9 +254,11 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 	cout<<"-----"<<"Positions"<<endl;
 	cout<<y_vec<<endl;
 	cout<<"kinetic term"<<endl;
-	cout<<kineticE<<endl;
+	cout<<kineticE/in->convergence_scaling_paramter<<endl;
 	cout<<"potential term"<<endl;
 	cout<<strainE/in->convergence_scaling_paramter<<endl;
+	cout<<"gravity term"<<endl;
+	cout<<gravE/in->convergence_scaling_paramter<<endl;
 	// cout<<"Masses"<<endl;
 	// cout<<in->RegMass<<endl;
 	cout<<"--**---"<<func<<endl;
@@ -403,8 +411,7 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	f.setZero();
 
 	for(unsigned int i=0; i<f.size()/3; i++){
-		double vertex_mass = massVector(3*i+1);
-		f(3*i+1) += vertex_mass*gravity;
+		f(3*i+1) += massVector(3*i+1)*gravity;
 	}
 
 	//elastic
