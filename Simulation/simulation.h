@@ -17,7 +17,8 @@ public:
 	IntegratorAbstract* integrator;
 	vector<int> mapV2TV;
 	int iters;
-	MatrixXd sB, TV_k;
+	MatrixXd TV_k;
+	MatrixXd* sB;
 	VectorXd x_k, f_k, external_force;
 	int ignorePastIndex;
 	VectorXi putForceOnTheseVerts;

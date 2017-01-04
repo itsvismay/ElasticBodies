@@ -111,7 +111,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->fixVertices(fixVertices);
 	}
 
-	
+	sB = &B;
 	return 1;
 }
 
@@ -120,15 +120,23 @@ void Simulation::applyExternalForces(){
 }
 
 void Simulation::headless(){
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
+	int printcount =0;
 	clock_t begin = clock();
 	integrator->external_f = this->external_force;
-	while(integrator->simTime<iters){
+	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		cout<<"Min Displacement (called maxDisp in code)"<<endl;
 		double disp =0;
 		for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
 			if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
 				disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+		}
+		int printThisManyPerSec =1/integrator->h/1000;
+		if(integrator->simTime%(printThisManyPerSec) == 0){
+			printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
+			cout<<integrator->simTime<<endl;
+			printcount+=1;
 		}
 		if(disp < maxDisp){
 			maxDisp = disp;
@@ -1174,6 +1182,7 @@ void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, 
 	}
 
 	system(("mkdir -p " +printToHere).c_str());
+	cout<<printToHere<<numberOfPrints<< endl;
 	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
 	
 	return;

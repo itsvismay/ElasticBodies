@@ -92,8 +92,6 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
         double logdetF = log(detF);
         Matrix3d FInvTransp = (F.inverse()).transpose();
         dP = mu*dF + (mu - lambda*logdetF)*(FInvTransp)*dF.transpose()*(FInvTransp) + lambda*(F.inverse()*dF).trace()*(FInvTransp);
-        cout<<"FIX THE HESSIAN"<<endl;
-        exit(0);
     }
     else if(material_model.compare("svk") == 0){
         //SVK
@@ -166,7 +164,7 @@ void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
         this->energy = 1e40;
         cout<<"ERROR: F determinant is 0"<<endl;
         cout<<"Decrease timestep maybe - instantaneous force is too much with this timestep"<<endl;
-        // exit(0);
+        exit(0);
     }
     if(this->energy != this->energy){
         //NANS
@@ -198,16 +196,15 @@ MatrixXd Tetrahedron::oldComputeElasticForces(MatrixXd &TV, int e){
     if(material_model.compare("neo") == 0){
         //Neo
         
-        double J = F.determinant();     
-        double I1 = (F.transpose()*F).trace();
-        double powj = pow(J, -2.0/3.0);
-        double I1bar = powj*I1;
-
-        P = mu*(powj * F) +
-        (- mu/3.0 * I1 * powj + lambda*(J-1.0)*J)*F.inverse().transpose();
- 
-        this->energy = this->undeformedVol*(mu/2.0 * (I1bar - 3) + lambda/2.0 * (J-1.0) * (J-1.0));
-
+        P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
+        double firstTerm = ((mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()));
+        if(firstTerm<0 ){
+            cout<<"###first term condition############"<<endl;
+            cout<<firstTerm<<endl;
+            firstTerm = 0;
+        }
+        this->energy = firstTerm + (lambda/2)*log(F.determinant())*log(F.determinant());
+        this->energy *= this->undeformedVol;
 
     }else if(material_model.compare("svk") == 0){
         //SVK

@@ -352,7 +352,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-		// ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 		
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
@@ -419,15 +419,22 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	}
 
 	//elastic
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		// MatrixXd F_tet = M.tets[i].oldComputeElasticForces(TVk, simTime%2);
-		// f.segment<3>(3*indices(0)) += F_tet.col(0);
-		// f.segment<3>(3*indices(1)) += F_tet.col(1);
-		// f.segment<3>(3*indices(2)) += F_tet.col(2);
-		// f.segment<3>(3*indices(3)) += F_tet.col(3);
-		M.tets[i].computeElasticForces(TVk, f);
+	if(solver.compare("newton")==0){
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			Vector4i indices = M.tets[i].verticesIndex;
+			MatrixXd F_tet = M.tets[i].oldComputeElasticForces(TVk, simTime%2);
+			f.segment<3>(3*indices(0)) += F_tet.col(0);
+			f.segment<3>(3*indices(1)) += F_tet.col(1);
+			f.segment<3>(3*indices(2)) += F_tet.col(2);
+			f.segment<3>(3*indices(3)) += F_tet.col(3);
+		}
+	}else{
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			M.tets[i].computeElasticForces(TVk, f);
+		}
 	}
+
+
 	for(int k=0; k<f.rows(); k++){
 		if(fabs(external_f(k))>0.0001){
 			f(k) += external_f(k);
