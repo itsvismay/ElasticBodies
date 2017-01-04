@@ -4,7 +4,7 @@ thkInPlane = 2.0; //mm Thickness of the circular section before scaling
 widthInPlane = 40; //width of spring in mm
 thkOutOfPlane = 10; //mm
 
-$fn=40;
+$fn=100;
 diaExt = 30;
 scaleX1 = 2.0;
 scaleY1 = 1.0;

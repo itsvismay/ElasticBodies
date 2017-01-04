@@ -3,6 +3,8 @@ bezierSpring(x3=-40.0, y3=20.0);
              
 // height will be fixed and will be set before the optimization run.
 
+$fn = 60;
+
 module bezierSpring(x3,y3) {
     x1=0.0;
     x2=20.0;

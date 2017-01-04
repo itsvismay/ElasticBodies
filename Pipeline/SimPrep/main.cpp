@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
   else if (settings->backFixed) fixedVolume = mesh->createBackBound(settings->fixedDepth);
 
   /////// temp code ///////
-  //fixedVolume = mesh->createRightBound(.01);
+  fixedVolume = mesh->createLeftBound(.01);
   /////////////////////////
 
   // translate the object to the origin

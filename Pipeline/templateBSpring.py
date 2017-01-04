@@ -66,7 +66,7 @@ for opt, arg in opts:
     w4 = float(arg)
   elif opt == "--thk":
     thk = float(arg)
-  elif opt == "--hei"
+  elif opt == "--hei":
     hei = float(arg)
   elif opt == "-a":
     name = sys.argv[2]
