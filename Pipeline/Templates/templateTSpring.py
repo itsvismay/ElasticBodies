@@ -1,5 +1,114 @@
 # inputs
 # --name             name of the file to be outputed
+# --minRadius        the minimum value of the radius
+# --maxRadius        the maximum value of the radius
+# --minHeight        the minimum value of the height
+# --maxHeight        the maximum value of the height
+# --minWidth         the minimum value of the width
+# --maxWidth         the maximum value of the width
+# --resolution       the total number of samples
+# -a read raw data
+
+# raw data is of this form:
+# number of control points for radius
+# number of control points for width
+# number of control points for height
+# min radius
+# max radius
+# min width
+# max width
+# min height
+# max height
+# for each control point for radius
+#   the control points y value
+# for each control point for width
+#   the control points y value
+# for each control point for height
+#   the control points y value
+
+# there are 3 1D Bezier Curves to represnt this
+# For radius
+#   first control point is locked at 0.0
+#   last control point is locked at 1.0
+# For width
+#   first control point is at 0.5
+#   second control point is at 0.5
+# For height
+#   first control point is at 0.5
+#   second control point is at 0.5
+
+radiusCtrlPts = []
+widthCtrlPts = []
+heightCtrlPts = []
+
+maxRadius = 0.0
+minRadius = 0.0
+minWidth = 0.0
+maxWidth = 0.0
+minHeight = 0.0
+maxHeight = 0.0
+
+try:
+  opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "data=", "complex=", "resolution=", "displacement=", "dtheta="])
+except getopt.GetoptError:
+  print 'Error Bad Input'
+  sys.exit(-2)
+for opt, arg in opts:
+  if opt == "--name":
+    name = arg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#################### OLD STUFFS #####################
+# inputs
+# --name             name of the file to be outputed
 # --ctrlPts          number of control points followed by the points x1 y1 x2 y2
 # --width            width for each control point
 # --height           height for each control point
@@ -92,7 +201,7 @@ def simple():
   #currentTheta = 0
   #for i in range(numCtrlPts):
   #  for j in range(resolution):
-      
+
   # to be implemented
 
 def bspline():
