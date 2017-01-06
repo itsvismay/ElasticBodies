@@ -4,7 +4,7 @@
 //STL
 #include <iostream>
 #include <vector>
-#include <pthread.h>
+#include <thread>
 #include <fstream>
 #include <string>
 #include <math.h>

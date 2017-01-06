@@ -24,7 +24,7 @@ include_directories( ${GLFW_INCLUDE_DIR})
 find_package(TETGEN REQUIRED)
 include_directories( ${TETGEN_INCLUDE_DIR})
 
-find_package(SUITESPARSE QUIET)
+find_package(SUITESPARSE REQUIRED)
 include_directories(${SUITESPARSE_INCLUDE_DIRS})
 
 find_package(LIBLBFGS QUIET)
@@ -82,7 +82,7 @@ if(UNIX AND NOT APPLE)
   set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama -ldl")
 endif(UNIX AND NOT APPLE)
 
-FILE(GLOB HEADFILES  "${PROJECT_SOURCE_DIR}/../../alglib-cpp/src/*.h" "../*.h" "*.h")
+FILE(GLOB HEADFILES "${PROJECT_SOURCE_DIR}/../../alglib-cpp/src/*.h" "../*.h" "*.h")
 FILE(GLOB SRCFILES "${PROJECT_SOURCE_DIR}/../../alglib-cpp/src/*.cpp" "../*.cpp" "*.cpp" )
 add_executable(elastic ${HEADFILES} ${SRCFILES} ${GLEW_SOURCES} ${TETGEN_SOURCES})
 target_link_libraries(elastic ${LIBS})

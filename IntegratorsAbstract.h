@@ -2,8 +2,6 @@
 #define integrators_abstract_h
 
 #include "solidmesh.h"
-
-#include "Eigen/SPQRSupport"
 #include <Eigen/CholmodSupport>
 #include <lbfgs.h>
 
@@ -15,6 +13,9 @@ public:
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
+	// SimplicialLLT<SparseMatrix<double>> llt_solver;
+	CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+	SparseMatrix<double> forceGradient;
 	
 	vector<int> fixedVerts;
 	int vertsNum; //number of vertices
@@ -32,6 +33,8 @@ public:
 	void printInfo();
 	virtual void render(VectorXd& ext_force)=0; //pure virtual render class
 	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT)=0;
+	void analyzeCholeskySetup();
+
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);

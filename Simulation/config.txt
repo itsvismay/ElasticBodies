@@ -1,7 +1,7 @@
-.00001
+.0001
 t
 i
-1000
+10
 0.00
 -100000000
 1
@@ -10,7 +10,7 @@ i
 pR
 neo
 newton
-tensile_beam/tensileTest
+bezier_spring/springFULL
 
 #1 timestep
 #2 headless t/f

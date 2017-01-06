@@ -1,5 +1,7 @@
 #include "IntegratorsAbstract.h"
 
+typedef Eigen::Triplet<double> Trip;
+typedef Matrix<double, 12, 1> Vector12d;
 //TODO: Optimize this using hashing
 bool IntegratorAbstract::isFixed(int vert){
 
@@ -108,6 +110,7 @@ void IntegratorAbstract::initVectors(){
 	v_old.resize(3*vertsNum);
 	f.resize(3*vertsNum);
 	massVector.resize(3*vertsNum);
+	forceGradient.resize(3*vertsNum, 3*vertsNum);
 	
 	x_old.setZero();
 	v_old.setZero();
@@ -115,6 +118,51 @@ void IntegratorAbstract::initVectors(){
 	massVector.setZero();
 
 	v_old(0) = 10;
+}
+
+void IntegratorAbstract::analyzeCholeskySetup(){
+	forceGradient.setZero();
+	int ignorePastIndex = TV.rows() - fixedVerts.size();
+	cout<<"Ignore past"<<endl;
+	cout<<ignorePastIndex<<endl;
+	vector<Trip> triplets1;
+	triplets1.reserve(12*12*M.tets.size());	
+	for(unsigned int i=0; i<M.tets.size(); i++){
+		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
+		//P is the compute Force Differentials blackbox fxn
+
+		Vector12d dx(12);
+		dx.setZero();
+		Vector4i indices = M.tets[i].verticesIndex;
+		int kj;
+		for(unsigned int j=0; j<12; j++){
+			kj = j%3;
+			//row in order for dfxi/dxi ..dfxi/dzl
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0], 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+1, 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[0]+2, 1));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1], 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+1, 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[1]+2, 1));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2], 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+1, 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[2]+2, 1));
+
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3], 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+1, 1));
+			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, 1));
+		}
+	}
+	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
+	SparseMatrix<double> forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+	// cout<<"analyzing pattern******"<<endl;
+	// cout<<forceGradient<<endl;
+	// cout<<"analyzing pattern******"<<endl;
+	// cout<<forceGradientStaticBlock<<endl;
+	cout<<"analyzing pattern******"<<endl;
+	llt_solver.analyzePattern(forceGradientStaticBlock);
 }
 
 void IntegratorAbstract::initMassMatrices(){
@@ -185,6 +233,9 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 		//set vels to 0
 		v_old.segment<3>(3*fixMe[i])*=0;
 	}
+
+	//must recreate whenever fixed
+	analyzeCholeskySetup();
 
 }
 

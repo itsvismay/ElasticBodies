@@ -8,6 +8,8 @@
 #include <igl/writeOBJ.h>
 #include <igl/barycenter.h>
 #include <igl/readOFF.h>
+#include <igl/writeOFF.h>
+#include <igl/hausdorff.h>
 #include <igl/readOBJ.h>
 
 class Simulation{
@@ -23,6 +25,9 @@ public:
 	int ignorePastIndex;
 	VectorXi putForceOnTheseVerts;
 	double maxDisp = 100;
+
+	MatrixXd V;
+	MatrixXi F;
 
 	Simulation(void);
 	int initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons);
@@ -45,13 +50,16 @@ public:
 
 	void setInitPosition(VectorXd& force, vector<int>& fixVertices);
 	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
+	void printDesigns(int printcount, int simTime);
+	void printOptimizationOutput();
+
 	void setTVtoX(VectorXd &x, MatrixXd &TV);
 	void xToTV(VectorXd& x, MatrixXd& TV);
 	void applyExternalForces();
 	void calculateElasticForces(VectorXd &f, MatrixXd &TV);
 	void calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient);
 	void headless();
-	void render();
+	bool render();
 
 };
 #endif

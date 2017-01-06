@@ -14,7 +14,7 @@ public:
 	SparseMatrix<double> ZeroMatrix;
 	SparseMatrix<double> Ident;
 
-	SparseMatrix<double> forceGradient;
+	
 	SparseMatrix<double> grad_g;
 
 	double gamma = 0.5;

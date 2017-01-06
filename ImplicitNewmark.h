@@ -10,7 +10,6 @@ public:
 	SparseMatrix<double> ZeroMatrix;
 	SparseMatrix<double> Ident;
 
-	SparseMatrix<double> forceGradient;
 	SparseMatrix<double> grad_g;
 
 	VectorXd x_k, v_k, f_old;

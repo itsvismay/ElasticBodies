@@ -199,8 +199,6 @@ MatrixXd Tetrahedron::oldComputeElasticForces(MatrixXd &TV, int e){
         P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
         double firstTerm = ((mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()));
         if(firstTerm<0 ){
-            cout<<"###first term condition############"<<endl;
-            cout<<firstTerm<<endl;
             firstTerm = 0;
         }
         this->energy = firstTerm + (lambda/2)*log(F.determinant())*log(F.determinant());

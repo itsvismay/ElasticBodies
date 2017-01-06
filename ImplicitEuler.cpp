@@ -20,11 +20,11 @@ struct VougaGeometryInfo
 };
 
 void rep_grad(const real_1d_array &x, double func, void *impe){
-	// cout<<"*********FUNC***********"<<endl;
-	// cout<<func<<endl;
-	// for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
-	// 	cout << x[i] << " ";
-	// cout << endl;
+	cout<<"*********FUNC***********"<<endl;
+	cout<<func<<endl;
+	for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
+		cout << x[i] << " ";
+	cout << endl;
 }
 
 void rep_grad_vouga(const real_1d_array &x, double func, void *impe){
@@ -328,14 +328,21 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	x_k = x_old;
 	x_k(0) += 0.01;//2.1898e-09;
 	v_k = v_old;
+	clock_t t0 = clock();
 
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
-	
+	clock_t t1 = clock();
+	cout<<"t1 t0"<<endl;
+	cout<<"SECONDS"<<double(t1 - t0)/CLOCKS_PER_SEC<<endl;
+
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+	clock_t t2 = clock();
+	cout<<"t2 t1"<<endl;
+	cout<<"SECONDS"<<double(t2 - t1)/CLOCKS_PER_SEC<<endl;
 
 	forceGradient.setZero();
 	bool Nan=false;
@@ -347,11 +354,15 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	// cout<<v_k<<endl<<endl;
 	// cout<<"--------------------"<<endl;
 	for( i=0; i<NEWTON_MAX; i++){
+		clock_t t3 = clock();
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-		
+		clock_t t4 = clock();
+		cout<<"forces and grad f"<< i<<endl;
+		cout<<"SECONDS"<<double(t4 - t3)/CLOCKS_PER_SEC<<endl;
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 		
@@ -360,21 +371,33 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd g_block;
 		findgBlock(g_block, x_k, x_old, ignorePastIndex);
-
 		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
 		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
 		// Sparse Cholesky LL^T
-		SimplicialLLT<SparseMatrix<double>> llt;
-		llt.compute(grad_g);
-		if(llt.info() == Eigen::NumericalIssue){
+		if(llt_solver.info() == Eigen::NumericalIssue){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
 			exit(0);
 		}
-		VectorXd deltaX = -1* llt.solve(g_block);
-		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+		clock_t t5 = clock();
+		cout<<"grad_g g block"<< i<<endl;
+		cout<<"SECONDS - "<<double(t5 - t4)/CLOCKS_PER_SEC<<endl;
+			llt_solver.factorize(grad_g);
+		
+			clock_t t6 = clock();
+			cout<<"factorize"<< i<<endl;
+			cout<<"SECONDS - "<<double(t6 - t5)/CLOCKS_PER_SEC<<endl<<endl;
 
+		
+		VectorXd deltaX = -1* llt_solver.solve(g_block);
+		
+		clock_t t7 = clock();
+		cout<<"solver"<< i<<endl;
+		cout<<"SECONDS - "<<double(t7 - t5)/CLOCKS_PER_SEC<<endl<<endl;
+
+		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+		
 		//Sparse QR 
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
