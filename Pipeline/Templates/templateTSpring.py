@@ -7,6 +7,7 @@
 # --minWidth         the minimum value of the width
 # --maxWidth         the maximum value of the width
 # --resolution       the total number of samples
+# --loops            the fractional number of loops
 # -a read raw data
 
 # raw data is of this form:
@@ -19,6 +20,8 @@
 # max width
 # min height
 # max height
+# resolution
+# loops
 # for each control point for radius
 #   the control points y value
 # for each control point for width
@@ -37,204 +40,114 @@
 #   first control point is at 0.5
 #   second control point is at 0.5
 
-radiusCtrlPts = []
-widthCtrlPts = []
-heightCtrlPts = []
-
-maxRadius = 0.0
-minRadius = 0.0
-minWidth = 0.0
-maxWidth = 0.0
-minHeight = 0.0
-maxHeight = 0.0
-
-try:
-  opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "data=", "complex=", "resolution=", "displacement=", "dtheta="])
-except getopt.GetoptError:
-  print 'Error Bad Input'
-  sys.exit(-2)
-for opt, arg in opts:
-  if opt == "--name":
-    name = arg
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#################### OLD STUFFS #####################
-# inputs
-# --name             name of the file to be outputed
-# --ctrlPts          number of control points followed by the points x1 y1 x2 y2
-# --width            width for each control point
-# --height           height for each control point
-# --displacement     displacement from center for each control point
-# --resolution       the resolution (number of draws between control points)
-# --dTheta           the change in theta per control point
-# --complex          if the curve is rendererd by bspline or normal
-# -a                 read raw data
-
 import sys, getopt, os, math
 import numpy as np
 
-name = 'torsion_test.scad'
-dataFile = 'torsionData.txt'
-numCtrlPts = 20
-ctrlPts = []
-width = [1.0]
-height = [1.0]
-displacement = [0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-complexity = 0 # 0 = simple 1 = bspline
-resolution = 5
-dTheta = 60
+name = "torsion_test.scad"
+numberRadiusCtrlPts = 5
+numberWidthCtrlPts = 5
+numberHeightCtrlPts = 5
+radiusCtrlPts = [0.0, 0.25, 0.5, 0.75, 1.0]
+widthCtrlPts = [1.0, 1.0, 1.0, 1.0, 1.0]
+heightCtrlPts = [0.2, 0.7, 0.95, 0.7, 0.2]
+
+maxRadius = 30.0
+minRadius = 0.0
+minWidth = 1.0
+maxWidth = 5.0
+minHeight = 3.0
+maxHeight = 10.0
+resolution = 100
+loops = 3.0
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "data=", "complex=", "resolution=", "displacement=", "dtheta="])
+  opts, args = getopt.getopt(sys.argv[1:], 'a', ["maxRadius=", "minRadius=", "minHeight=", "maxHeight=", "minWidth=", "maxWidth=", "resolution=", "loops="])
 except getopt.GetoptError:
   print 'Error Bad Input'
   sys.exit(-2)
 for opt, arg in opts:
   if opt == "--name":
     name = arg
-  elif opt == "--data":
-    dataFile = arg
+  elif opt == "--maxRadius":
+    maxRadius = float(arg)
+  elif opt == "--minRadius":
+    minRadius = float(arg)
+  elif opt == "--minHeight":
+    minHeight = float(arg)
+  elif opt == "--maxHeight":
+    maxHeight = float(arg)
+  elif opt == "--minWidth":
+    minWidth = float(arg)
+  elif opt == "--maxWidth":
+    maxWidth = float(arg)
   elif opt == "--resolution":
-    resolution = float(arg)
-  #elif opt == "--displacement":
-  #  displacement = []
-  elif opt == "--complex":
-    complexity = int(arg)
-  elif opt == "--dTheta":
-    dTheta = float(arg)
+    resolution = int(float(arg))
+  elif opt == "--loops":
+    loops = float(arg)
+  elif opt == "-a":
+    # do input stuffs
+    radiusCtrlPts = []
+    widthCtrlPts = []
+    heightCtrlPts = []
 
-def loadData(fileName):
-  #fr = open(filename)
-  count = 0;
-  #for line in fr.readlines():
-  #  curLine = line.strip().split(' ')
-  #  if count == 0:
-  #    # read in number of points
-  #    temp = 0
-  #  elif count == 1:
-  #    # read in displacement
-  #    temp = 0
-  #  elif count == 2:
-  #    # read in width
-  #    temp = 0
-  #  elif count == 3:
-  #    # read in height
-  #    temp = 0
-  #  count += 1
-  currentR = 0.0
-  for i in range(numCtrlPts):
-    currentD = displacement[i]
-    currentR += currentD
-    ctrlPts.append([currentR * math.cos(math.radians(dTheta * i)), currentR * math.sin(math.radians(dTheta * i))])
-    print ctrlPts[i]
+def factorial(v):
+  val = 1;
+  for i in range(1,v+1):
+    val = val * i
+  return val
 
-def createKnot(ctrlPts, degree, numCtrlPts):
-  #val = len(ctrlPts) + degree + 1
-  val = numCtrlPts + degree + 1
-  #print 'Val', val
-  siz = float(val - 1)
-  knot = []
-  for i in range(val):
-    knot.append(float(i) / siz)
-  return knot
+def combination(n, r):
+  return factorial(n) / (factorial(r) * factorial(n-r))
 
-def basis(i, j, knot, t):
-  if j == 0 and t < knot[i+1] and t >= knot[i]:
-    return 1
-  if j == 0:
-    return 0
-  return ((t - knot[i]) / (knot[i+j] - knot[i])) * basis(i,j-1,knot,t) + ((knot[i+j+1] - t) / (knot[i+j+1] - knot[i+1])) * basis(i+1,j-1,knot,t)
+def evaluateBez(ctrlPts):
+  evaluatedValues = []
+  numberCtrls = len(ctrlPts)
+  print "NUM CTRL ::", len(ctrlPts)
+  for i in range(0, resolution):
+    t = float(i) / float(resolution)
+    print "t :", t
+    nt = 1.0 - t
+    print 'nt :', nt
+    n = numberCtrls - 1
+    currentVal = 0.0
+    for j in range(0, len(ctrlPts)):
+      tmp = math.pow(t, j) * math.pow(nt, n-j)
+      tmp = tmp * combination(n, j)
+      currentVal = currentVal + tmp * ctrlPts[j]
+    evaluatedValues.append(currentVal)
+  return evaluatedValues
 
-def simple():
-  Data = []
-  #Data.append([0.0, 0.0, 1.0])
-  #totalTheta = dTheta * numCtrlPts
-  #ddTheta = dTheta / resolution
-  #currentTheta = 0
-  #for i in range(numCtrlPts):
-  #  for j in range(resolution):
+def calculateRadius(v):
+  return (maxRadius - minRadius) * v + minRadius
 
-  # to be implemented
+def calculateHeight(v):
+  return (maxHeight - minHeight) * v + minHeight
 
-def bspline():
-  Data = []
-  #Data.append([0.0, 0.0, 1.0])
-  knot = createKnot(ctrlPts, 3, numCtrlPts)
-  print 'Knot'
-  for i in range(len(knot)):
-    print knot[i]
-  samples = numCtrlPts * (resolution)
-  print 'Samples', samples
-  totalTheta = dTheta * numCtrlPts;
-  print 'TotalTheta', totalTheta
-  for i in range(samples):
-    currentJ = 3
-    currentI = math.floor(float(i) / float(resolution))
-    currentT = float(i) / float(samples)
-    #basisVal = basis(int(currentI), int(currentJ), knot, currentT)
-    pointX = 0.0
-    pointY = 0.0
-    for j in range(numCtrlPts):
-      basisVal = basis(int(j), int(currentJ), knot, currentT)
-      pointX += ctrlPts[j][0] * basisVal
-      pointY += ctrlPts[j][1] * basisVal
-    Data.append([pointX, pointY, 1.0])
-  return Data
+def calculateWidth(v):
+  return (maxWidth - minWidth) * v + minWidth
 
-# processing stuff goes here
-loadData("data.txt")
-data = bspline()
-for i in range(len(data)):
-  print data[i]
-Data = np.array(data)
+evaluatedRadius = evaluateBez(radiusCtrlPts)
+evaluatedHeight = evaluateBez(heightCtrlPts)
+evaluatedWidth  = evaluateBez(widthCtrlPts)
+
+Data = []
+
+for i in range(0, len(evaluatedRadius)):
+  theta = (2 * math.pi * loops / len(evaluatedRadius)) * i
+  pointX = calculateRadius(evaluatedRadius[i]) * math.cos(theta)
+  pointY = calculateRadius(evaluatedRadius[i]) * math.sin(theta)
+  width = calculateWidth(evaluatedWidth[i])
+  height = calculateHeight(evaluatedHeight[i])
+  Data.append([pointX, pointY, width, height])
+
+print "5 choose 2 ::", combination(5, 2)
+print "9 choose 4 ::", combination(9, 4)
+print "3 choose 1 ::", combination(3, 1)
+
+print radiusCtrlPts
+#print evaluatedRadius
+#print evaluatedWidth
+print Data
 
 layerThk = 0.4
 z = 0
@@ -267,7 +180,7 @@ file_write.write("$fn=50;\n")
 file_write.write("\n")
 file_write.write('points = [\n')
 for row in Data:
-  file_write.write("[%7.8f, %8.8f, %2.8f],\n" % (row[0], row[1], row[2]))
+  file_write.write("[%7.8f, %8.8f, %7.8f, %7.8f],\n" % (row[0], row[1], row[2], row[3]))
 file_write.write("];\n")
 file_write.write("\n")
 file_write.write("translate([0.0, 0.0, %6.8f]) {\n" % z)
@@ -285,6 +198,6 @@ file_write.write("\t\t}\n")
 file_write.write("\t}\n")
 file_write.write("}\n")
 file_write.write("\n")
-for row in ctrlPts:
+for row in Data:
   file_write.write("translate([%7.8f, %8.8f, 0.0]) circle(.1);\n" % (row[0], row[1]))
 file_write.close()
