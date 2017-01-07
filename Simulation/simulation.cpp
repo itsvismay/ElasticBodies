@@ -130,18 +130,17 @@ void Simulation::headless(){
 	printDesigns(printcount, integrator->simTime);
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
-		if(integrator->simTime%10==0){
+		if(integrator->simTime%100==0){
 			printDesigns(printcount, integrator->simTime);
 			// printOptimizationOutput();
 			printcount += 1;
 		}
-		igl::writeMESH(to_string(integrator->simTime)+"test1.mesh", integrator->TV, integrator->TT, TF);
 	}
 
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/"+to_string(integrator->h)+"-test1/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/"+to_string(integrator->h)+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 
 }
