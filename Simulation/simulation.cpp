@@ -30,6 +30,11 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
 	setInitPosition(force, fixVertices);
+	//TEMPORARY CODE REMOVE BEFORE DOING ANYTHIGN ELSE
+	// for(int i=0; i< TV.rows(); i++){
+	// 	if(TV.row(i)(1)<-40)
+	// 		fixVertices.push_back(i);
+	// }
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -122,23 +127,23 @@ void Simulation::headless(){
 	int printcount =0;
 
 	integrator->external_f = this->external_force;
+	printDesigns(printcount, integrator->simTime);
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
-		
-		printDesigns(printcount, integrator->simTime);
-		// printOptimizationOutput();
-		printcount += 1;
+		if(integrator->simTime%10==0){
+			printDesigns(printcount, integrator->simTime);
+			// printOptimizationOutput();
+			printcount += 1;
+		}
+		igl::writeMESH(to_string(integrator->simTime)+"test1.mesh", integrator->TV, integrator->TT, TF);
 	}
 
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
-	
-	if(integrator->simTime%20==0){
-		printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
-		cout<<printcount<<endl;
-	}
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/"+to_string(integrator->h)+"-test1/";
+	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
+
 }
 
 void Simulation::printOptimizationOutput(){

@@ -15,7 +15,7 @@ public:
 	SparseMatrix<double> RegMass;
 	// SimplicialLLT<SparseMatrix<double>> llt_solver;
 	CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
-	SparseMatrix<double> forceGradient;
+	SparseMatrix<double> forceGradient, CholeskyAnalyze;
 	
 	vector<int> fixedVerts;
 	int vertsNum; //number of vertices

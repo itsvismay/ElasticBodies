@@ -37,4 +37,5 @@ extern string tetgen_code;
 extern string solver;
 extern string objectName;
 
+extern MatrixXi TF;
 #endif

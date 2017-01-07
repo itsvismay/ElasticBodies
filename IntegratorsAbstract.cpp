@@ -111,6 +111,7 @@ void IntegratorAbstract::initVectors(){
 	f.resize(3*vertsNum);
 	massVector.resize(3*vertsNum);
 	forceGradient.resize(3*vertsNum, 3*vertsNum);
+	CholeskyAnalyze.resize(3*vertsNum, 3*vertsNum);
 	
 	x_old.setZero();
 	v_old.setZero();
@@ -121,7 +122,7 @@ void IntegratorAbstract::initVectors(){
 }
 
 void IntegratorAbstract::analyzeCholeskySetup(){
-	forceGradient.setZero();
+	CholeskyAnalyze.setZero();
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	cout<<"Ignore past"<<endl;
 	cout<<ignorePastIndex<<endl;
@@ -155,14 +156,15 @@ void IntegratorAbstract::analyzeCholeskySetup(){
 			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, 1));
 		}
 	}
-	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
-	SparseMatrix<double> forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+	CholeskyAnalyze.setFromTriplets(triplets1.begin(), triplets1.end());
+	
+	SparseMatrix<double> CholeskyAnalyzeBlock = CholeskyAnalyze.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 	// cout<<"analyzing pattern******"<<endl;
-	// cout<<forceGradient<<endl;
+	// cout<<CholeskyAnalyze<<endl;
 	// cout<<"analyzing pattern******"<<endl;
-	// cout<<forceGradientStaticBlock<<endl;
+	// cout<<CholeskyAnalyzeStaticBlock<<endl;
 	cout<<"analyzing pattern******"<<endl;
-	llt_solver.analyzePattern(forceGradientStaticBlock);
+	llt_solver.analyzePattern(CholeskyAnalyzeBlock);
 }
 
 void IntegratorAbstract::initMassMatrices(){

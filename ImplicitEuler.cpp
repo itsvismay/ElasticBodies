@@ -357,7 +357,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		clock_t t3 = clock();
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
 		clock_t t4 = clock();
@@ -383,11 +382,27 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		clock_t t5 = clock();
 		cout<<"grad_g g block"<< i<<endl;
 		cout<<"SECONDS - "<<double(t5 - t4)/CLOCKS_PER_SEC<<endl;
-			llt_solver.factorize(grad_g);
 		
-			clock_t t6 = clock();
-			cout<<"factorize"<< i<<endl;
-			cout<<"SECONDS - "<<double(t6 - t5)/CLOCKS_PER_SEC<<endl<<endl;
+
+		// for(unsigned int k = 0; k<grad_g.cols(); k++){
+		// 	for(unsigned int j = 0; j<grad_g.rows(); j++){
+		// 		cout<<k<<", "<<j<<endl;
+		// 		if(grad_g.coeffRef(k, j) != grad_g.coeffRef(k, j)){
+		// 			cout<<"______grad g nans__________"<<endl;
+		// 			exit(0);
+		// 		}
+		// 		if(grad_g.coeffRef(k, j) != 0 && CholeskyAnalyze.coeffRef(k, j)==0){
+		// 			cout<<"_______Analyze problem_________"<<endl;
+		// 			exit(0);
+		// 		}
+		// 	}
+		// }
+
+		llt_solver.factorize(grad_g);
+	
+		clock_t t6 = clock();
+		cout<<"factorize"<< i<<endl;
+		cout<<"SECONDS - "<<double(t6 - t5)/CLOCKS_PER_SEC<<endl<<endl;
 
 		
 		VectorXd deltaX = -1* llt_solver.solve(g_block);

@@ -6,6 +6,7 @@
 #include "../ImplicitNewmark.h"
 
 #include <igl/writeOBJ.h>
+#include <igl/writeMESH.h>
 #include <igl/barycenter.h>
 #include <igl/readOFF.h>
 #include <igl/writeOFF.h>
