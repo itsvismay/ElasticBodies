@@ -1,1 +1,1 @@
-beam_test.scad 50 10 15
+optimizeTest.txt.scad 50 10 15.0
