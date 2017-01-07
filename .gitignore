@@ -41,4 +41,5 @@ WolframAndProfilerandHoudini/backup/*.hipnc
 TestsResults/*
 3dUnion/build/*
 local_temp/*
+Simulation/build/*
 Condor/TestsResults/*
