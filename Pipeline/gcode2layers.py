@@ -198,11 +198,11 @@ for layer in runLayers:
   file_write.write("}\n")
   file_write.close()
 
-filename = "CCgcode_for_loop.scad"
-file_write = open(filename, "w")
-for layer in runLayers:
-  file_write.write("include <"+vName[:-6]+"_layer_%d.scad>;\n" % (layer))
-file_write.close()
+#filename = "CCgcode_for_loop.scad"
+#file_write = open(filename, "w")
+#for layer in runLayers:
+#  file_write.write("include <"+vName[:-6]+"_layer_%d.scad>;\n" % (layer))
+#file_write.close()
 
 print numLayers
 
