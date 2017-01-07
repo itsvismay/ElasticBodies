@@ -2,8 +2,7 @@
 #define integrators_abstract_h
 
 #include "solidmesh.h"
-#include <Eigen/CholmodSupport>
-#include <lbfgs.h>
+//#include <Eigen/CholmodSupport>
 
 
 class IntegratorAbstract{
@@ -13,8 +12,8 @@ public:
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
-	// SimplicialLLT<SparseMatrix<double>> llt_solver;
-	CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+	SimplicialLLT<SparseMatrix<double>> llt_solver;
+	//CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
 	SparseMatrix<double> forceGradient;
 	
 	vector<int> fixedVerts;

@@ -1,7 +1,6 @@
 #ifndef simulation_h
 #define simulation_h
 
-#include "../Verlet.h"
 #include "../ImplicitEuler.h"
 #include "../ImplicitNewmark.h"
 

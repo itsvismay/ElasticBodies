@@ -8,8 +8,9 @@ int staticSolveDirection = 0;
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
 	if (method =='e'){
-		integrator = new Verlet();
+	//	integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;	
+		exit(0);
 	}else if(method == 'i'){
 		integrator = new ImplicitEuler();
 		cout<<"Initialized Implicit Euler"<<endl;
@@ -124,10 +125,11 @@ void Simulation::headless(){
 	integrator->external_f = this->external_force;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
-		
-		printDesigns(printcount, integrator->simTime);
+		if(integrator->simTime%20 ==0){
+			printDesigns(printcount, integrator->simTime);
+			printcount += 1;
+		}		
 		// printOptimizationOutput();
-		printcount += 1;
 	}
 
 }
@@ -135,10 +137,8 @@ void Simulation::headless(){
 void Simulation::printDesigns(int printcount, int simTime){
 	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	
-	if(integrator->simTime%20==0){
-		printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
-		cout<<printcount<<endl;
-	}
+	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
+	cout<<printcount<<endl;
 }
 
 void Simulation::printOptimizationOutput(){
