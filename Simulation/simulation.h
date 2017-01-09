@@ -49,7 +49,8 @@ public:
 	
 	void staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
 
-	void setInitPosition(VectorXd& force, vector<int>& fixVertices);
+	void setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices);
+	
 	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	void printDesigns(int printcount, int simTime);
 	void printOptimizationOutput();

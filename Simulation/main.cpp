@@ -31,7 +31,7 @@ Eigen::MatrixXi F;
 Eigen::MatrixXd B;
 
 // Tetrahedralized interior
-Eigen::MatrixXd ForcesTV; 
+Eigen::MatrixXd ForcesTV;
 Eigen::MatrixXd FixedTV;
 Eigen::MatrixXd TV;
 Eigen::MatrixXi TT;
@@ -47,7 +47,7 @@ Simulation Sim;
 bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.clear();
 	Sim.render();
-	
+
 
 	viewer.data.add_points(Sim.integrator->TV, RowVector3d(1,0,0));
 	viewer.data.add_edges(Sim.integrator->TV.row(0), Sim.integrator->TV.row(1), RowVector3d(1,0,0));
@@ -73,7 +73,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(100,0,0), RowVector3d(1,1,1));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,100,0), RowVector3d(0,0,0));
 	//viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,100), RowVector3d(1,1,1));
-	
+
 	return false;
 }
 
@@ -108,15 +108,15 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
 	viewer.data.clear();
-	
+
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
-	
-	int totalRows = Sim.integrator->TV.rows();
-	for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
-		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
-	}
+
+	// int totalRows = Sim.integrator->TV.rows();
+	// for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
+	// 	ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
+	// }
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
@@ -136,25 +136,28 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	} else if (offFile.good()) {
 		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
+		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (objFile.good()) {
 		igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);	
+		// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else {
 		cout << "ERROR :: MESH FILE WAS NOT FOUND" << endl;
 		exit(0);
 	}
-    
+
 	vector<int> moveVertices;
 	vector<int> fixedVertices;
 
 	//***************************
 	Sim.initializeSimulation(timestep,iterations, method, TT, TV, B, moveVertices, fixedVertices, youngs, poissons);
-	// exit(0);	
-	ForcesTV.resize(Sim.putForceOnTheseVerts.rows(), 3);
-	cout<<Sim.putForceOnTheseVerts.rows()<<endl;
-	
+	// exit(0);
+	ForcesTV.resize(moveVertices.size(), 3);
+	ForcesTV.setZero();
+	for(int i=0; i<moveVertices.size(); i++){
+		ForcesTV.row(i) = Sim.integrator->TV.row(moveVertices[i]);
+	}
+
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
 	FixedTV.setZero();
 	for(int i=0; i<Sim.integrator->fixedVerts.size(); i++){
@@ -183,18 +186,18 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	// 			10, 0, 0,
 	// 			0, 10, 0,
 	// 			0, 0, 0;
-	
+
 	TT_One_G.resize(2, 4);
 	TT_One_G<<  0, 1, 2, 3,
 				4, 0, 2, 3;
 
 	TV_One_G.resize(5, 3);
 	TV_One_G << 10, 10, 0, //affect
-				0, 20, 0,
-				0, 10, 10,
-				0, 10, 0,
-				0, 0, 0;
-				
+							0, 20, 0,
+							0, 10, 10,
+							0, 10, 0,
+							0, 0, 0;
+
 	// TV_One_G << 0, 0, 0, //affect
 	// 			1, 10, 0,
 	// 			2, 0, 10,
@@ -210,9 +213,9 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 	// fix vertices
 	// fixedVertices.push_back(1);
 
-				
+
 	Sim.initializeSimulation(timestep, iterations, method, TT_One_G, TV_One_G, B, moveVertices, fixedVertices, youngs, poissons);
-	
+
 	if(headless){
 		Sim.headless();
 	}else{
@@ -221,7 +224,7 @@ void useMyObject(bool headless, double timestep, int iterations, char method){
 		viewer.callback_pre_draw = &drawLoopTest;
 		viewer.launch();
 	}
-		
+
 }
 
 
@@ -240,11 +243,11 @@ int main(int argc, char *argv[])
 		getline(configFile, line);
 		timestep = stod(line.c_str());
 		cout<<timestep<<endl;
-		
+
 		getline(configFile, line);
 		runHeadless = line.c_str()[0];
 		cout<<line<<endl;
-		
+
 		getline(configFile, line);
 		method = line.c_str()[0];
 		cout<<method<<endl;
@@ -292,7 +295,7 @@ int main(int argc, char *argv[])
 		cout<<"Check yo self: Config file not found"<<endl;
 		return 0;
 	}
-    
+
 	///////////////////
 	cout<<"###########################My Code ###################"<<endl;
 	headless = false;
@@ -305,9 +308,9 @@ int main(int argc, char *argv[])
 	kineticEnergyFile.open("../Scripts/kenergy.txt");
 	gravityEnergyFile.open("../Scripts/genergy.txt");
 	optimizationFile.open("../TestsResults/opt.txt");
-	
+
 	if(object ==0){
-		useMyObject(headless, timestep, iterations, method);	
+		useMyObject(headless, timestep, iterations, method);
 	}else if(object ==1){
 		useFullObject(headless, timestep, iterations, method);
 	}else if(object == 2){
@@ -322,7 +325,7 @@ int main(int argc, char *argv[])
 	momentumFile.close();
 	optimizationFile.close();
 	cout<<"###########################My Code ###################"<<endl;
-	
+
 
 	return 0;
 }

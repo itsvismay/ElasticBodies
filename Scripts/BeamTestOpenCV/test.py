@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-y_ref = 485
+y_ref = 360
 curr_vals = []
 num = 0
 def mouse_cap(event, x, y, flags, param):
@@ -24,10 +24,10 @@ else:
 			img = frame[100:, 300:1800]
 			cv2.line(img, (0, y_ref), (1150, y_ref), (255, 255, 255), 2)
 			cv2.imshow('video', img)
-			#print(num, np.mean(curr_vals)*(35/440.0))
-			print(num)
+			print(num, np.mean(curr_vals)*(48/665.0))
 			curr_vals = []
-			cv2.waitKey()
+			if num>950:
+				cv2.waitKey()
 		num+=1
 		
 cap.release()
