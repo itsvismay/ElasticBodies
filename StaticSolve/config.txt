@@ -4,13 +4,13 @@ i
 1
 0.00
 -000
-0
+1
 6900000
 .35
--pRa0.12
+-pRa0.10
 svk
 newton
-test_obj/testObject
+tensile_beam/rawTensile
 
 #1 timestep
 #2 headless t/f

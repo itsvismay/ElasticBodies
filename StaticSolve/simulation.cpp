@@ -9,7 +9,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	iters = iterations;
 	if (method =='e'){
 		integrator = new Verlet();
-		cout<<"Initialized Verlet"<<endl;	
+		cout<<"Initialized Verlet"<<endl;
 	}else if(method == 'i'){
 		integrator = new ImplicitEuler();
 		cout<<"Initialized Implicit Euler"<<endl;
@@ -25,7 +25,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	//*********BEAM******************
 	// move vertices
 	for(int i=0; i<TV.rows(); i++){
-	 	if(TV.row(i)[0]>=180){
+	 	if(TV.row(i)[0]>=160){
 	 		moveVertices.push_back(i);
 	 	}
 	}
@@ -45,7 +45,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	cout<<"Fixed and moving"<<endl;
 	cout<<fixVertices.size()<<endl;
 	cout<<moveVertices.size()<<endl;
-// 
+//
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -111,9 +111,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			// syntheticTests(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 			// staticSolveInitialPosition(newMoveIndices, newTV, newTT, fixVertices.size(), B);
 			exit(0);
-		
+
 		}
-		
+
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		integrator->fixVertices(newfixIndices);
@@ -130,7 +130,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->fixVertices(fixVertices);
 	}
 
-	
+
 	return 1;
 }
 
@@ -178,14 +178,14 @@ void Simulation::render(){
 
 //TODO: Clean up function params size Fixed and size Move are not needed
 void Simulation::reIndexTVandTT(
-	vector<int> newVertsIndices, 
-	int sizeFixed, 
-	int sizeMove, 
-	MatrixXd& TV, 
-	MatrixXi& TT, 
-	VectorXd& force, 
-	MatrixXd& newTV, 
-	MatrixXi& newTT, 
+	vector<int> newVertsIndices,
+	int sizeFixed,
+	int sizeMove,
+	MatrixXd& TV,
+	MatrixXi& TT,
+	VectorXd& force,
+	MatrixXd& newTV,
+	MatrixXi& newTT,
 	VectorXd& new_force){
 	//apply re-index to TV
 	for(unsigned int i=0; i<newVertsIndices.size(); i++){
@@ -251,7 +251,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 				//cout<<f(i)<<endl;
 			}
 		}
-		
+
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
@@ -287,7 +287,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	}
 	double strainE = 0;
 	for(int i=0; i< M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		strainE += M.tets[i].energy;
 	}
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;
@@ -327,21 +327,17 @@ void Simulation::calculateElasticForces(VectorXd &f, MatrixXd& TV){
 	f.setZero();
 	//elastic
 	for(unsigned int i=0; i< M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		MatrixXd F_tet = M.tets[i].computeElasticForces(TV, 1);
-		f.segment<3>(3*indices(0)) += F_tet.col(0);
-		f.segment<3>(3*indices(1)) += F_tet.col(1);
-		f.segment<3>(3*indices(2)) += F_tet.col(2);
-		f.segment<3>(3*indices(3)) += F_tet.col(3);
+		M.tets[i].computeElasticForces(TV, f);
+
 	}
 	return;
 }
 
 void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& forceGradient){
 	forceGradient.setZero();
-	
+
 	vector<Trip> triplets1;
-	triplets1.reserve(12*12*M.tets.size());	
+	triplets1.reserve(12*12*M.tets.size());
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -439,7 +435,7 @@ void Simulation::staticSolveInitialPosition(vector<int> moveVertices, MatrixXd& 
 	int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
 
 	int count=0;
-	
+
 	int reals_index =0;
 	printObj(saveTestToHere, count, TV, TT, B);
 	//New Binary Search
@@ -454,8 +450,8 @@ void Simulation::staticSolveInitialPosition(vector<int> moveVertices, MatrixXd& 
 		printObj(saveTestToHere,  count, TV, TT, B);
 		count++;
 	}
-		
-	
+
+
 	VectorXd f;
 	f.resize(3*TV.rows());
 	calculateElasticForces(f, TV);
@@ -531,13 +527,13 @@ void Simulation::staticSolveInitialPosition(vector<int> moveVertices, MatrixXd& 
 // 	return fx;
 // }
 
-// static int progressStaticSolveLBFGS(void *instance, const lbfgsfloatval_t *x, const lbfgsfloatval_t *g, const lbfgsfloatval_t fx, const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step, int n, int k, int ls){	
+// static int progressStaticSolveLBFGS(void *instance, const lbfgsfloatval_t *x, const lbfgsfloatval_t *g, const lbfgsfloatval_t fx, const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step, int n, int k, int ls){
 
 // 	printf("Iteration %d:\n", k);
 //     printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
 //     printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
 //     printf("\n");
-//     return 0;	
+//     return 0;
 // }
 
 // void Simulation::staticSolveStepLBFGS(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
@@ -597,7 +593,7 @@ void Simulation::xToTV(VectorXd& x, MatrixXd& TV){
 		TV.row(indices(0)) = Vector3d(x(3*indices(0)), x(3*indices(0)+1), x(3*indices(0) +2));
 		TV.row(indices(1)) = Vector3d(x(3*indices(1)), x(3*indices(1)+1), x(3*indices(1) +2));
 		TV.row(indices(2)) = Vector3d(x(3*indices(2)), x(3*indices(2)+1), x(3*indices(2) +2));
-		TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2)); 
+		TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2));
 	}
 }
 
@@ -607,7 +603,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	for(unsigned int i=0; i<moveVertices.size(); i++){
 		TV.row(TV.rows()-i-1)[staticSolveDirection] += move_step;//move step
 	}
-	
+
 	//Newtons method static solve for minimum Strain E
 	SparseMatrix<double> forceGradient;
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
@@ -629,11 +625,11 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 			TV.row(indices(0)) = Vector3d(x(3*indices(0)), x(3*indices(0)+1), x(3*indices(0) +2));
 			TV.row(indices(1)) = Vector3d(x(3*indices(1)), x(3*indices(1)+1), x(3*indices(1) +2));
 			TV.row(indices(2)) = Vector3d(x(3*indices(2)), x(3*indices(2)+1), x(3*indices(2) +2));
-			TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2)); 
+			TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2));
 		}
 		calculateForceGradient(TV, forceGradient);
 		calculateElasticForces(f, TV);
-		
+
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
@@ -645,7 +641,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 		// SparseMatrix<double> forceGradientStaticBlockTranspose = forceGradientStaticBlock.transpose();
 		// cout<<(forceGradientStaticBlockTranspose - forceGradientStaticBlock).norm()<<endl;
 
-		//Sparse QR 
+		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(forceGradientStaticBlock);
 		// VectorXd deltaX = -1*sqr.solve(fblock);
@@ -677,7 +673,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 			cout<<"NAN"<<endl;
 			exit(0);
 		}
-		
+
 		if (fblock.squaredNorm()/fblock.size() < 0.00001){
 			break;
 		}
@@ -690,7 +686,7 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 	}
 	double strainE = 0;
 	for(int i=0; i< M.tets.size(); i++){
-		strainE += M.tets[i].undeformedVol*M.tets[i].energyDensity;
+		strainE += M.tets[i].energy;
 	}
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;
@@ -705,7 +701,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 	//REAL VALUES FROM EXPERIMENT
 	//dist, load
-	vector<pair<double, double>> realLoads = 
+	vector<pair<double, double>> realLoads =
 	{
 		{0.100244,	101.073609},
 		{0.20048,	184.592875},
@@ -738,8 +734,8 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		{2.900472,	1412.155562},
 		{3.000338,	1393.765691}
 	};
-	
-	// vector<pair<double, double>> realLoads = 
+
+	// vector<pair<double, double>> realLoads =
 	// {
 	// 	{0.06, 37.0006},
 	// 	{0.66, 405.748},
@@ -765,11 +761,11 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
  	dt.erase('\n');
  	replace(dt.begin(), dt.end(), ' ', '-');
  	//-----------------
-	
+
 	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/StaticSolve/"+objectName+"/"+to_string(TT.rows())+"tets@"+tetgen_code+"@"+material_model+"/";
 	system(("mkdir -p "+saveTestToHere).c_str());
 	system(("(git log -1; echo ''; echo 'Ran Test On:'; date;) >>"+saveTestToHere+"log.txt").c_str());
-	
+
 	ofstream distvLoadFile;
 	distvLoadFile.open(saveTestToHere+"#distVLoad.txt");
 
@@ -786,7 +782,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	int ignorePastIndex = TV.rows() - moveVertices.size() - fv;
 
 	int count=0;
-	
+
 	int reals_index =0;
 	printObj(saveTestToHere, count, TV, TT, B);
 	//New Binary Search
@@ -799,7 +795,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 			dist_moved += move_amount/number_of_moves;//move step
 			cout<<"distance moved"<<dist_moved<<endl;
 			cout<<(dist_moved<realLoads[reals_index].first && (fabs(dist_moved-realLoads[reals_index].first)>1e-3) )<<endl;
-			staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);	
+			staticSolveStepNewtonsMethod(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 			// staticSolveStepLBFGS(move_amount/number_of_moves, ignorePastIndex, moveVertices, TV, TT);
 			count++;
 		}
@@ -813,7 +809,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 		while(fabs(load_scalar-realLoads[reals_index].second)>(realLoads[reals_index].second/1000) && dist_moved<move_amount){
 			load_scalar =0;
 			curr_youngs = (min_youngs+max_youngs)/2; //just a guess
-			
+
 			if(fabs(curr_youngs - max_youngs)<0.0000001 || fabs(curr_youngs - min_youngs)<0.0000001){
 				cout<<"Error: Young's Modulus did not converge."<<endl;
 				cout<<"Current y: "<<curr_youngs<<endl;
@@ -839,7 +835,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 
 			//BELOW: dividing loads by 1000 because we measure forces in Newtons(real data), but calculate in mm based force
 			load_scalar = fabs(load(staticSolveDirection)/1e6);
-			
+
 			if((load_scalar - realLoads[reals_index].second)>0){
 				cout<<"too high"<<endl;
 				max_youngs = curr_youngs;
@@ -867,6 +863,7 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	youngsFile.close();
 	system(("(echo 'Finished Test On:'; date;)>>"+saveTestToHere+"log.txt").c_str());
 	//system("( speaker-test -t sine -f 1000 )& pid=$! ; sleep 5s ; kill -9 $pid");
+	exit(0);
 }
 
 void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B){
@@ -875,7 +872,7 @@ void Simulation::syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi
 	string saveTestToHere = OUTPUT_SAVED_PATH"TestsResults/SyntheticStaticSolve/";
 	ofstream generateLoadsFile;
 	generateLoadsFile.open(saveTestToHere+"syntheticGeneratedLoads.txt");
-	
+
 	int setYoungs = 2e6;
 	M.setNewYoungsPoissons(setYoungs, 0.35);
 
@@ -954,7 +951,6 @@ void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, 
 
 	system(("mkdir -p " +printToHere).c_str());
 	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
-	
+
 	return;
 }
-
