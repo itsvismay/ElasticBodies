@@ -24,7 +24,7 @@ include_directories( ${GLFW_INCLUDE_DIR})
 find_package(TETGEN REQUIRED)
 include_directories( ${TETGEN_INCLUDE_DIR})
 
-find_package(SUITESPARSE QUIET)
+find_package(SUITESPARSE REQUIRED)
 include_directories(${SUITESPARSE_INCLUDE_DIRS})
 
 find_package(LIBLBFGS QUIET)
