@@ -64,19 +64,16 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		for(unsigned int j=0; j<moveVertices.size(); j++){
 			vertexNewIndices.push_back(moveVertices[j]);
 		}
-
 		//re-index fixed verts
 		for(unsigned int j=0; j<fixVertices.size(); j++){
 			vertexNewIndices.push_back(fixVertices[j]);
 		}
-
 
 		//new indices for the moving verts
 		vector<int> newMoveIndices;
 		for(unsigned int i= vertexNewIndices.size() - (moveVertices.size()+fixVertices.size()); i<(vertexNewIndices.size() - fixVertices.size()); i++){
 			newMoveIndices.push_back(i);
 		}
-
 		//these are the new indices for the fixed verts
 		vector<int> newfixIndices;
 		for(unsigned int i= vertexNewIndices.size() - fixVertices.size(); i<vertexNewIndices.size(); i++){
@@ -87,18 +84,18 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		new_force.resize(3*TV.rows());
 		reIndexTVandTT(vertexNewIndices, fixVertices.size(), moveVertices.size(), TV, TT, force, newTV, newTT, new_force);
 
-		cout<<new_force<<endl;
 		igl::barycenter(newTV, newTT, B);
 		//Initialize Solid Mesh
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
-			// int ignorePastIndex = TV.rows() - newfixIndices.size();
-			//staticSolveNewtonsForces(newTV, newTT, B, new_force, ignorePastIndex);
+			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			igl::writeMESH(OUTPUT_SAVED_PATH"shared/"+objectName+"_static_init_position.mesh", TV, TT, TF);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
+		applyExternalForces();
 		integrator->fixVertices(newfixIndices);
 
 	}else{
@@ -206,38 +203,63 @@ void Simulation::reIndexTVandTT(
 	}
 }
 
-void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, int ignorePastIndex){
-	cout<<"------------Static Solve on Forces----------------"<<endl;
-	// cout<<ignorePastIndex<<endl;
+void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
+	cout<<"***APPLYING STATIC FORCES****"<<endl;
+
+	int staticSolveSteps = 1;
+	int ignorePastIndex = TV.rows() - fixVertices.size();
+
+	while(staticSolveSteps < 11){
+		VectorXd f = fixed_forces*1e-1*staticSolveSteps;
+		staticSolveNewtonsForces(TV, TT, B, f, moveVertices, ignorePastIndex, staticSolveSteps);
+		staticSolveSteps += 1;
+	}
+	//MAX
+	double maxd = 100.0;
+	for(int i=0; i<moveVertices.size(); i++){
+		if(TV.row(moveVertices[i])(2) < maxd){
+			maxd = TV.row(moveVertices[i])(2);
+		}
+	}
+	cout<<"Max D"<<endl;
+	cout<<maxd<<endl;
+
+	printObj("BEAM", staticSolveSteps, TV, TT, B);
+}
+
+void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, int ignorePastIndex, int step){
+	cout<<"------------Static Solve Newtons Method-Iteration"<< step<<"--------------"<<endl;
+
 	//Newtons method static solve for minimum Strain E
 	SparseMatrix<double> forceGradient;
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
-	VectorXd f, x;
+	VectorXd f, x, f_prev;
 	f.resize(3*TV.rows());
 	f.setZero();
 	x.resize(3*TV.rows());
 	x.setZero();
 	setTVtoX(x, TV);
-
-	int NEWTON_MAX = 10, k=0;
+	f_prev = fixed_forces;
+	int NEWTON_MAX = 20, k=0;
 	for(k=0; k<NEWTON_MAX; k++){
 		xToTV(x, TV);
 
 		calculateForceGradient(TV, forceGradient);
 		calculateElasticForces(f, TV);
-		//PLAYGROUND - Check forces in mathematica
-		cout<<TV<<endl;
-		cout<<f<<endl;
 		//--------------
 		for(int i=0; i<fixed_forces.rows(); i++){
 			if(fabs(fixed_forces(i))>0.00001){
-				f(i) = fixed_forces(i);
-				//cout<<f(i)<<endl;
+				f(i) += fixed_forces(i);
 			}
 		}
-
+		// exit(0);
+		// cout<<fixed_forces- f_prev<<endl;
+		f_prev = fixed_forces;
+		// cout<<"Change in position"<<endl;
+		// cout<<f_prev - f<<endl;
+		// f_prev = f;
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
@@ -251,6 +273,21 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 		}
 		VectorXd deltaX = -1*cg.solve(fblock);
 
+		//Sparse QR
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*sqr.solve(fblock);
+
+		// // Sparse Cholesky LL^T
+		// CholmodSupernodalLLT<SparseMatrix<double>> llt;
+		// llt.compute(forceGradientStaticBlock);
+		// if(llt.info() == Eigen::NumericalIssue){
+		// 	cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+		// 	exit(0);
+		// }
+		// VectorXd deltaX = -1*llt.solve(fblock);
+
+
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
 
@@ -258,9 +295,9 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 			cout<<"NAN"<<endl;
 			exit(0);
 		}
+
 		cout<<"fblock"<<endl;
 		cout<<fblock.squaredNorm()/fblock.size()<<endl;
-
 		if (fblock.squaredNorm()/fblock.size() < 0.00001){
 			break;
 		}
@@ -279,10 +316,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	cout<<"x[0] "<<x(0)<<endl;
 	cout<<"x[1] "<<x(1)<<endl;
 
-
 	cout<<"----------------------"<<endl;
-	cout<<TV<<endl;
-	exit(0);
 }
 
 void Simulation::setTVtoX(VectorXd &x, MatrixXd &TV){
@@ -313,12 +347,7 @@ void Simulation::calculateElasticForces(VectorXd &f, MatrixXd& TV){
 	f.setZero();
 	//elastic
 	for(unsigned int i=0; i< M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		// MatrixXd F_tet = M.tets[i].computeElasticForces(TV, 1);
-		// f.segment<3>(3*indices(0)) += F_tet.col(0);
-		// f.segment<3>(3*indices(1)) += F_tet.col(1);
-		// f.segment<3>(3*indices(2)) += F_tet.col(2);
-		// f.segment<3>(3*indices(3)) += F_tet.col(3);
+		M.tets[i].computeElasticForces(TV, f);
 	}
 	return;
 }
@@ -564,7 +593,7 @@ void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, 
 	// F = F_temp;
 	// cout<<"**** Hausdorff Between this and prev it"<<endl;
 	// cout<< hausdorffDist<<endl;
-	igl::writeOBJ(printToHere + to_string(numberOfPrints)+".obj", V_temp, F_temp);
+	igl::writeOFF(printToHere + to_string(numberOfPrints)+".off", V_temp, F_temp);
 
 	return;
 }

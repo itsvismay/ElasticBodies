@@ -50,7 +50,11 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-
+		for(int k=0; k<f.rows(); k++){
+			if(fabs(ext_force(k))>0.0001){
+				f(k) += ext_force(k);
+			}
+		}
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
 
@@ -117,12 +121,7 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	//elastic
 	if(solver.compare("newton")==0){
 		for(unsigned int i=0; i<M.tets.size(); i++){
-			Vector4i indices = M.tets[i].verticesIndex;
-			MatrixXd F_tet = M.tets[i].oldComputeElasticForces(TVk, simTime%2);
-			f.segment<3>(3*indices(0)) += F_tet.col(0);
-			f.segment<3>(3*indices(1)) += F_tet.col(1);
-			f.segment<3>(3*indices(2)) += F_tet.col(2);
-			f.segment<3>(3*indices(3)) += F_tet.col(3);
+			M.tets[i].computeElasticForces(TVk, f);
 		}
 	}else{
 		for(unsigned int i=0; i<M.tets.size(); i++){
@@ -130,12 +129,6 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 		}
 	}
 
-
-	// for(int k=0; k<f.rows(); k++){
-	// 	if(fabs(external_f(k))>0.0001){
-	// 		f(k) += external_f(k);
-	// 	}
-	// }
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }
