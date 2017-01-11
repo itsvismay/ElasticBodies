@@ -210,7 +210,7 @@ void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, Vect
 	int staticSolveSteps = 1;
 	int ignorePastIndex = TV.rows() - fixVertices.size();
 
-	while(staticSolveSteps < 11){
+	while(staticSolveSteps<11){
 		VectorXd f = fixed_forces*1e-1*staticSolveSteps;
 		staticSolveNewtonsForces(TV, TT, B, f, moveVertices, ignorePastIndex, staticSolveSteps);
 		staticSolveSteps += 1;
@@ -243,6 +243,8 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	x.setZero();
 	setTVtoX(x, TV);
 	int NEWTON_MAX = 20, k=0;
+	for(k=0; k<moveVertices.size(); k++)
+		cout<<moveVertices[k]<<endl;
 	for(k=0; k<NEWTON_MAX; k++){
 		xToTV(x, TV);
 
