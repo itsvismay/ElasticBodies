@@ -3,14 +3,14 @@ t
 i
 100
 0.00
--100000000
+-00000000
 1
 3000000000
 .35
 pR
 neo
 newton
-bezier_spring/springFULL
+tensile_beam/rawTensile
 
 #1 timestep
 #2 headless t/f

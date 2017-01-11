@@ -11,7 +11,7 @@ using namespace std;
 using namespace glm;
 
 class Mesh {
-public:
+private:
   const char* file;
   vector<ivec3> faces;
   vector<FVert*> verts;

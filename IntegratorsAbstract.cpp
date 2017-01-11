@@ -25,15 +25,15 @@ void IntegratorAbstract::printInfo(){
 			int k=3*i;
 			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
-			
+
 			k++;
 			gravityE +=  massVector(k)*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
-			
+
 			k++;
 			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
-		}		
+		}
 	}
 
 	for(int i=0; i< M.tets.size(); i++){
@@ -62,7 +62,7 @@ void IntegratorAbstract::printInfo(){
 	gravityEnergyFile<<simTime<<", "<<gravityE<<"\n";
 
 	////////////////////////////////////
-	
+
 	// //////Momentum Code////////////
 	// if(momentumFile.is_open()){
 	// 	double xp=0;
@@ -99,7 +99,7 @@ void IntegratorAbstract::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd
 	M = pM;
 	TV = pTV;
 	TT = pTT;
-	
+
 	initVectors();
 	initMassMatrices();
 	createXFromTet();
@@ -111,7 +111,8 @@ void IntegratorAbstract::initVectors(){
 	f.resize(3*vertsNum);
 	massVector.resize(3*vertsNum);
 	forceGradient.resize(3*vertsNum, 3*vertsNum);
-	
+	CholeskyAnalyze.resize(3*vertsNum, 3*vertsNum);
+
 	x_old.setZero();
 	v_old.setZero();
 	f.setZero();
@@ -121,12 +122,12 @@ void IntegratorAbstract::initVectors(){
 }
 
 void IntegratorAbstract::analyzeCholeskySetup(){
-	forceGradient.setZero();
+	CholeskyAnalyze.setZero();
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	cout<<"Ignore past"<<endl;
 	cout<<ignorePastIndex<<endl;
 	vector<Trip> triplets1;
-	triplets1.reserve(12*12*M.tets.size());	
+	triplets1.reserve(12*12*M.tets.size());
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -155,14 +156,15 @@ void IntegratorAbstract::analyzeCholeskySetup(){
 			triplets1.push_back(Trip(3*indices[j/3]+kj, 3*indices[3]+2, 1));
 		}
 	}
-	forceGradient.setFromTriplets(triplets1.begin(), triplets1.end());
-	SparseMatrix<double> forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+	CholeskyAnalyze.setFromTriplets(triplets1.begin(), triplets1.end());
+
+	SparseMatrix<double> CholeskyAnalyzeBlock = CholeskyAnalyze.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 	// cout<<"analyzing pattern******"<<endl;
-	// cout<<forceGradient<<endl;
+	// cout<<CholeskyAnalyze<<endl;
 	// cout<<"analyzing pattern******"<<endl;
-	// cout<<forceGradientStaticBlock<<endl;
+	// cout<<CholeskyAnalyzeStaticBlock<<endl;
 	cout<<"analyzing pattern******"<<endl;
-	llt_solver.analyzePattern(forceGradientStaticBlock);
+	llt_solver.analyzePattern(CholeskyAnalyzeBlock);
 }
 
 void IntegratorAbstract::initMassMatrices(){
@@ -203,7 +205,7 @@ void IntegratorAbstract::initMassMatrices(){
 	}
 	cout<<"MEDIAN"<<endl;
 	cout<<this->convergence_scaling_paramter<<endl;
-	cout<<"Mass Vector"<<endl;
+	// cout<<"Mass Vector"<<endl;
 	// cout<<"Mass Vector"<<endl;
 	// cout<<massVector<<endl;
 	// cout<<"INV Mass"<<endl;

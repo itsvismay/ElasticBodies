@@ -165,8 +165,6 @@ int main(int argc, char* argv[]) {
   if (settings->off) mesh = new Mesh(settings->inputMeshOff, settings);
   else mesh = new Mesh(settings->inputMeshObj, settings);
 
-  cout << "Mesh V " << mesh->verts.size() << endl;
-
   // calculate the bounding shape based on the verts
   BoundingVolume* fixedVolume = 0x0;
   if (settings->topFixed) fixedVolume = mesh->createTopBound(settings->fixedDepth);
@@ -178,7 +176,6 @@ int main(int argc, char* argv[]) {
 
   /////// temp code ///////
   fixedVolume = mesh->createFrontBound(.01);
-  cout << "FV " << fixedVolume->verts.size() << endl;
   /////////////////////////
 
   // translate the object to the origin
@@ -200,7 +197,6 @@ int main(int argc, char* argv[]) {
   /////// temp code ///////
   //forceVolume = mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
   forceVolume = mesh->createBackBound(0.01);
-  cout << "FORCE VERTS: " << forceVolume->verts.size() << endl;
   /////////////////////////
 
   // distribute force per vert in volume

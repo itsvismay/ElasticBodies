@@ -27,9 +27,6 @@ include_directories( ${TETGEN_INCLUDE_DIR})
 find_package(SUITESPARSE REQUIRED)
 include_directories(${SUITESPARSE_INCLUDE_DIRS})
 
-find_package(LIBLBFGS QUIET)
-include_directories(${LIBLBFGS_INCLUDE_DIRS})
-
 
 if(LIBIGL_VIEWER_WITH_NANOGUI)
   add_definitions(-DIGL_VIEWER_WITH_NANOGUI)
@@ -73,16 +70,14 @@ set(LIBS
   ${GLEW_LIBRARIES}
   ${NANOGUI_LIBRARIES}
   ${TETGEN_LIBRARIES}
-  ${SUITESPARSE_LIBRARIES}
-  ${LIBLBFGS_LIBRARIES}
 )
 
 if(UNIX AND NOT APPLE)
   set(LIBS ${LIBS} ${LIBS})
-  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama -ldl")
+  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -lGL -lGLU -lrt -lX11 -lXxf86vm -lXrandr -lpthread -lXi  -lXcursor -lXinerama -ldl -llapack -lblas")
 endif(UNIX AND NOT APPLE)
 
-FILE(GLOB HEADFILES "${PROJECT_SOURCE_DIR}/../../alglib-cpp/src/*.h" "../*.h" "*.h")
-FILE(GLOB SRCFILES "${PROJECT_SOURCE_DIR}/../../alglib-cpp/src/*.cpp" "../*.cpp" "*.cpp" )
+FILE(GLOB HEADFILES "../*.h" "*.h")
+FILE(GLOB SRCFILES "../*.cpp" "*.cpp" )
 add_executable(elastic ${HEADFILES} ${SRCFILES} ${GLEW_SOURCES} ${TETGEN_SOURCES})
 target_link_libraries(elastic ${LIBS})

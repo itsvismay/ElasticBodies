@@ -49,9 +49,9 @@ for opt, arg in opts:
   if opt == "--name":
     name = arg
   if opt == "--gen":
-    generation = int(arg)
+    generation = int(float(arg))
   if opt == "--ind":
-    individual = int(arg)
+    individual = int(float(arg))
   if opt == "-c":
     cleanAll = True
   if opt == "sConfig":
@@ -69,29 +69,31 @@ fixedMeshedFile = ''
 prepedMesh = ''
 forceData = ''
 
-if isBatch == True:
-  # generate all of the scad files based on the template
-  batchData = open(name)
-  for line in batchData.readlines():
-    curLine = line.strip().split(' ')
-    command = ['python', template, '-a']
-    for obj in curLine:
-      command.append(obj)
-    result = subprocess.check_output(command)
-    initialScadFiles.append(result.strip())
-else:
-  initialScadFiles.append(name)
+#if isBatch == True:
+#  # generate all of the scad files based on the template
+#  batchData = open(name)
+#  for line in batchData.readlines():
+#    curLine = line.strip().split(' ')
+#    command = ['python', template, '-a']
+#    for obj in curLine:
+#      command.append(obj)
+#    result = subprocess.check_output(command)
+#    initialScadFiles.append(result.strip())
+#else:
+#  initialScadFiles.append(name)
 
-for i in range(len(initialScadFiles)):
-  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
+#for i in range(len(initialScadFiles)):
+#  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
+#
+#  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
+#  try:
+#    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
+#  except OSError as e:
+#    print 'There was a System Error: ', e, '\n'
+#  # add generated stl file to list for next step
+#  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
-  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
-  try:
-    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
-  except OSError as e:
-    print 'There was a System Error: ', e, '\n'
-  # add generated stl file to list for next step
-  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
+initialSTLFiles.append("bezspring.stl")
 
 for i in range(len(initialSTLFiles)):
   # run slic3r initialSTLFiles[i] --load sConfig
@@ -136,13 +138,13 @@ for i in range(len(layerScadFiles)):
 # convert stl layer files to obj files
 for i in range(len(layerSTLFiles)):
   #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
-  print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'
+  print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
   try:
-    result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.obj'])
+    result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'])
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
-  layerObjFiles.append(layerSTLFiles[i][:-4]+'.obj')
+  layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
 
 # combine obj files into one file
 for i in range(len(initialGCodeFiles)):
@@ -151,67 +153,75 @@ for i in range(len(initialGCodeFiles)):
   try:
     temp = 0
     result = subprocess.check_output(['../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
-    #result = subprocess.check_output(['./../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(3)])
   except OSError as e:
     print 'There was a System Error: ', e, '\n'
 
 # fix mesh
-meshedFile = "unioned.obj"
-fixedMeshedFile = "fixedUnion.obj"
-doubleMeshedFile = "doubleFixed.obj"
+meshedFile = "unioned.off"
+fixedMeshedFile = "fixedUnion.off"
+largestOff = "largest.off"
+restOff = "rest.off"
+pathToCgal = "../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
 
 try:
-  print 'python fix_mesh.py', meshedFile
-  result = subprocess.check_output(['python', '../..//PyMesh/scripts/fix_mesh.py', '--detail', 'low', meshedFile, fixedMeshedFile])
+  print 'split', meshedFile
+  result = subprocess.check_output(['./../3dUnion/build/remesh', meshedFile])
 except OSError as e:
-  print 'There was a System Error ', e, '\n'
+  print 'There was a System Error', e, '\n'
 
-#try:
-#  print 'python fix_mesh.py', fixedMeshedFile
-#  result = subprocess.check_output(['python', '../../PyMesh/scripts/fix_mesh.py', '--detail', 'low', fixedMeshedFile, doubleMeshedFile])
-#except OSError as e:
-#  print 'There was a System Error ', e, '\n'
+try:
+  print 'remesh', meshedFile
+  result = subprocess.check_output(['./'+pathToCgal+'main', largestOff, restOff])
+except OSError as e:
+  print 'There was a System Error', e, '\n'
+
+# pointless but used for legacy
+try:
+  print 'cp', 'out.off', fixedMeshedFile
+  result = subprocess.check_output(['cp', 'out.off', fixedMeshedFile])
+except OSError as e:
+  print 'There was a System Error', e, '\n'
 
 # run sim prep to set up the mesh for simulation
-force = 20000;
-prepedMesh = 'prepedMesh.obj'
-forceData = 'forcedata.txt'
+force = 10000000;
+#prepedMesh = 'prepedMesh.off'
+#forceData = 'forcedata.txt'
 
 # temp for beam
-prepedMesh = '../shared/lowDetailBeam.obj'
-forceData = '../shared/lowBeamForce.txt'
+prepedMesh = '../shared/beam.off'
+forceData = '../shared/beam.txt'
 resultMeshes = '../PipelineTests/'
 
 try:
-  print './simprep --in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', force
-  result = subprocess.check_output(['./SimPrep/simprep', '--in', fixedMeshedFile, '--out', prepedMesh, '--force', forceData, '--maxForce', str(force)])
+  print './simprep --inputMeshOff', fixedMeshedFile, '--outputM', prepedMesh, 'outputF', forceData, '--forceYAxis', '-1', '--maxForce', force, ''
+  result = subprocess.check_output(['./SimPrep/simprep', '--meshOff', fixedMeshedFile, '--outputM', prepedMesh, '--outputF', forceData, '--forceZAxis', '-1', '--maxForce', str(force)])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 try:
-  print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.obj'
-  result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.obj'])
+  print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'
+  result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 try:
-  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.obj'
-  result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.obj'])
+  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'
+  result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 try:
-  print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.obj'
-  result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.obj'])
+  print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'
+  result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 # call simulation
-try:
-  print './elastic', '\n'
-  result = subprocess.check_output(['./../elastic'])
-except OSError as e:
-  print 'There was a System Error ', e, '\n'
+#try:
+#  print './elastic', '\n'
+#  result = subprocess.check_output(['./../elastic'])
+#except OSError as e:
+#  print 'There was a System Error ', e, '\n'
 
 # lists to clean
 # -- initialScadFiles

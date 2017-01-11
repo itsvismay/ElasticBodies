@@ -24,10 +24,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	clock_t t1 = clock();
-	cout<<"t1 t0"<<endl;
-	cout<<"SECONDS"<<double(t1 - t0)/CLOCKS_PER_SEC<<endl;
+
 
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
@@ -49,15 +48,16 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		clock_t t3 = clock();
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
-
-		ImplicitCalculateElasticForceGradient(TVk, forceGradient); 
+		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-		clock_t t4 = clock();
-		cout<<"forces and grad f"<< i<<endl;
-		cout<<"SECONDS"<<double(t4 - t3)/CLOCKS_PER_SEC<<endl;
+		for(int k=0; k<f.rows(); k++){
+			if(fabs(ext_force(k))>0.0001){
+				f(k) += ext_force(k);
+			}
+		}
 		// VectorXd g_block = x_k - x_old -h*v_old -h*h*InvMass*f;
 		// grad_g = Ident - h*h*InvMass*forceGradient - h*rayleighCoeff*InvMass*forceGradient;
-		
+
 
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
@@ -72,25 +72,13 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
 			exit(0);
 		}
-		clock_t t5 = clock();
-		cout<<"grad_g g block"<< i<<endl;
-		cout<<"SECONDS - "<<double(t5 - t4)/CLOCKS_PER_SEC<<endl;
-			llt_solver.factorize(grad_g);
-		
-			clock_t t6 = clock();
-			cout<<"factorize"<< i<<endl;
-			cout<<"SECONDS - "<<double(t6 - t5)/CLOCKS_PER_SEC<<endl<<endl;
 
-		
+
+		llt_solver.factorize(grad_g);
 		VectorXd deltaX = -1* llt_solver.solve(g_block);
-		
-		clock_t t7 = clock();
-		cout<<"solver"<< i<<endl;
-		cout<<"SECONDS - "<<double(t7 - t5)/CLOCKS_PER_SEC<<endl<<endl;
-
 		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
-		
-		//Sparse QR 
+
+		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
 		// VectorXd deltaX = -1*sqr.solve(g_block);
@@ -105,7 +93,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
 			break;
-		}	
+		}
 
 	}
 	if(Nan){
@@ -133,12 +121,7 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	//elastic
 	if(solver.compare("newton")==0){
 		for(unsigned int i=0; i<M.tets.size(); i++){
-			Vector4i indices = M.tets[i].verticesIndex;
-			MatrixXd F_tet = M.tets[i].oldComputeElasticForces(TVk, simTime%2);
-			f.segment<3>(3*indices(0)) += F_tet.col(0);
-			f.segment<3>(3*indices(1)) += F_tet.col(1);
-			f.segment<3>(3*indices(2)) += F_tet.col(2);
-			f.segment<3>(3*indices(3)) += F_tet.col(3);
+			M.tets[i].computeElasticForces(TVk, f);
 		}
 	}else{
 		for(unsigned int i=0; i<M.tets.size(); i++){
@@ -146,21 +129,15 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 		}
 	}
 
-
-	// for(int k=0; k<f.rows(); k++){
-	// 	if(fabs(external_f(k))>0.0001){
-	// 		f(k) += external_f(k);
-	// 	}
-	// }
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }
 
 void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 	forceGradient.setZero();
-	
+
 	vector<Trip> triplets1;
-	triplets1.reserve(12*12*M.tets.size());	
+	triplets1.reserve(12*12*M.tets.size());
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -202,14 +179,6 @@ void ImplicitEuler::render(VectorXd& ext_force){
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
-
-		
-	}else if(solver.compare("lbfgsvismay")==0){
-	//	alglibLBFGSVismay(ext_force);
-		exit(0);
-	}else if(solver.compare("lbfgsvouga")==0){
-	//	alglibLBFGSVouga(ext_force);
-		exit(0);
 	}else{
 		cout<<"Solver not specified properly"<<endl;
 		exit(0);
@@ -252,7 +221,7 @@ void ImplicitEuler::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){
 		TVk.row(indices(0)) = Vector3d(x_tv(3*indices(0)), x_tv(3*indices(0)+1), x_tv(3*indices(0) +2));
 		TVk.row(indices(1)) = Vector3d(x_tv(3*indices(1)), x_tv(3*indices(1)+1), x_tv(3*indices(1) +2));
 		TVk.row(indices(2)) = Vector3d(x_tv(3*indices(2)), x_tv(3*indices(2)+1), x_tv(3*indices(2) +2));
-		TVk.row(indices(3)) = Vector3d(x_tv(3*indices(3)), x_tv(3*indices(3)+1), x_tv(3*indices(3) +2)); 
+		TVk.row(indices(3)) = Vector3d(x_tv(3*indices(3)), x_tv(3*indices(3)+1), x_tv(3*indices(3) +2));
 	}
 	return;
 }
