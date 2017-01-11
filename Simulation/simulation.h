@@ -17,7 +17,7 @@ class Simulation{
 public:
 	SolidMesh M;
 	IntegratorAbstract* integrator;
-	vector<int> mapV2TV;
+	vector<int> moveVerticesStore;
 	int iters;
 	MatrixXd TV_k;
 	MatrixXd* sB;
@@ -34,7 +34,7 @@ public:
 
 	void staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, int ignorePastIndex, int step);
 
-	void staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT);
+	void staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, vector<int>& moveVertices, int ignorePastIndex, int step);
 	void syntheticTests(vector<int> moveVertices, MatrixXd& TV, MatrixXi& TT, int fv, MatrixXd& B);
 	void reIndexTVandTT(vector<int> newVertsIndices,
 						int sizeFixed,
@@ -47,6 +47,8 @@ public:
 						VectorXd& new_force);
 
 	void applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices);
+	void applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices);
+
 	void setInitPosition(VectorXd& force, vector<int>& fixVertices, vector<int>& moveVertices);
 
 	void printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
