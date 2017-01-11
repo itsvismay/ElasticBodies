@@ -3,9 +3,10 @@
 # --minRadius        the minimum value of the radius
 # --maxRadius        the maximum value of the radius
 # --height           the height of the spring
-# --depth            the depth of the spring
 # --minWidth         the minimum value of the width
 # --maxWidth         the maximum value of the width
+# --minOverlap       the minimum value of the overlap
+# --maxOverlap       the maximum value of the overlap
 # --resolution       the total number of samples
 # --loops            the fractional number of loops
 # -a read raw data
@@ -17,8 +18,9 @@
 # max x
 # min width
 # max width
+# min overlap
+# max overlap
 # height
-# depth
 # resolution
 # for each control point for x
 #   the control points y value
@@ -37,21 +39,22 @@ import sys, getopt, os, math
 import numpy as np
 
 name = "bezier_test.scad"
-numberXCtrlPts = 7
-numberWidthCtrlPts = 7
-xCtrlPts = [0.0, 0.25, 0.75, 0.2, 0.5, 0.9, 1.0]
-widthCtrlPts = [0.6, 1.0, 0.7, 0.4, 0.2, 0.4, 0.5]
+numberXCtrlPts = 5
+numberWidthCtrlPts = 5
+xCtrlPts = [0.0, 0.25, 0.75, 0.2, 0.5, 0.8, 1.0]
+widthCtrlPts = [0.6, 1.0, 0.7, 0.4, 0.7, 0.6, 0.5]
 
-maxX = 40.0
 minX = -40.0
+maxX = 40.0
 minWidth = 1.0
-maxWidth = 10.0
+maxWidth = 5.0
 height = 40.0
-depth = 10.0
-resolution = 1000
+depth = 20.0
+resolution = 100
+overlap = 1.0
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'a', ["maxX=", "minX=", "minWidth=", "maxWidth=", "height=", "resolution="])
+  opts, args = getopt.getopt(sys.argv[1:], 'a', ["maxX=", "minX=", "minWidth=", "maxWidth=", "height=", "resolution=", "minOverlap=", "maxOverlap="])
 except getopt.GetoptError:
   print 'Error Bad Input'
   sys.exit(-2)
@@ -64,12 +67,14 @@ for opt, arg in opts:
     minX = float(arg)
   elif opt == "--height":
     height = float(arg)
-  elif opt == "--depth":
-    depth = float(arg)
   elif opt == "--minWidth":
     minWidth = float(arg)
   elif opt == "--maxWidth":
     maxWidth = float(arg)
+  elif opt == "--minOverlap":
+    minOverlap = float(arg)
+  elif opt == "--maxOverlap":
+    maxOverlap = float(arg)
   elif opt == "--resolution":
     resolution = int(float(arg))
   elif opt == "-a":
@@ -80,15 +85,18 @@ for opt, arg in opts:
     maxX = float(sys.argv[6])
     minWidth = float(sys.argv[7])
     maxWidth = float(sys.argv[8])
-    height = float(sys.argv[9])
-    resolution = int(float(sys.argv[10]))
-    val = 10
+    minOverlap = float(sys.argv[9])
+    maxOverlap = float(sys.argv[10])
+    height = float(sys.argv[11])
+    resolution = int(float(sys.argv[12]))
+    val = 12
     for i in range(0, len(numberXCtrlPts)):
       xCtrlPts.append(float(sys.argv[val+1]))
       val = val + 1
     for i in range(0, len(numberWidthCtrlPts)):
       widthCtrlPts.append(float(sys.argv[val+1]))
       val = val + 1
+    overlap = calculateOverlap(float(sys.argv[val]))
 
 xCtrlPts.insert(0, 0.5)
 xCtrlPts.append(0.5)
@@ -109,7 +117,7 @@ def combination(n, r):
 def evaluateBez(ctrlPts):
   evaluatedValues = []
   numberCtrls = len(ctrlPts)
-  for i in range(0, resolution+1):
+  for i in range(0, resolution + 1):
     t = float(i) / float(resolution)
     nt = 1.0 - t
     n = numberCtrls - 1
@@ -126,6 +134,9 @@ def calculateX(v):
 
 def calculateHeight(v):
   return height * v
+
+def calculateOverlap(v):
+  return (maxOverlap - minOverlap) * v + minOverlap
 
 def calculateWidth(v):
   return (maxWidth - minWidth) * v + minWidth
@@ -187,10 +198,29 @@ file_write.write("\t\t\t\ty2 = points[i+1][1];\n")
 file_write.write("\t\t\t\twidth = points[i+1][2];\n")
 file_write.write("\t\t\t\ttranslateAndRotate(x1, y1, x2, y2, width);\n")
 file_write.write("\t\t\t}\n")
-file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), -(minWidth), maxX, minWidth*2.0))
-file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), height-(minWidth), maxX, minWidth*2.0))
+file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), -(minWidth), maxX/2.0, minWidth*2.0))
+file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), height-(minWidth), maxX/2.0, minWidth*2.0))
 file_write.write("\t\t}\n")
 file_write.write("\t}\n")
+file_write.write("}\n")
+file_write.write("\n")
+file_write.write("mirror() {\n")
+file_write.write("translate([%6.8f, 0.0, %6.8f]) {\n" % (overlap, z))
+file_write.write("\tlinear_extrude(height = %6.8f, center = false, convexity = 10, twist = 0) {\n" % depth)
+file_write.write("\t\tunion() {\n")
+file_write.write("\t\t\tfor( i=[0:len(points)-2] ){ \n")
+file_write.write("\t\t\t\tx1 = points[i][0];\n")
+file_write.write("\t\t\t\ty1 = points[i][1];\n")
+file_write.write("\t\t\t\tx2 = points[i+1][0];\n")
+file_write.write("\t\t\t\ty2 = points[i+1][1];\n")
+file_write.write("\t\t\t\twidth = points[i+1][2];\n")
+file_write.write("\t\t\t\ttranslateAndRotate(x1, y1, x2, y2, width);\n")
+file_write.write("\t\t\t}\n")
+file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), -(minWidth), maxX/2.0, minWidth*2.0))
+file_write.write("\t\t\ttranslate([%6.8f,%6.8f]) square([%6.8f, %6.8f]);\n" % (-(maxX / 2.0), height-(minWidth), maxX/2.0, minWidth*2.0))
+file_write.write("\t\t}\n")
+file_write.write("\t}\n")
+file_write.write("}\n")
 file_write.write("}\n")
 file_write.write("\n")
 file_write.close()
