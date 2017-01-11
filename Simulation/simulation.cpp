@@ -91,7 +91,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
 			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			igl::writeMESH(OUTPUT_SAVED_PATH"shared/"+objectName+"_static_init_position.mesh", TV, TT, TF);
+			igl::writeMESH(TUTORIAL_SHARED_PATH"shared/"+objectName+"_static_init_position.mesh", TV, TT, TF);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
@@ -205,6 +205,14 @@ void Simulation::reIndexTVandTT(
 }
 
 void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
+	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+"_static_init_position.mesh");
+	if(meshFile.good()){
+		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+"_static_init_position.mesh", TV, TT, TF);
+		cout<<"*****FOUND EXISTING MESH*****"<<endl;
+		return;
+	}
+
+
 	cout<<"***APPLYING STATIC FORCES****"<<endl;
 
 	int staticSolveSteps = 1;
@@ -242,7 +250,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	x.resize(3*TV.rows());
 	x.setZero();
 	setTVtoX(x, TV);
-	int NEWTON_MAX = 20, k=0;
+	int NEWTON_MAX = 30, k=0;
 	for(k=0; k<moveVertices.size(); k++)
 		cout<<moveVertices[k]<<endl;
 	for(k=0; k<NEWTON_MAX; k++){
@@ -256,23 +264,28 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 				f(i) += fixed_forces(i);
 			}
 		}
+
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
-
+		
+		
+		
+		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		sqr.compute(forceGradientStaticBlock);
+		VectorXd deltaX = -1*sqr.solve(fblock);
 		// Conj Grad
-		ConjugateGradient<SparseMatrix<double>> cg;
-		cg.compute(forceGradientStaticBlock);
-		if(cg.info() == Eigen::NumericalIssue){
-			cout<<"ConjugateGradient numerical issue"<<endl;
-			exit(0);
-		}
-		VectorXd deltaX = -1*cg.solve(fblock);
+		//ConjugateGradient<SparseMatrix<double>> cg;
+		//cg.compute(forceGradientStaticBlock);
+		//if(cg.info() == Eigen::NumericalIssue){
+		//	cout<<"ConjugateGradient numerical issue"<<endl;
+		//	exit(0);
+		//}
+		//VectorXd deltaX = -1*cg.solve(fblock);
 
 		
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
-
 		if(x != x){
 			cout<<"NAN"<<endl;
 			exit(0);
