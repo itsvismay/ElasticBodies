@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/vismay/ElasticBodies/Pipeline/3dUnion/main.cpp
+igl/read_triangle_mesh.h
+-
+igl/copyleft/cgal/CSGTree.h
+-
+igl/viewer/Viewer.h
+-
+igl/jet.h
+-
+Eigen/Core
+-
+vector
+-
+igl/writeOBJ.h
+-
+tutorial_shared_path.h
+/home/vismay/ElasticBodies/Pipeline/3dUnion/tutorial_shared_path.h
+

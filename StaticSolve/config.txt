@@ -1,0 +1,31 @@
+.00001
+f
+i
+1
+0.00
+-000
+1
+6900000
+.35
+-pRa0.065
+svk
+newton
+tensile_beam/rawTensile
+
+#1 timestep
+#2 headless t/f
+#3 explicit/implicit
+#4 number of steps if headless
+#5 rayleigh
+#6 gravity
+#7 object
+#8 youngs
+#9 poissons
+#10 tetgen code -pRq7
+#11 solver netwon or lbfgs
+#12 object name (in shared file)
+-pqa15000
+-pRq1.18
+low_detail_beam/lowDetailBeam
+test_obj/testObject
+tensile_beam/tensileTest

@@ -1,91 +1,232 @@
-
-FROM scratch
+FROM ubuntu:16.04
+MAINTAINER zack441@mac.com
 
 # required libraries
-RUN apt install aptitude
-RUN apt install vim
-RUN apt install git
-RUN apt install build-essentials
-RUN apt install libgl1-mesa-dev
-RUN apt install freeglut3-dev
-RUN apt install cmake
-RUN apt install libblas-dev
-RUN apt install libboost-dev
-RUN apt install llibmpfr4 libmpfr4-dbg
-RUN apt install libopenblas-dev
-RUN apt install libpng12-dev
-RUN apt install python-matplotlib
-RUN apt install python-scipy
-RUN apt install swig
-RUN apt install zlib1g-dev
-RUN apt install libxcursor-dev
-RUN apt install libxi-dev
-RUN apt install libxinerama-dev
-RUN apt install libxrandr-dev
-RUN apt install libcgal-dev
-RUN apt purge libcgal-dev
-RUN apt install libeigen3-dev
-RUN apt install openscad openscad-dbg
-RUN apt install slic3r
+RUN echo 'apt-get update' && \
+    apt-get update && \
+    echo 'install apt-utils' && \
+    apt-get install -y apt-utils && \
+    echo 'install aptitude' && \
+    apt-get install -y aptitude && \
+    echo 'install vim' && \
+    apt-get install -y vim && \
+    echo 'install git' && \
+    apt-get install -y git && \
+    echo 'install build-essential' && \
+    apt-get install -y build-essential && \
+    echo 'install libgl1-mesa-dev' && \
+    apt-get install -y libgl1-mesa-dev && \
+    echo 'install freeglut3-dev' && \
+    apt-get install -y freeglut3-dev && \
+    echo 'install cmake' && \
+    apt-get install -y cmake && \
+    echo 'install libblas-dev' && \
+    apt-get install -y libblas-dev && \
+    echo 'install libboost-dev' && \
+    apt-get install -y libboost-dev && \
+    echo 'install libmpfr4 and libmpfr4-dbg' && \
+    apt-get install -y libmpfr4 libmpfr4-dbg && \
+    echo 'install libopenlbas-dev' && \
+    apt-get install -y libopenblas-dev && \
+    echo 'install libpng12-dev' && \
+    apt-get install -y libpng12-dev && \
+    echo 'install python-matplotlib' && \
+    apt-get install -y python-matplotlib && \
+    echo 'install python-scipy' && \
+    apt-get install -y python-scipy && \
+    echo 'install python3-dev' && \
+    apt-get install -y python3-dev && \
+    echo 'install swig' && \
+    apt-get install -y swig && \
+    echo 'install zlib1g-dev' && \
+    apt-get install -y zlib1g-dev && \
+    echo 'install libxcursor-dev' && \
+    apt-get install -y libxcursor-dev && \
+    echo 'install libxi-dev' && \
+    apt-get install -y libxi-dev && \
+    echo 'install libxinerama-dev' && \
+    apt-get install -y libxinerama-dev && \
+    echo 'install libxrandr-dev' && \
+    apt-get install -y libxrandr-dev && \
+    echo 'install libcgal-dev' && \
+    apt-get install -y libcgal-dev && \
+    echo 'purge libcgal-dev' && \
+    apt-get purge -y libcgal-dev && \
+    echo 'install libeigen3-dev' && \
+    apt-get install -y libeigen3-dev && \
+    echo 'install openscad and openscad-dbg' && \
+    apt-get install -y openscad openscad-dbg && \
+    echo 'install slic3r' && \
+    apt-get install -y slic3r && \
+    echo 'install meshlab' && \
+    apt-get install -y meshlab && \
+    echo 'install clang' && \
+    apt-get install -y clang && \
+    echo 'install libtool' && \
+    apt-get install -y libtool && \
+    echo 'install libtbb-dev' && \
+    apt-get install -y libtbb-dev && \
+    echo 'install libqt4-dev' && \
+    apt-get install -y libqt4-dev && \
+    echo 'install wget' && \
+    apt-get install -y wget && \
+    echo ‘install libgmp3-dev’ && \
+    apt-get install -y libgmp3-dev && \
+    echo ‘install libmpfr-dev’ && \
+    apt-get install -y libmpfr-dev && \
+    echo ‘install m4’ && \
+    apt-get install -y m4 && \
+    echo ‘install autoconf’ && \
+    apt-get install -y autoconf && \
 
-# required downloads - use wget
+
+# git clones
+RUN git clone --recursive https://github.com/qnzhou/PyMesh.git && \
+    git clone https://github.com/chokkan/liblbfgs.git && \
+    git clone --recursive https://github.com/libigl/libigl.git && \
+    git clone https://github.com/jluttine/suitesparse.git && \
+    git clone https://github.com/itsvismay/ElasticBodies.git && \
+    git clone --recursive https://github.com/CGAL/cgal.git
+
 # Anaconda
-# CGAL
-# liblbfgs-1.10
+RUN echo ‘wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh’ && \
+    wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh && \
+    echo ‘Anaconda2-4.2.0-Linux-x86_64.sh -b’ && \
+    bash Anaconda2-4.2.0-Linux-x86_64.sh -b
 
-# required git repositories and building them
-# git clone https://github.com/qnzhou/PyMesh.git
-# to be done
-# git clone https://github.com/jluttine/suitespares.git
-# to be done
-# git clone --recursive https://github.com/libigl/libigl.git
-# to be done
-# git clone https://github.com/itsvismay/ElasticBodies.git
-# to be done
+# Needed for PyMesh
+RUN python --version && \
+    echo ‘wget https://bootstrap.pypa.io/ez_setup.py -O - python’ && \
+    wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 
-ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
+# Moving Files Around
+RUN echo ‘cp -r ElasticBodies/Pipeline/3dUnion libigl/tutorial’ && \
+    cp -r ElasticBodies/Pipeline/3dUnion libigl/tutorial && \
+    cp ElasticBodies/Pipeline/CMakeLists.txt libigl/tutorial/CMakeLists.txt
 
-# a few minor docker-specific tweaks
-# see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
-RUN set -xe \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L40-L48
-	&& echo '#!/bin/sh' > /usr/sbin/policy-rc.d \
-	&& echo 'exit 101' >> /usr/sbin/policy-rc.d \
-	&& chmod +x /usr/sbin/policy-rc.d \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L54-L56
-	&& dpkg-divert --local --rename --add /sbin/initctl \
-	&& cp -a /usr/sbin/policy-rc.d /sbin/initctl \
-	&& sed -i 's/^exit.*/exit 0/' /sbin/initctl \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L71-L78
-	&& echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L85-L105
-	&& echo 'DPkg::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' > /etc/apt/apt.conf.d/docker-clean \
-	&& echo 'APT::Update::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' >> /etc/apt/apt.conf.d/docker-clean \
-	&& echo 'Dir::Cache::pkgcache ""; Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/docker-clean \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L109-L115
-	&& echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/docker-no-languages \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L118-L130
-	&& echo 'Acquire::GzipIndexes "true"; Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/docker-gzip-indexes \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L134-L151
-	&& echo 'Apt::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/docker-autoremove-suggests
+RUN ls
 
-# delete all the apt list files since they're big and get stale quickly
-RUN rm -rf /var/lib/apt/lists/*
-# this forces "apt-get update" in dependent images, which is also good
+# Set up CGAL
+RUN echo ‘cd cgal’ && \
+    cd cgal && \
+    echo ‘cmake .’ && \
+    cmake . && \
+    echo ‘make’ && \
+    make && \
+    echo ‘make install’ && \
+    make install && \
+    echo ‘cd ..’ && \
+    cd ..
 
-# enable the universe
-RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
+# Set up Suitesparse
+RUN echo ‘cd suitesparse’ && \
+    cd suitesparse && \
+    echo ‘make’ && \
+    make && \
+    echo ‘make install’ && \
+    make install && \
+    echo ‘cd ..’ && \
+    cd ..
 
-# make systemd-detect-virt return "docker"
-# See: https://github.com/systemd/systemd/blob/aa0c34279ee40bce2f9681b496922dedbadfca19/src/basic/virt.c#L434
-RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
+# Set up libigl
+RUN echo ‘cd libigl’ && \
+    cd libigl && \
+    echo ‘cd external’ && \
+    cd external && \
+    echo ‘cd nanogui’ && \
+    cd nanogui && \
+    echo ‘mkdir build’ && \
+    mkdir build && \
+    echo ‘cd build’ && \
+    cd build && \
+    echo ‘cmake ..’ && \
+    cmake .. && \
+    echo ‘make’ && \
+    make && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd tutorial’ && \
+    cd tutorial && \
+    echo ‘mkdir build’ && \
+    mkdir build && \
+    echo ‘cd build’ && \
+    cd build && \
+    echo ‘cmake ..’ && \
+    cmake .. && \
+    echo ‘make’ && \
+    make && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd ..
 
-# overwrite this with 'CMD []' in a dependent Dockerfile
-CMD ["/bin/bash"]
+# Set up PyMesh
+RUN echo ‘cd PyMesh’ && \
+    cd PyMesh && \
+    echo ‘export PYMESH_PATH=$(pwd)’ && \
+    export PYMESH_PATH=$(pwd) && \
+    echo ‘cd third_party’ && \
+    cd third_party && \
+    echo ‘mkdir build’ && \
+    mkdir build && \
+    echo ‘cd build’ && \
+    cd build && \
+    echo ‘cmake ..’ && \
+    cmake .. && \
+    echo ‘make’ && \
+    make && \
+    echo ‘make install’ && \
+    make install && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cmake ..’ && \
+    cmake .. && \
+    echo ‘make’ && \
+    make && \
+    echo ‘make src_tests’ && \
+    make src_tests && \
+    echo ‘make tools’ && \
+    make tools && \
+    echo ‘make tools_tests’ && \
+    make tools_tests && \
+    echo ‘./setup.py build’ && \
+    ./setup.py build && \
+    echo ‘./setup.py install’ && \
+    ./setup.py install && \
+    echo ‘cd ..’ && \
+    cd ..
+
+# Set up liblbfgs
+RUN echo ‘cd liblbfgs’ && \
+    cd liblbfgs && \
+    echo ‘cd ..’ && \
+    cd ..
+
+# Set up ElasticBodies
+RUN echo ‘cd ElasticBodies’ && \
+    cd ElasticBodies && \
+    echo ’cmake .’ && \
+    cmake . && \
+    echo ‘make’ && \
+    make && \
+    echo ‘cd Pipeline/SimPrep’ && \
+    cd Pipeline/SimPrep && \
+    echo ‘make’ && \
+    make && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd .. && \
+    echo ‘cd ..’ && \
+    cd ..
+
+# Run the Simulation
+
