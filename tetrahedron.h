@@ -1,28 +1,23 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef tetrahedron_h
+#define tetrahedron_h
 
-using namespace Eigen;
-using namespace std;
-
-typedef Matrix<double, 12, 1> Vector12d;
+#include "globals.h"
 
 class Tetrahedron
 {
 public:
     Matrix3d DeformedShapeMatrix, ReferenceShapeMatrix, InvRefShapeMatrix;
     VectorXi verticesIndex;
-    double undeformedVol, energyDensity;
+    double undeformedVol, energy, currentVol;
     double mu, lambda;
     Tetrahedron(VectorXi k, double mu, double lambda);
-    MatrixXd computeElasticForces(MatrixXd& TV, int e);
+    void computeElasticForces(MatrixXd& TV, VectorXd& f);
+    MatrixXd oldComputeElasticForces(MatrixXd &TV, int e);
     void precomputeForces(MatrixXd& TV);
     MatrixXd computeForceDifferentials(MatrixXd& TV, Vector12d& dx);
     Matrix3d computeDeltaDs(const Vector12d& dx);
     Matrix3d computeDs(const Vector12d& x);
 
 };
+
+#endif

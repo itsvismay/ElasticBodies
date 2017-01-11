@@ -11,9 +11,13 @@ if(NOT NANOGUI_FOUND)
 FIND_PATH(NANOGUI_INCLUDE_DIR nanogui/nanogui.h
   PATHS
     $ENV{LIBIGL}/external/nanogui/include
+    ${PROJECT_SOURCE_DIR}/../../../../external/nanogui/include
+    ${PROJECT_SOURCE_DIR}/../../../external/nanogui/include
     ${PROJECT_SOURCE_DIR}/../../external/nanogui/include
     ${PROJECT_SOURCE_DIR}/../external/nanogui/include
     ${PROJECT_SOURCE_DIR}/external/nanogui/include
+    ${PROJECT_SOURCE_DIR}/../../../../libigl/external/nanogui/include
+    ${PROJECT_SOURCE_DIR}/../../../libigl/external/nanogui/include
     ${PROJECT_SOURCE_DIR}/../../libigl/external/nanogui/include
     ${PROJECT_SOURCE_DIR}/../libigl/external/nanogui/include
     ${PROJECT_SOURCE_DIR}/libigl/external/nanogui/include

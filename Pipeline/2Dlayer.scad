@@ -2,8 +2,8 @@ module drawBasicShape(x1, y1, x2, y2, width)
 {
     // width: width of extrude
     length = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
-    if (length == 0)
-        echo(5);
+    //if (length == 0)
+    //    echo(5);
     if (width!=0.0) {
         square(size = [width, length], center = false);
         translate([width/2, 0, 0]) circle(d=width);
@@ -21,11 +21,12 @@ module translateAndRotate(x1, y1, x2, y2, width)
         angle = atan((y2-y1)/(x2-x1)) + 270;
         //translate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) %drawBasicShape(x1, y1, x2, y2, width);
         if (x2>=x1) {
-            translate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);
+            translate([x1, y1, 0.0]) rotate([0.0, 0.0, angle]) translate([-width/2, 0.0, 0.0]) scale(1.0, 1.0, 1.0001) drawBasicShape(x1, y1, x2, y2, width);
         } 
         else if (x2<x1) { 
-            translate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) drawBasicShape(x1, y1, x2, y2, width);}
-    }        
+            translate([x1, y1, 0.0]) rotate([0.0, 0.0, angle+180]) translate([-width/2, 0.0, 0.0]) scale(1.0, 1.0, 1.0001) drawBasicShape(x1, y1, x2, y2, width);}
+    }      
+  //drawBasicShape(x1, y1, x2, y2, width);  
 }
 
 /////////////////////////////
@@ -37,5 +38,5 @@ $fn = 200;
 
 union() {
 // Read File Containing [X, Y, Width] Info
-include <gcode_for_loop.scad>;
+include <CCgcode_for_loop.scad>;
 }

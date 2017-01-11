@@ -7,11 +7,15 @@
 #  LIBIGL_SOURCES - the LIBIGL source files
 if(NOT LIBIGL_FOUND)
 find_path(LIBIGL_INCLUDE_DIR igl/readOBJ.h
+   ${PROJECT_SOURCE_DIR}/../../../../include
+   ${PROJECT_SOURCE_DIR}/../../../include
    ${PROJECT_SOURCE_DIR}/../../include
    ${PROJECT_SOURCE_DIR}/../include
    ${PROJECT_SOURCE_DIR}/include
    ${PROJECT_SOURCE_DIR}/../libigl/include
    ${PROJECT_SOURCE_DIR}/../../libigl/include
+   ${PROJECT_SOURCE_DIR}/../../../libigl/include
+   ${PROJECT_SOURCE_DIR}/../../../libigl/include
    $ENV{LIBIGL}/include
    $ENV{LIBIGLROOT}/include/igl/readOBJ.h
    $ENV{LIBIGL_ROOT}/include

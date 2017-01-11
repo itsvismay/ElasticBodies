@@ -1,18 +1,7 @@
-#ifndef IMPLICIT_NEWMARK__H
-#define IMPLICIT_NEWMARK__H
-
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <iostream>
-#include <vector>
-#include <pthread.h>
-#include <fstream>
-#include <math.h>
+#ifndef implicit_newmark_h
+#define implicit_newmark_h
 
 #include "IntegratorsAbstract.h"
-
-using namespace Eigen;
-using namespace std;
 
 class ImplicitNewmark: public IntegratorAbstract{
 
@@ -21,7 +10,6 @@ public:
 	SparseMatrix<double> ZeroMatrix;
 	SparseMatrix<double> Ident;
 
-	SparseMatrix<double> forceGradient;
 	SparseMatrix<double> grad_g;
 
 	VectorXd x_k, v_k, f_old;
@@ -29,11 +17,11 @@ public:
 	double gamma = 0.5;
 	double beta =0.25;
 	
-	void render();
-	void renderNewtonsMethod();
+	void render(VectorXd& ext_force);
+	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS();
 	
-	
+	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta);
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
