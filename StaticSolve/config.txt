@@ -7,7 +7,7 @@ i
 1
 6900000
 .35
--pRa0.10
+-pRa0.065
 svk
 newton
 tensile_beam/rawTensile

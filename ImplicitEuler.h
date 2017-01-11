@@ -2,7 +2,6 @@
 #define implicit_euler_h
 
 #include "IntegratorsAbstract.h"
-#include "../alglib-cpp/src/optimization.h"
 
 using namespace Eigen;
 using namespace std;
@@ -14,7 +13,7 @@ public:
 	SparseMatrix<double> ZeroMatrix;
 	SparseMatrix<double> Ident;
 
-	
+
 	SparseMatrix<double> grad_g;
 
 	double gamma = 0.5;
@@ -29,7 +28,7 @@ public:
 	int alglibLBFGSVismay(VectorXd& ext_force);
 	int alglibLBFGSVouga(VectorXd& ext_force);
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
-	
+
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);

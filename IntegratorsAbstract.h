@@ -3,7 +3,6 @@
 
 #include "solidmesh.h"
 #include <Eigen/CholmodSupport>
-#include <lbfgs.h>
 
 
 class IntegratorAbstract{
