@@ -254,11 +254,6 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 				f(i) += fixed_forces(i);
 			}
 		}
-		// exit(0);
-		// cout<<fixed_forces- f_prev<<endl;
-		// cout<<"Change in position"<<endl;
-		// cout<<f_prev - f<<endl;
-		// f_prev = f;
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
@@ -272,21 +267,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 		}
 		VectorXd deltaX = -1*cg.solve(fblock);
 
-		//Sparse QR
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		// sqr.compute(forceGradientStaticBlock);
-		// VectorXd deltaX = -1*sqr.solve(fblock);
-
-		// // Sparse Cholesky LL^T
-		// CholmodSupernodalLLT<SparseMatrix<double>> llt;
-		// llt.compute(forceGradientStaticBlock);
-		// if(llt.info() == Eigen::NumericalIssue){
-		// 	cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
-		// 	exit(0);
-		// }
-		// VectorXd deltaX = -1*llt.solve(fblock);
-
-
+		
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
 
