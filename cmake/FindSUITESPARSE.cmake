@@ -103,10 +103,10 @@
 # Specify search directories for include files and libraries (this is the union
 # of the search directories for all OSs).
 SET(SUITESPARSE_CHECK_INCLUDE_DIRS
-${PROJECT_SOURCE_DIR}/../../SuiteSparse/include
+${PROJECT_SOURCE_DIR}/../../suitesparse/include
 )
 SET(SUITESPARSE_CHECK_LIBRARY_DIRS
- ${PROJECT_SOURCE_DIR}/../../SuiteSparse/lib
+ ${PROJECT_SOURCE_DIR}/../../suitesparse/lib
 )
 message("FUCK THIS INSTALL ")
 message(${SUITESPARSE_CHECK_INCLUDE_DIRS})

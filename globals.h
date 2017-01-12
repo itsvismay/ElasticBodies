@@ -4,19 +4,16 @@
 #include "externals.h"
 
 //MACROS
-#define PATH "/home/vismay/"
-
 // #define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
 // #define OUTPUT_SAVED_PATH "/scratch/cluster/vismay/"
 
-#define HOME_SAVED_PATH  PATH"ElasticBodies/"
-#define OUTPUT_SAVED_PATH PATH"ElasticBodies/"
-
+#define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
+#define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/"
 // #define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
 // #define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
 
-#define TUTORIAL_SHARED_PATH PATH"ElasticBodies/"
-#define CONSISTENCY_TEST_SAVE_PATH PATH"ElasticBodies/"
+#define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
+#define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/" 
 
 using namespace Eigen;
 using namespace std;

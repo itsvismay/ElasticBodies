@@ -142,7 +142,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
 		// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else {
-		cout << "ERROR :: MESH FILE WAS NOT FOUND" << endl;
+		cout << "MAIN ERROR :: MESH FILE WAS NOT FOUND" << endl;
 		exit(0);
 	}
 
@@ -154,8 +154,8 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	// exit(0);
 	ForcesTV.resize(moveVertices.size(), 3);
 	ForcesTV.setZero();
-	for(int i=0; i<moveVertices.size(); i++){
-		ForcesTV.row(i) = Sim.integrator->TV.row(moveVertices[i]);
+	for(int i=0; i<Sim.moveVerticesStore.size(); i++){
+		ForcesTV.row(i) = Sim.integrator->TV.row(Sim.moveVerticesStore[i]);
 	}
 
 	FixedTV.resize(Sim.integrator->fixedVerts.size(), 3);
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
 	strainEnergyFile.open("../Scripts/senergy.txt");
 	kineticEnergyFile.open("../Scripts/kenergy.txt");
 	gravityEnergyFile.open("../Scripts/genergy.txt");
-	optimizationFile.open("../TestsResults/opt.txt");
+	optimizationFile.open("../../TestsResults/opt.txt");
 
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);

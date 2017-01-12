@@ -8,8 +8,9 @@ int staticSolveDirection = 0;
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
 	if (method =='e'){
-		integrator = new Verlet();
+	//	integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;
+		exit(0);
 	}else if(method == 'i'){
 		integrator = new ImplicitEuler();
 		cout<<"Initialized Implicit Euler"<<endl;
@@ -29,7 +30,21 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices, moveVertices);
+	// setInitPosition(force, fixVertices, moveVertices);
+	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[1] > -1.5){
+			moveVertices.push_back(i);
+		}
+		if(TV.row(i)[1] < -40.5){
+			fixVertices.push_back(i);
+		}
+	}
+	double amountofforce = 1e8/moveVertices.size();
+	for(int i=0; i<moveVertices.size(); i++){
+		force(3*moveVertices[i] + 1) -= amountofforce;
+	}
+	//-------------------
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -89,12 +104,14 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
-			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			this->moveVerticesStore = newMoveIndices;
+			// applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
-		applyExternalForces();
+		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
 
 	}else{
@@ -119,11 +136,14 @@ void Simulation::headless(){
 
 	integrator->external_f = this->external_force;
 	printDesigns(printcount, integrator->simTime);
+	double maxYVel = 0;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
+		double yvel = printOptimizationOutput();
+		if(yvel>maxYVel)
+			maxYVel = yvel;
 		if(integrator->simTime%100==0){
 			printDesigns(printcount, integrator->simTime);
-			// printOptimizationOutput();
 			printcount += 1;
 		}
 	}
@@ -131,29 +151,35 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/"+to_string(integrator->h)+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
-
+	cout<<printcount<<endl;
 }
 
-void Simulation::printOptimizationOutput(){
-	// double disp =0;
-	// for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-	// 	if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
-	// 		disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+double Simulation::printOptimizationOutput(){
+	// double avgmove = 0.0;
+	// for(int i = 0; i < this->moveVerticesStore.size(); i++){
+	// 	avgmove += integrator->TV.row(this->moveVerticesStore[i])(1);
 	// }
-	// if(disp < maxDisp){
-	// 	maxDisp = disp;
-	// }
-	// optimizationFile<<integrator->simTime <<maxDisp<<endl;
-	// cout<<maxDisp<<"\n";
+	//
+	// optimizationFile<<integrator->simTime <<avgmove/this->moveVerticesStore.size()<<endl;
+	// cout<<"Spring has moved to here:"<<endl;
+	// cout<<avgmove/this->moveVerticesStore.size()<<"\n";
 
+	double avgV = 0.0;
+	for(int i=0; i<this->moveVerticesStore.size(); i++){
+		avgV += integrator->v_old(3*this->moveVerticesStore[i]+1); //avg in the y direction
+	}
+	optimizationFile<< integrator->simTime <<", "<< avgV/this->moveVerticesStore.size()<<"\n";
+	cout<<"Moving this fast:"<<endl;
+	cout<<avgV/this->moveVerticesStore.size()<<endl;
+	return avgV/this->moveVerticesStore.size();
 }
 
 bool Simulation::render(){
 	//These changes are for the spring
 	integrator->render(this->external_force);
-
+	printOptimizationOutput();
 
 	return true;
 }
@@ -202,6 +228,113 @@ void Simulation::reIndexTVandTT(
 		}
 	}
 }
+void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
+	cout<<"***SETTING INITIAL POSITIONS***"<<endl;
+	double movePercentOfSpringLength = .1;
+	int direction = -1; //-y
+	cout<<"MOVING"<<endl;
+	cout<<moveVertices.size()<<endl;
+	double designTop = 0.0;
+	double designBottom = 0.0;
+	for(int i=0; i<TV.rows(); ++i){
+		if(TV.row(i)[abs(direction)] > designTop){
+			designTop = TV.row(i)[abs(direction)];
+		}
+		if(TV.row(i)[abs(direction)] < designBottom){
+			designBottom = TV.row(i)[abs(direction)];
+		}
+	}
+	cout<<designTop<<", "<<designBottom<<endl;
+	double distance_to_move = (designTop - designBottom)*movePercentOfSpringLength;
+	int number_of_moves = 100;
+	double step_size = distance_to_move/number_of_moves;
+	cout<<"STEP SIZE"<<endl;
+	cout<<step_size<<endl;
+	int ignorePastIndex = TV.rows() - moveVertices.size() - fixVertices.size();
+	double amount_moved = 0;
+	int i=0;
+	while(amount_moved < distance_to_move){
+		//Move vertices slightly in x,y,z direction
+		// [v, v, v..., m, m, ...f, f, f...]
+		for(unsigned int i=0; i<moveVertices.size(); i++){
+			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
+
+		}
+		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, number_of_moves);
+		number_of_moves -= 1;
+		printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", i, TV, TT, B);
+		i++;
+	}
+}
+void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, vector<int>& moveVertices, int ignorePastIndex, int step){
+	cout<<"------------Static Solve Newtons POSITION - Iteration"<< step<<"--------------"<<endl;
+	//Newtons method static solve for minimum Strain E
+	SparseMatrix<double> forceGradient;
+	forceGradient.resize(3*TV.rows(), 3*TV.rows());
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	VectorXd f, x;
+	f.resize(3*TV.rows());
+	f.setZero();
+	x.resize(3*TV.rows());
+	x.setZero();
+	setTVtoX(x, TV);
+
+	int NEWTON_MAX = 100, k=0;
+	for(k=0; k<NEWTON_MAX; k++){
+		xToTV(x, TV);
+
+		calculateForceGradient(TV, forceGradient);
+		calculateElasticForces(f, TV);
+
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd fblock = f.head(ignorePastIndex*3);
+
+		//Sparse QR
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> solver;
+		// solver.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*solver.solve(fblock);
+
+		// Conj Grad
+		ConjugateGradient<SparseMatrix<double>> solver;
+		solver.compute(forceGradientStaticBlock);
+		if(solver.info() == Eigen::NumericalIssue){
+			cout<<"ConjugateGradient numerical issue"<<endl;
+			exit(0);
+		}
+
+		VectorXd deltaX = -1*solver.solve(fblock);
+
+		x.segment(0,3*(ignorePastIndex))+=deltaX;
+		cout<<"		Newton Iter "<<k<<endl;
+
+		if(x != x){
+			cout<<"NAN"<<endl;
+			exit(0);
+		}
+
+		cout<<"fblock/size"<<endl;
+		cout<<fblock.squaredNorm()/fblock.size()<<endl;
+		if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			break;
+		}
+	}
+
+	if(k== NEWTON_MAX){
+		cout<<"ERROR Static Solve: Newton max reached"<<endl;
+		cout<<k<<endl;
+		exit(0);
+	}
+	double strainE = 0;
+	for(int i=0; i< M.tets.size(); i++){
+		strainE += M.tets[i].energy;
+	}
+	cout<<"strain E"<<strainE<<endl;
+	cout<<"x[0] "<<x(0)<<endl;
+	cout<<"x[1] "<<x(1)<<endl;
+	exit(0);
+}
 
 void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
 	cout<<"***APPLYING STATIC FORCES****"<<endl;
@@ -209,10 +342,11 @@ void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, Vect
 	int staticSolveSteps = 1;
 	int ignorePastIndex = TV.rows() - fixVertices.size();
 
-	while(staticSolveSteps < 11){
+	while(staticSolveSteps<11){
 		VectorXd f = fixed_forces*1e-1*staticSolveSteps;
 		staticSolveNewtonsForces(TV, TT, B, f, moveVertices, ignorePastIndex, staticSolveSteps);
 		staticSolveSteps += 1;
+		printObj(OUTPUT_SAVED_PATH"Boba/StaticSolve/", staticSolveSteps, TV, TT, B);
 	}
 	//MAX
 	double maxd = 100.0;
@@ -224,11 +358,10 @@ void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, Vect
 	cout<<"Max D"<<endl;
 	cout<<maxd<<endl;
 
-	printObj("BEAM", staticSolveSteps, TV, TT, B);
 }
 
 void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, int ignorePastIndex, int step){
-	cout<<"------------Static Solve Newtons Method-Iteration"<< step<<"--------------"<<endl;
+	cout<<"------------Static Solve Newtons FORCES - Iteration"<< step<<"--------------"<<endl;
 
 	//Newtons method static solve for minimum Strain E
 	SparseMatrix<double> forceGradient;
@@ -241,8 +374,8 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 	x.resize(3*TV.rows());
 	x.setZero();
 	setTVtoX(x, TV);
-	f_prev = fixed_forces;
-	int NEWTON_MAX = 20, k=0;
+	int NEWTON_MAX = 100, k=0;
+
 	for(k=0; k<NEWTON_MAX; k++){
 		xToTV(x, TV);
 
@@ -259,6 +392,12 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd fblock = f.head(ignorePastIndex*3);
 
+
+
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(forceGradientStaticBlock);
+		// VectorXd deltaX = -1*sqr.solve(fblock);
+
 		// Conj Grad
 		ConjugateGradient<SparseMatrix<double>> cg;
 		cg.compute(forceGradientStaticBlock);
@@ -268,9 +407,9 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 		}
 		VectorXd deltaX = -1*cg.solve(fblock);
 
+
 		x.segment(0,3*(ignorePastIndex))+=deltaX;
 		cout<<"		Newton Iter "<<k<<endl;
-
 		if(x != x){
 			cout<<"NAN"<<endl;
 			exit(0);
@@ -406,7 +545,6 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vect
 			}
 			index+=1;
 		}
-		this->putForceOnTheseVerts.resize(temp.size());
 		for(int i=0; i<temp.size(); i++){
 			moveVertices.push_back(temp[i]);
 		}
@@ -433,104 +571,6 @@ void Simulation::xToTV(VectorXd& x, MatrixXd& TV){
 	}
 }
 
-void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIndex, vector<int>& moveVertices, MatrixXd& TV,  MatrixXi& TT){
-	//Move vertices slightly in x,y,z direction
-	// [v, v, v..., f, f, ...(m), (m), (m)...]
-	for(unsigned int i=0; i<moveVertices.size(); i++){
-		TV.row(TV.rows()-i-1)[staticSolveDirection] += move_step;//move step
-	}
-
-	//Newtons method static solve for minimum Strain E
-	SparseMatrix<double> forceGradient;
-	forceGradient.resize(3*TV.rows(), 3*TV.rows());
-	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
-	VectorXd f, x;
-	f.resize(3*TV.rows());
-	f.setZero();
-	x.resize(3*TV.rows());
-	x.setZero();
-	setTVtoX(x, TV);
-
-	int NEWTON_MAX = 100, k=0;
-	for(k=0; k<NEWTON_MAX; k++){
-		// X to TV
-		TV.setZero();
-		for(unsigned int i=0; i < M.tets.size(); i++){
-			Vector4i indices = M.tets[i].verticesIndex;
-			TV.row(indices(0)) = Vector3d(x(3*indices(0)), x(3*indices(0)+1), x(3*indices(0) +2));
-			TV.row(indices(1)) = Vector3d(x(3*indices(1)), x(3*indices(1)+1), x(3*indices(1) +2));
-			TV.row(indices(2)) = Vector3d(x(3*indices(2)), x(3*indices(2)+1), x(3*indices(2) +2));
-			TV.row(indices(3)) = Vector3d(x(3*indices(3)), x(3*indices(3)+1), x(3*indices(3) +2));
-		}
-		calculateForceGradient(TV, forceGradient);
-		calculateElasticForces(f, TV);
-
-		//Block forceGrad and f to exclude the fixed verts
-		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		VectorXd fblock = f.head(ignorePastIndex*3);
-
-		// cout<<TV.rows()<<endl;
-		// cout<<ignorePastIndex<<endl;
-		// cout<<forceGradientStaticBlock.rows()<<endl;
-		// cout<<forceGradientStaticBlock.cols()<<endl;
-		// SparseMatrix<double> forceGradientStaticBlockTranspose = forceGradientStaticBlock.transpose();
-		// cout<<(forceGradientStaticBlockTranspose - forceGradientStaticBlock).norm()<<endl;
-
-		//Sparse QR
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		// sqr.compute(forceGradientStaticBlock);
-		// VectorXd deltaX = -1*sqr.solve(fblock);
-
-		// Conj Grad
-		ConjugateGradient<SparseMatrix<double>> cg;
-		cg.compute(forceGradientStaticBlock);
-		if(cg.info() == Eigen::NumericalIssue){
-			cout<<"ConjugateGradient numerical issue"<<endl;
-			exit(0);
-		}
-		VectorXd deltaX = -1*cg.solve(fblock);
-
-		// // Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(forceGradientStaticBlock);
-		// if(llt.info() == Eigen::NumericalIssue){
-		// 	cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
-		// 	exit(0);
-		// }
-		// VectorXd deltaX = -1*llt.solve(fblock);
-
-		// cout<< (fblock - forceGradientStaticBlock*deltaX).squaredNorm()<<endl;
-
-		x.segment(0,3*(ignorePastIndex))+=deltaX;
-		cout<<"		Newton Iter "<<k<<endl;
-
-		if(x != x){
-			cout<<"NAN"<<endl;
-			exit(0);
-		}
-
-		cout<<"Fblock/size"<<endl;
-		cout<<fblock.squaredNorm()/fblock.size()<<endl;
-		if (fblock.squaredNorm()/fblock.size() < 0.00001){
-			break;
-		}
-	}
-
-	if(k== NEWTON_MAX){
-		cout<<"ERROR Static Solve: Newton max reached"<<endl;
-		cout<<k<<endl;
-		exit(0);
-	}
-	double strainE = 0;
-	for(int i=0; i< M.tets.size(); i++){
-		strainE += M.tets[i].energy;
-	}
-	cout<<"strain E"<<strainE<<endl;
-	cout<<"x[0] "<<x(0)<<endl;
-	cout<<"x[1] "<<x(1)<<endl;
-	exit(0);
-}
 
 void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B){
 
