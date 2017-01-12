@@ -90,7 +90,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
 			this->moveVerticesStore = newMoveIndices;
-			applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			// applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 			//applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
