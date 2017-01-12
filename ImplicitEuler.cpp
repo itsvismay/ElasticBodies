@@ -69,7 +69,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		Sparse Cholesky LL^T
+		// Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
 			exit(0);
@@ -83,7 +83,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// 	cout<<"ConjugateGradient numerical issue"<<endl;
 		// 	exit(0);
 		// }
-		VectorXd deltaX = -1*cg.solve(g_block);
+		// VectorXd deltaX = -1*llt.solve(g_block);
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
