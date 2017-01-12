@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
 	strainEnergyFile.open("../Scripts/senergy.txt");
 	kineticEnergyFile.open("../Scripts/kenergy.txt");
 	gravityEnergyFile.open("../Scripts/genergy.txt");
-	optimizationFile.open("../TestsResults/opt.txt");
+	optimizationFile.open("../../TestsResults/opt.txt");
 
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);

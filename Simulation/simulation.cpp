@@ -91,7 +91,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			this->moveVerticesStore = newMoveIndices;
 			// applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			//applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
@@ -139,20 +139,28 @@ void Simulation::printDesigns(int printcount, int simTime){
 }
 
 void Simulation::printOptimizationOutput(){
-	double avgmove = 0.0;
-	for(int i = 0; i < this->moveVerticesStore.size(); i++){
-		avgmove += integrator->TV.row(this->moveVerticesStore[i])(1);
-	}
+	// double avgmove = 0.0;
+	// for(int i = 0; i < this->moveVerticesStore.size(); i++){
+	// 	avgmove += integrator->TV.row(this->moveVerticesStore[i])(1);
+	// }
+	//
+	// optimizationFile<<integrator->simTime <<avgmove/this->moveVerticesStore.size()<<endl;
+	// cout<<"Spring has moved to here:"<<endl;
+	// cout<<avgmove/this->moveVerticesStore.size()<<"\n";
 
-	optimizationFile<<integrator->simTime <<avgmove/this->moveVerticesStore.size()<<endl;
-	cout<<"Spring has moved to here:"<<endl;
-	cout<<avgmove/this->moveVerticesStore.size()<<"\n";
+	double avgV = 0.0;
+	for(int i=0; i<this->moveVerticesStore.size(); i++){
+		avgV += integrator->v_old(3*this->moveVerticesStore[i]+1); //avg in the y direction
+	}
+	optimizationFile<< integrator->simTime <<", "<< avgV/this->moveVerticesStore.size()<<"\n";
+	cout<<"Moving this fast:"<<endl;
+	cout<<avgV/this->moveVerticesStore.size()<<endl;
 }
 
 bool Simulation::render(){
 	//These changes are for the spring
 	integrator->render(this->external_force);
-
+	printOptimizationOutput();
 
 	return true;
 }
