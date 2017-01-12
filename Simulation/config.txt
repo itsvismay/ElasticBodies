@@ -1,5 +1,5 @@
 .00001
-f
+t
 i
 100
 0.00
@@ -10,7 +10,7 @@ i
 pR
 neo
 newton
-bezier_spring/springFULL
+tensile_beam/rawTensile
 
 #1 timestep
 #2 headless t/f

@@ -2,6 +2,7 @@
 #define integrators_abstract_h
 
 #include "solidmesh.h"
+//IF CHOLMOD, COMMENT THIS IN**
 //#include <Eigen/CholmodSupport>
 
 
@@ -13,6 +14,7 @@ public:
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
 	SimplicialLLT<SparseMatrix<double>> llt_solver;
+	//IF CHOLMOD, COMMENT THIS IN** |^|comment above out
 	//CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
 	SparseMatrix<double> forceGradient, CholeskyAnalyze;
 
