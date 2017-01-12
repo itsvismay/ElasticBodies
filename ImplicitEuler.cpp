@@ -31,6 +31,8 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+
+
 	clock_t t2 = clock();
 	cout<<"t2 t1"<<endl;
 	cout<<"SECONDS"<<double(t2 - t1)/CLOCKS_PER_SEC<<endl;
@@ -67,16 +69,21 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		// Sparse Cholesky LL^T
+		Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
 			exit(0);
 		}
-
-
 		llt_solver.factorize(grad_g);
 		VectorXd deltaX = -1* llt_solver.solve(g_block);
-		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(grad_g);
+		// if(cg.info() == Eigen::NumericalIssue){
+		// 	cout<<"ConjugateGradient numerical issue"<<endl;
+		// 	exit(0);
+		// }
+		VectorXd deltaX = -1*cg.solve(g_block);
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
@@ -84,6 +91,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		// VectorXd deltaX = -1*sqr.solve(g_block);
 		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 
+		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
 		if(x_k != x_k){
 			Nan = true;
 			break;

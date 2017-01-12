@@ -89,8 +89,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		M.initializeMesh(newTT, newTV, youngs, poissons);
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
-			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			igl::writeMESH(OUTPUT_SAVED_PATH"shared/"+objectName+"_static_init_position.mesh", TV, TT, TF);
+			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
@@ -138,16 +137,17 @@ void Simulation::printDesigns(int printcount, int simTime){
 }
 
 void Simulation::printOptimizationOutput(){
-	double disp =0;
-	for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
-		if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
-			disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
-	}
-	if(disp < maxDisp){
-		maxDisp = disp;
-	}
-	optimizationFile<<integrator->simTime <<maxDisp<<endl;
-	cout<<maxDisp<<"\n";
+	// double disp =0;
+	// for(int i=0; i<this->putForceOnTheseVerts.rows(); i++){
+	// 	if (integrator->TV.row(this->putForceOnTheseVerts(i))(2) < disp)
+	// 		disp = integrator->TV.row(this->putForceOnTheseVerts(i))(2);
+	// }
+	// if(disp < maxDisp){
+	// 	maxDisp = disp;
+	// }
+	// optimizationFile<<integrator->simTime <<maxDisp<<endl;
+	// cout<<maxDisp<<"\n";
+
 }
 
 bool Simulation::render(){
