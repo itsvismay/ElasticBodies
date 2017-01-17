@@ -30,20 +30,21 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	// setInitPosition(force, fixVertices, moveVertices);
+	setInitPosition(force, fixVertices, moveVertices);
+
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1] > -1.5){
-			moveVertices.push_back(i);
-		}
-		if(TV.row(i)[1] < -40.5){
-			fixVertices.push_back(i);
-		}
-	}
-	double amountofforce = 1e8/moveVertices.size();
-	for(int i=0; i<moveVertices.size(); i++){
-		force(3*moveVertices[i] + 1) -= amountofforce;
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[1] > -1.5){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[1] < -40.5){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// }
+	// double amountofforce = 1e8/moveVertices.size();
+	// for(int i=0; i<moveVertices.size(); i++){
+	// 	force(3*moveVertices[i] + 1) -= amountofforce;
+	// }
 	//-------------------
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
@@ -105,8 +106,14 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
 			this->moveVerticesStore = newMoveIndices;
-			// applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			//RECOMMENT
+			ifstream meshFile(TUTORIAL_SHARED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
+			if(meshFile.good()){
+				igl::readMESH(TUTORIAL_SHARED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
+			}else{
+				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			}
+			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
@@ -133,20 +140,26 @@ void Simulation::applyExternalForces(){
 
 void Simulation::headless(){
 	int printcount =0;
-
+	ofstream dampingPositionFile;
+	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Boba/"+objectName+"@"+tetgen_code+"position.txt");
 	integrator->external_f = this->external_force;
 	printDesigns(printcount, integrator->simTime);
 	double maxYVel = 0;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
-		double yvel = printOptimizationOutput();
-		if(yvel>maxYVel)
-			maxYVel = yvel;
-		if(integrator->simTime%100==0){
-			printDesigns(printcount, integrator->simTime);
-			printcount += 1;
-		}
+		//RECOMMENT
+		double z_pos = integrator->TV.row(369)[2] + 0.5;
+		// double z_pos = integrator->TV.row(65)[2] + 0.5;
+		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
+		// double yvel = printOptimizationOutput();
+		// if(yvel>maxYVel)
+		// 	maxYVel = yvel;
+		// if(integrator->simTime%100==0){
+		// 	printDesigns(printcount, integrator->simTime);
+		// 	printcount += 1;
+		// }
 	}
+	dampingPositionFile.close();
 
 }
 
@@ -179,7 +192,7 @@ double Simulation::printOptimizationOutput(){
 bool Simulation::render(){
 	//These changes are for the spring
 	integrator->render(this->external_force);
-	printOptimizationOutput();
+	// printOptimizationOutput();
 
 	return true;
 }
@@ -231,40 +244,65 @@ void Simulation::reIndexTVandTT(
 void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
 	cout<<"***SETTING INITIAL POSITIONS***"<<endl;
 	double movePercentOfSpringLength = .1;
-	int direction = -1; //-y
+	cout<<"DIRECTION of Static position solve: -z"<<endl;
+	int direction = -2; //-y
 	cout<<"MOVING"<<endl;
 	cout<<moveVertices.size()<<endl;
-	double designTop = 0.0;
-	double designBottom = 0.0;
+	double designZMax = 0.0;
+	double designZMin = 0.0;
+	double designXMax = 0.0;
+	double designXMin = 0.0;
+	double designYMax = 0.0;
+	double designYMin = 0.0;
 	for(int i=0; i<TV.rows(); ++i){
-		if(TV.row(i)[abs(direction)] > designTop){
-			designTop = TV.row(i)[abs(direction)];
+		if(TV.row(i)[2] > designZMax){
+			designZMax = TV.row(i)[2];
 		}
-		if(TV.row(i)[abs(direction)] < designBottom){
-			designBottom = TV.row(i)[abs(direction)];
+		if(TV.row(i)[2] < designZMin){
+			designZMin = TV.row(i)[2];
+		}
+		if(TV.row(i)[1] > designYMax){
+			designYMax = TV.row(i)[1];
+		}
+		if(TV.row(i)[1] < designYMin){
+			designYMin = TV.row(i)[1];
+		}
+		if(TV.row(i)[0] > designXMax){
+			designXMax = TV.row(i)[0];
+		}
+		if(TV.row(i)[0] < designXMin){
+			designXMin = TV.row(i)[0];
 		}
 	}
-	cout<<designTop<<", "<<designBottom<<endl;
-	double distance_to_move = (designTop - designBottom)*movePercentOfSpringLength;
-	int number_of_moves = 100;
+	Vector3d designMaxes(designXMax, designYMax, designZMax);
+	Vector3d designMins(designXMin, designYMin, designZMin);
+	cout<<designXMax<<", "<<designXMin<<endl;
+	cout<<designYMax<<", "<<designYMin<<endl;
+	cout<<designZMax<<", "<<designZMin<<endl;
+
+	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
+	double distance_to_move = 17;
+	int number_of_moves = 34;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
 	int ignorePastIndex = TV.rows() - moveVertices.size() - fixVertices.size();
 	double amount_moved = 0;
-	int i=0;
+	int c=0;
 	while(amount_moved < distance_to_move){
 		//Move vertices slightly in x,y,z direction
 		// [v, v, v..., m, m, ...f, f, f...]
 		for(unsigned int i=0; i<moveVertices.size(); i++){
 			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
-
 		}
-		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, number_of_moves);
-		number_of_moves -= 1;
-		printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", i, TV, TT, B);
-		i++;
+
+		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, c);
+		c++;
+		amount_moved+=step_size;
 	}
+	printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", c, TV, TT, B);
+	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
+	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
 }
 void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, vector<int>& moveVertices, int ignorePastIndex, int step){
 	cout<<"------------Static Solve Newtons POSITION - Iteration"<< step<<"--------------"<<endl;
@@ -333,7 +371,6 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;
 	cout<<"x[1] "<<x(1)<<endl;
-	exit(0);
 }
 
 void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){

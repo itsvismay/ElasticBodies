@@ -1,62 +1,128 @@
 #include "ImplicitNewmark.h"
-#include "globals.h"
 
+using namespace Eigen;
+using namespace std;
 
-void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
-	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
-	ZeroMatrix.setZero();
-	Ident.resize(3*vertsNum, 3*vertsNum);
-	Ident.setIdentity();
-	forceGradient.resize(3*vertsNum, 3*vertsNum);
-	grad_g.resize(3*vertsNum, 3*vertsNum);
-	x_k.resize(3*vertsNum);
-	v_k.resize(3*vertsNum);
-	x_k.setZero();
+typedef Eigen::Triplet<double> Trip;
+typedef Matrix<double, 12, 1> Vector12d;
+
+void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
+	//Implicit Code
 	v_k.setZero();
-	TVk = TV;
+	x_k.setZero();
+	x_k = x_old;
+	v_k = v_old;
+	f_old = f;
+	double gamma = 0.5;
+	double beta =0.25;
+
+
+	int ignorePastIndex = TV.rows() - fixedVerts.size();
+	SparseMatrix<double> forceGradientStaticBlock;
+	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+
+	SparseMatrix<double> RegMassBlock;
+	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+
+	forceGradient.setZero();
+	bool Nan=false;
+	int NEWTON_MAX = 100, i =0;
+
+	for( i=0; i<NEWTON_MAX; i++){
+		grad_g.setZero();
+		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
+		NewmarkCalculateElasticForceGradient(TVk, forceGradient);
+		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
+		for(int k=0; k<f.rows(); k++){
+			if(fabs(ext_force(k))>0.0001){
+				f(k) += ext_force(k);
+			}
+		}
+
+		//Block forceGrad and f to exclude the fixed verts
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
+		VectorXd g_block = g.head(ignorePastIndex*3);
+		grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock);
+
+		// Sparse Cholesky LL^T
+		if(llt_solver.info() == Eigen::NumericalIssue){
+			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+			exit(0);
+		}
+		llt_solver.factorize(grad_g);
+		VectorXd deltaX = -1* llt_solver.solve(g_block);
+
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(grad_g);
+		// if(cg.info() == Eigen::NumericalIssue){
+		// 	cout<<"ConjugateGradient numerical issue"<<endl;
+		// 	exit(0);
+		// }
+		// VectorXd deltaX = -1*llt.solve(g_block);
+
+		//Sparse QR
+		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+		// sqr.compute(grad_g);
+		// VectorXd deltaX = -1*sqr.solve(g_block);
+		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+
+		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+		if(x_k != x_k){
+			Nan = true;
+			break;
+		}
+
+		cout<<"g norm"<<endl;
+		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
+		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
+			break;
+		}
+
+	}
+	if(Nan){
+		cout<<"ERROR: Newton's method doesn't converge"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	if(i== NEWTON_MAX){
+		cout<<"ERROR: Newton max reached"<<endl;
+		cout<<i<<endl;
+		exit(0);
+	}
+	v_old = (x_k - x_old)/h;
+	x_old = x_k;
 }
 
-void ImplicitNewmark::NewmarkTVtoX(VectorXd& x_tv, MatrixXd& TVk){
-	x_tv.setZero();
-	for(unsigned int i = 0; i < M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
+void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
+	// //gravity
+	f.setZero();
 
-		x_tv(3*indices(0)) = TVk.row(indices(0))[0];
-		x_tv(3*indices(0)+1) = TVk.row(indices(0))[1];
-		x_tv(3*indices(0)+2) = TVk.row(indices(0))[2];
-
-		x_tv(3*indices(1)) = TVk.row(indices(1))[0];
-		x_tv(3*indices(1)+1) = TVk.row(indices(1))[1];
-		x_tv(3*indices(1)+2) = TVk.row(indices(1))[2];
-
-		x_tv(3*indices(2)) = TVk.row(indices(2))[0];
-		x_tv(3*indices(2)+1) = TVk.row(indices(2))[1];
-		x_tv(3*indices(2)+2) = TVk.row(indices(2))[2];
-
-		x_tv(3*indices(3)) = TVk.row(indices(3))[0];
-		x_tv(3*indices(3)+1) = TVk.row(indices(3))[1];
-		x_tv(3*indices(3)+2) = TVk.row(indices(3))[2];
+	for(unsigned int i=0; i<f.size()/3; i++){
+		f(3*i+1) += massVector(3*i+2)*gravity;
 	}
-}
 
-void ImplicitNewmark::NewmarkXtoTV(VectorXd& x_tv, MatrixXd& TVk){
-	TVk.setZero();
-	for(unsigned int i=0; i < M.tets.size(); i++){
-		Vector4i indices = M.tets[i].verticesIndex;
-		TVk.row(indices(0)) = Vector3d(x_tv(3*indices(0)), x_tv(3*indices(0)+1), x_tv(3*indices(0) +2));
-		TVk.row(indices(1)) = Vector3d(x_tv(3*indices(1)), x_tv(3*indices(1)+1), x_tv(3*indices(1) +2));
-		TVk.row(indices(2)) = Vector3d(x_tv(3*indices(2)), x_tv(3*indices(2)+1), x_tv(3*indices(2) +2));
-		TVk.row(indices(3)) = Vector3d(x_tv(3*indices(3)), x_tv(3*indices(3)+1), x_tv(3*indices(3) +2)); 
+	//elastic
+	if(solver.compare("newton")==0){
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			M.tets[i].computeElasticForces(TVk, f);
+		}
+	}else{
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			M.tets[i].computeElasticForces(TVk, f);
+		}
 	}
+
+	f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }
 
 void ImplicitNewmark::NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient){
 	forceGradient.setZero();
-	
+
 	vector<Trip> triplets1;
-	triplets1.reserve(12*12*M.tets.size());	
+	triplets1.reserve(12*12*M.tets.size());
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
@@ -92,227 +158,78 @@ void ImplicitNewmark::NewmarkCalculateElasticForceGradient(MatrixXd& TVk, Sparse
 	return;
 }
 
-void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
-	// //gravity
-	f.setZero();
-	for(unsigned int i=0; i<M.tets.size(); i++){
-		double vertex_mass = M.tets[i].undeformedVol/4;//assume const density 1
-		Vector4i indices = M.tets[i].verticesIndex;
-		f(3*indices(0)+1) += vertex_mass*gravity;
-		f(3*indices(1)+1) += vertex_mass*gravity; 
-		f(3*indices(2)+1) += vertex_mass*gravity;
-		f(3*indices(3)+1) += vertex_mass*gravity;
-	}
-
-	//elastic
-	// for(unsigned int i=0; i<M.tets.size(); i++){
-	// 	M.tets[i].computeElasticForces(TVk, f);
-
-	// }
-	// cout<<f<<endl<<endl;
-	//damping
-	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
-	// cout<<f<<endl<<endl;
-	return;
-}
-
-void ImplicitNewmark::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta){
-	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
-
-	VectorXd g = RegMass*x_k - RegMass*x_old - RegMass*h*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
-	g_block = g.head(ignorePast*3);
-	cout<<"HELLO"<<endl;
-	// cout<<"		First Term"<<endl;
-	// cout<<	RegMass*x<<endl;
-	// cout<<"		Second Term"<<endl;
-	// cout<<	RegMass*x_old<<endl;
-	// cout<<"		Third Term"<<endl;
-	// cout<<	h*RegMass*v_old<<endl;
-	// cout<<"		Fourth Term"<<endl;
-	// cout<<	(h*h/2)*(1-2*beta)*f_old<<endl;
-	// cout<<"		Fifth Term"<<endl;
-	// cout<<(h*h*beta)*f<<endl;
-}
-
-void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
-	//Implicit Code
-	v_k.setZero();
-	x_k.setZero();
-	x_k = x_old;
-	x_k(0) += 1;
-	v_k = v_old;
-	f_old = f;
-
-	int ignorePastIndex = TV.rows() - fixedVerts.size();
-	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);	
-	
-	SparseMatrix<double> RegMassBlock;
-	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
-	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
-
-
-	forceGradient.setZero();
-	bool Nan=false;
-	int NEWTON_MAX = 100, i =0;
-	
-	double gamma = 0.5;
-	double beta =0.25;
-	// cout<<"--------"<<simTime<<"-------"<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<x_k<<endl<<endl;
-	// cout<<"v_k"<<endl;
-	// cout<<v_k<<endl<<endl;
-	// cout<<"--------------------"<<endl;
-	for( i=0; i<NEWTON_MAX; i++){
-		grad_g.setZero();
-		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
-		NewmarkCalculateElasticForceGradient(TVk, forceGradient); 
-		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
-		for(int k=0; k<f.rows(); k++){
-			if(fabs(ext_force(k))>0.0001){
-				f(k) = 0.01*ext_force(k);
-			}
-		}
-		// VectorXd g_block = x_k - x_old - h*v_old - (h*h/2)*(1-2*beta)*InvMass*f_old - (h*h*beta)*InvMass*f;
-		//grad_g = Ident - h*h*beta*InvMass*(forceGradient+(rayleighCoeff/h)*forceGradient);
-
-		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
-		VectorXd g_block = g.head(ignorePastIndex*3);
-		grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock);
-		// VectorXd g = RegMass*x_k - RegMass*x_old - RegMass*h*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
-		// VectorXd g_block = g.head(ignorePastIndex*3);
-		// // findgBlock(g_block, x_k, x_old, ignorePastIndex, gamma, beta);
-		// // grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock);
-		//  grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock);
-		// VectorXd g_block = RegMass*x_k - RegMass*x_old - h*RegMass*v_old + (h*h/2)*((1-2*beta)*f_old + 2*beta*f);
-		
-		// cout<<"Gblock check"<<endl;
-		// cout<<g_block2<<endl<<"diff"<<endl;
-		// cout<<RegMass*g_block - g_block2<<endl;
-
-		// cout<<"re-arr g"<<endl;
-		// cout<<g_block<<endl<<endl;
-		// cout<<"G Gradient"<<t<<endl;
-		// cout<<grad_g<<endl;
-
-		//solve for delta x
-		// Conj Grad
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// VectorXd deltaX = -1*cg.solve(g);
-
-		// Sparse Cholesky LL^T
-		// SimplicialLLT<SparseMatrix<double>> llt;
-		// llt.compute(grad_g);
-		// if(llt.info() == Eigen::NumericalIssue){
-		// 	cout<<"Possibly using a non- pos def matrix in the Newmark newton LLT method"<<endl;
-		// 	exit(0);
-		// }
-		// VectorXd deltaX = -1* llt.solve(g_block);
-
-		//Sparse QR 
-		SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		sqr.compute(grad_g);
-		VectorXd deltaX = -1*sqr.solve(g_block);
-
-		// CholmodSimplicialLLT<SparseMatrix<double>> cholmodllt;
-		// cholmodllt.compute(grad_g);
-		// VectorXd deltaX = -cholmodllt.solve(g);
-		
-		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
-		if(x_k != x_k){
-			Nan = true;
-			break;
-		}
-
-		if(g_block.squaredNorm()/convergence_scaling_paramter < 1e-11){
-			cout<<"g norm"<<endl;
-			cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
-			break;
-		}
-
-	}
-	if(Nan){
-		cout<<"ERROR NEWMARK: Newton's method doesn't converge"<<endl;
-		cout<<i<<endl;
-		exit(0);
-	}
-	if(i== NEWTON_MAX){
-		cout<<"ERROR NEWMARK: Newton max reached"<<endl;
-		cout<<i<<endl;
-		exit(0);
-	}
-	v_old = v_old + h*(1-gamma)*InvMass*f_old + h*gamma*InvMass*f;
-	x_old = x_k;
-}
-
-// void ImplicitNewmark::renderLBFGS(){
-// 	//LBFGS
-// 	int N=3*vertsNum;
-// 	int i, ret = 0;
-
-// 	double gamma = 0.5;
-
-//     lbfgsfloatval_t fx;
-//     lbfgsfloatval_t *x = lbfgs_malloc(N);
-//     lbfgs_parameter_t param;
-//     if (x == NULL) {
-//         printf("ERROR: Newmark Failed to allocate a memory block for variables.\n");
-//     }
-
-//     /* Initialize the variables. */
-//     x_k.setZero();
-//     for (i = 0;i < N; i++) {
-       
-//        x[i] = x_old(i);
-//     }
-//     x_k = x_old;
-//     v_k = v_old;
-//     f_old = f;
-
-//      // Initialize the parameters for the L-BFGS optimization. 
-//     lbfgs_parameter_init(&param);
-
-//     /*
-//         Start the L-BFGS optimization; this will invoke the callback functions
-//         evaluateEuler() and progress() when necessary.
-//      */
-//     ret = lbfgs(N, x, &fx, evaluateNewmark, progressNewmark, this, &param);
-//     if(ret<0){
-//     	cout<<"ERROR: Newmark Liblbfgs did not converge, code "<<ret<<endl;
-//     	exit(0);
-//     }
-    
-//     v_old = v_old + h*(1-gamma)*InvMass*f_old + h*gamma*InvMass*f;
-// 	x_old = x_k;
-
-//     lbfgs_free(x);
-// }
-
 void ImplicitNewmark::render(VectorXd& ext_force){
 	simTime+=1;
-	cout<<"n"<<simTime<<endl;
+	cout<<"i"<<simTime<<endl;
+
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
-
-	}else if(solver.compare("lbfgs")==0){
-		//renderLBFGS(ext_force);
-		// alglibLBFGS(ext_force);
-		
 	}else{
 		cout<<"Solver not specified properly"<<endl;
 		exit(0);
 	}
 
-	cout<<"*******************"<<endl;
-	cout<< "New Pos"<<simTime<<endl;
-	cout<<x_old<<endl<<endl;
-	cout<< "New Vels"<<simTime<<endl;
-	cout<<v_old<<endl;
-	cout<<"*****************"<<endl<<endl;
+	// cout<<"*******************"<<endl;
+	// cout<< "New Pos"<<simTime<<endl;
+	// cout<<x_old<<endl<<endl;
+	// cout<< "New Vels"<<simTime<<endl;
+	// cout<<v_old<<endl;
+	// cout<<"*****************"<<endl<<endl;
 	IntegratorAbstract::printInfo();
+
 	NewmarkXtoTV(x_old, TV);
+
+}
+
+
+void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
+	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
+	ZeroMatrix.setZero();
+	Ident.resize(3*vertsNum, 3*vertsNum);
+	Ident.setIdentity();
+	forceGradient.resize(3*vertsNum, 3*vertsNum);
+	grad_g.resize(3*vertsNum, 3*vertsNum);
+	x_k.resize(3*vertsNum);
+	v_k.resize(3*vertsNum);
+	external_f.resize(3*vertsNum);
+	external_f.setZero();
+	x_k.setZero();
+	v_k.setZero();
+	TVk = TV;
+}
+
+void ImplicitNewmark::NewmarkXtoTV(VectorXd& x_tv, MatrixXd& TVk){
+	TVk.setZero();
+	for(unsigned int i=0; i < M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+		TVk.row(indices(0)) = Vector3d(x_tv(3*indices(0)), x_tv(3*indices(0)+1), x_tv(3*indices(0) +2));
+		TVk.row(indices(1)) = Vector3d(x_tv(3*indices(1)), x_tv(3*indices(1)+1), x_tv(3*indices(1) +2));
+		TVk.row(indices(2)) = Vector3d(x_tv(3*indices(2)), x_tv(3*indices(2)+1), x_tv(3*indices(2) +2));
+		TVk.row(indices(3)) = Vector3d(x_tv(3*indices(3)), x_tv(3*indices(3)+1), x_tv(3*indices(3) +2));
+	}
 	return;
+}
+
+void ImplicitNewmark::NewmarkTVtoX(VectorXd& x_tv, MatrixXd& TVk){
+	x_tv.setZero();
+	for(unsigned int i = 0; i < M.tets.size(); i++){
+		Vector4i indices = M.tets[i].verticesIndex;
+
+		x_tv(3*indices(0)) = TVk.row(indices(0))[0];
+		x_tv(3*indices(0)+1) = TVk.row(indices(0))[1];
+		x_tv(3*indices(0)+2) = TVk.row(indices(0))[2];
+
+		x_tv(3*indices(1)) = TVk.row(indices(1))[0];
+		x_tv(3*indices(1)+1) = TVk.row(indices(1))[1];
+		x_tv(3*indices(1)+2) = TVk.row(indices(1))[2];
+
+		x_tv(3*indices(2)) = TVk.row(indices(2))[0];
+		x_tv(3*indices(2)+1) = TVk.row(indices(2))[1];
+		x_tv(3*indices(2)+2) = TVk.row(indices(2))[2];
+
+		x_tv(3*indices(3)) = TVk.row(indices(3))[0];
+		x_tv(3*indices(3)+1) = TVk.row(indices(3))[1];
+		x_tv(3*indices(3)+2) = TVk.row(indices(3))[2];
+	}
 }
