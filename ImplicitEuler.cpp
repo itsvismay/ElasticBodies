@@ -18,8 +18,11 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	v_k.setZero();
 	x_k.setZero();
 	x_k = x_old;
-	x_k(0) += 0.01;//2.1898e-09;
 	v_k = v_old;
+	VectorXd f_old = f;
+	double gamma = 0.5;
+	double beta =0.25;
+
 	clock_t t0 = clock();
 
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
@@ -40,12 +43,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	// cout<<"--------"<<simTime<<"-------"<<endl;
-	// cout<<"x_k"<<endl;
-	// cout<<x_k<<endl<<endl;
-	// cout<<"v_k"<<endl;
-	// cout<<v_k<<endl<<endl;
-	// cout<<"--------------------"<<endl;
+
 	for( i=0; i<NEWTON_MAX; i++){
 		clock_t t3 = clock();
 		grad_g.setZero();
@@ -65,8 +63,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd g_block;
 		findgBlock(g_block, x_k, x_old, ignorePastIndex);
-		// VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - h*h*f;
-		// VectorXd g_block = g.head(ignorePastIndex*3);
 		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
 		// Sparse Cholesky LL^T

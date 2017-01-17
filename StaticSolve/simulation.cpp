@@ -8,7 +8,7 @@ int staticSolveDirection = 0;
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
 	if (method =='e'){
-		integrator = new Verlet();
+		//integrator = new Verlet();
 		cout<<"Initialized Verlet"<<endl;
 	}else if(method == 'i'){
 		integrator = new ImplicitEuler();
@@ -774,8 +774,8 @@ void Simulation::binarySearchYoungs(vector<int> moveVertices, MatrixXd& TV, Matr
 	vector<double> derivedYoungs;
 
 	//size of move
-	double move_amount = 3.1;
-	int number_of_moves = 62;
+	double move_amount = 2.5;
+	int number_of_moves = 50;
 	double dist_moved = 0;
 	double curr_youngs = 1;
 	double load_scalar = 0;
