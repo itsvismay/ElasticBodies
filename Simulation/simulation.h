@@ -11,7 +11,7 @@
 #include <igl/writeOFF.h>
 #include <igl/hausdorff.h>
 #include <igl/readOBJ.h>
-#include <igl/readMESH.h>#include <igl/readMESH.h>#include <igl/readMESH.h>
+#include <igl/readMESH.h>
 class Simulation{
 
 public:
