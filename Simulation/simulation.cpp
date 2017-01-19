@@ -107,9 +107,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			moveVertices = newMoveIndices;
 			this->moveVerticesStore = newMoveIndices;
 			//RECOMMENT
-			ifstream meshFile(TUTORIAL_SHARED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
+			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
+			cout<<OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
 			if(meshFile.good()){
-				igl::readMESH(TUTORIAL_SHARED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
+				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
 			}else{
 				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 			}
@@ -282,7 +283,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
 	double distance_to_move = 17;
-	int number_of_moves = 34;
+	int number_of_moves = 102;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
