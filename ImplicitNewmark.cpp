@@ -100,7 +100,7 @@ void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	f.setZero();
 
 	for(unsigned int i=0; i<f.size()/3; i++){
-		f(3*i+1) += massVector(3*i+2)*gravity;
+		f(3*i+2) += massVector(3*i+2)*gravity;
 	}
 
 	//elastic

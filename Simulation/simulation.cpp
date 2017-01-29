@@ -30,9 +30,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices, moveVertices);
-
-	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	// setInitPosition(force, fixVertices, moveVertices);
+	//BEZIER SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
 	// 	if(TV.row(i)[1] > -1.5){
 	// 		moveVertices.push_back(i);
@@ -45,6 +44,16 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	// for(int i=0; i<moveVertices.size(); i++){
 	// 	force(3*moveVertices[i] + 1) -= amountofforce;
 	// }
+	//-------------------
+	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0] < 1){
+			moveVertices.push_back(i);
+		}
+		if(TV.row(i)[0] > 140.1){
+			fixVertices.push_back(i);
+		}
+	}
 	//-------------------
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
@@ -146,11 +155,18 @@ void Simulation::headless(){
 	integrator->external_f = this->external_force;
 	printDesigns(printcount, integrator->simTime);
 	double maxYVel = 0;
+	cout<<integrator->TV.row(682)<<endl;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		//RECOMMENT
-		double z_pos = integrator->TV.row(369)[2] + 0.5;
-		// double z_pos = integrator->TV.row(65)[2] + 0.5;
+		double z_pos = 0;
+		if(tetgen_code.compare("pRa5")==0)
+			{z_pos = integrator->TV.row(682)[2] + 0.5;}
+		else if(tetgen_code.compare("pR")==0)
+			{z_pos = integrator->TV.row(80)[2] + 0.5;} //for pR only
+		else
+			{cout<<"FIND THE RIGHT VERTEX FIRTST"<<endl;
+			exit(0);}
 		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
@@ -246,7 +262,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 	cout<<"***SETTING INITIAL POSITIONS***"<<endl;
 	double movePercentOfSpringLength = .1;
 	cout<<"DIRECTION of Static position solve: -z"<<endl;
-	int direction = -2; //-y
+	int direction = -2; //-z
 	cout<<"MOVING"<<endl;
 	cout<<moveVertices.size()<<endl;
 	double designZMax = 0.0;
@@ -282,7 +298,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 	cout<<designZMax<<", "<<designZMin<<endl;
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
-	double distance_to_move = 17;
+	double distance_to_move = 14;
 	int number_of_moves = 102;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
@@ -294,7 +310,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		//Move vertices slightly in x,y,z direction
 		// [v, v, v..., m, m, ...f, f, f...]
 		for(unsigned int i=0; i<moveVertices.size(); i++){
-			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
+			TV.row(moveVertices[i])[abs(direction)] += (direction/abs(direction))*step_size;//step
 		}
 
 		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, c);

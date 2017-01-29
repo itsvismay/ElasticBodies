@@ -2,12 +2,12 @@
 t
 n
 10000
-0.0001
--10000000
+0.000150
+-10000
 1
-4900000000
+8300000000
 .35
-pRa4
+pRa5
 neo
 newton
 tensile_beam/rawTensile
@@ -17,7 +17,7 @@ tensile_beam/rawTensile
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity UNIT: mm/s^2
+#6 gravity UNIT: mm/s^2 = 1000*m/s^2
 #7 object
 #8 youngs UNIT: g/mm*s^2
 #9 poissons

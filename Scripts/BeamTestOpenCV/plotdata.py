@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 t = []
 x = []
 f = open('redbeamdata.txt')
-f1 = open('../../TestsResults/Boba/tensile_beam/rawTensile@pRa7.5position.txt')
+f1 = open('../../TestsResults/Boba/tensile_beam/rawTensile@pRa5position.txt')
 for line in f:
 	
 	step = line.strip("\n").split(",")
@@ -15,7 +15,7 @@ x1 = []
 for line in f1:
 	step = line.strip("\n").split(",")
 	t1.append(int(step[0])*1e-5)
-	x1.append(float(step[1]))
+	x1.append(float(step[1])*-1)
 
 plt.plot(t[210:], x[210:], "b", label='RealBeamData')
 print(t[211])
