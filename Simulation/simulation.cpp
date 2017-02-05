@@ -29,12 +29,22 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	force.setZero();
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
-	cout<<TV.rows()<<endl;
-	// setInitPosition(force, fixVertices, moveVertices);
-	//BEZIER SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	// cout<<TV.rows()<<endl;
+	setInitPosition(force, fixVertices, moveVertices);
+	// NON MIRRORED BEZ
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[1] < 1.5){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[1] < -40.5){
+	// 		// moveVertices.push_back(i);
+	// 	}
+	// }
+	//-----------------------
+	// MIRRORED BEZIER SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
 	// 	if(TV.row(i)[1] > -1.5){
-	// 		moveVertices.push_back(i);
+	// 		// moveVertices.push_back(i);
 	// 	}
 	// 	if(TV.row(i)[1] < -40.5){
 	// 		fixVertices.push_back(i);
@@ -46,15 +56,15 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	// }
 	//-------------------
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0] < 1){
-			moveVertices.push_back(i);
-		}
-		if(TV.row(i)[0] > 140.1){
-			fixVertices.push_back(i);
-		}
-	}
-	//-------------------
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[0] < 1){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[0] > 140.1){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// }
+	// -------------------
 
 	if(moveVertices.size()>0 or fixVertices.size()>0){
 		MatrixXd newTV;
@@ -119,9 +129,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
 			cout<<OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
 			if(meshFile.good()){
-				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
+				// igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
 			}else{
-				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+				// applyStvaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 			}
 			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
@@ -151,37 +161,38 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
-	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Boba/"+objectName+"@"+tetgen_code+"position.txt");
+	// dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/ConsistencyTests/"+objectName+"@"+tetgen_code+"position.txt");
 	integrator->external_f = this->external_force;
 	printDesigns(printcount, integrator->simTime);
+	printcount++;
 	double maxYVel = 0;
 	cout<<integrator->TV.row(682)<<endl;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		//RECOMMENT
-		double z_pos = 0;
-		if(tetgen_code.compare("pRa5")==0)
-			{z_pos = integrator->TV.row(682)[2] + 0.5;}
-		else if(tetgen_code.compare("pR")==0)
-			{z_pos = integrator->TV.row(80)[2] + 0.5;} //for pR only
-		else
-			{cout<<"FIND THE RIGHT VERTEX FIRTST"<<endl;
-			exit(0);}
-		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
+		// double z_pos = 0;
+		// if(tetgen_code.compare("pRa5")==0)
+		// 	{z_pos = integrator->TV.row(682)[2] + 0.5;}
+		// else if(tetgen_code.compare("pR")==0)
+		// 	{z_pos = integrator->TV.row(80)[2] + 0.5;} //for pR only
+		// else
+		// 	{cout<<"FIND THE RIGHT VERTEX FIRTST"<<endl;
+		// 	exit(0);}
+		// dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		// if(integrator->simTime%100==0){
-		// 	printDesigns(printcount, integrator->simTime);
-		// 	printcount += 1;
-		// }
+		if(integrator->simTime%1000==0){
+			printDesigns(printcount, integrator->simTime);
+			printcount += 1;
+		}
 	}
 	dampingPositionFile.close();
 
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Consistency/"+solver+"/"+to_string(integrator->h)+"/"+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }

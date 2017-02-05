@@ -32,7 +32,8 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	for( i=0; i<NEWTON_MAX; i++){
 		grad_g.setZero();
 		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
-		NewmarkCalculateElasticForceGradient(TVk, forceGradient);
+		if(i%2 == 0)
+			NewmarkCalculateElasticForceGradient(TVk, forceGradient);
 		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
 		for(int k=0; k<f.rows(); k++){
 			if(fabs(ext_force(k))>0.0001){
@@ -100,7 +101,7 @@ void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double
 	f.setZero();
 
 	for(unsigned int i=0; i<f.size()/3; i++){
-		f(3*i+2) += massVector(3*i+2)*gravity;
+		f(3*i+1) += massVector(3*i+1)*gravity;
 	}
 
 	//elastic

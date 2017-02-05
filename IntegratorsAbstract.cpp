@@ -23,7 +23,7 @@ void IntegratorAbstract::printInfo(){
 	for(int i=0; i<vertsNum; i++){
 		if(!isFixed(i)){
 			int k=3*i;
-			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
+			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 
 			k++;
@@ -31,7 +31,7 @@ void IntegratorAbstract::printInfo(){
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 
 			k++;
-			gravityE +=  massVector(k)*-1*gravity*(x_old(k));
+			// gravityE +=  massVector(k)*-1*gravity*(x_old(k));
 			kineticE += 0.5*massVector(k)*v_old(k)*v_old(k);
 		}
 	}

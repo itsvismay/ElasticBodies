@@ -1,16 +1,16 @@
-.00001
+.000001
 t
 n
-10000
+4000
 0.000150
--10000
+-100000000
 1
 8300000000
 .35
-pRa5
+pR
 neo
 newton
-tensile_beam/rawTensile
+bezier_spring/springFULL
 
 #1 timestep
 #2 headless t/f
@@ -33,3 +33,4 @@ test_obj/testObject
 beam/beam
 bezier_spring/spring
 tensile_beam/tensileTest
+bezier_spring/bezierMirrorPrepedOrig
