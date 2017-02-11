@@ -182,7 +182,7 @@ void Simulation::headless(){
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		if(integrator->simTime%1000==0){
+		if(integrator->simTime%10==0){
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}

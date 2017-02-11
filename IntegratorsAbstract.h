@@ -3,19 +3,19 @@
 
 #include "solidmesh.h"
 //IF CHOLMOD, COMMENT THIS IN**
-#include <Eigen/CholmodSupport>
+// #include <Eigen/CholmodSupport>
 
 
 class IntegratorAbstract{
 
 public:
-	int simTime =0;
+	int simTime = 0;
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
-	//IF CHOLMOD, COMMENT THIS IN** |^|comment above out
-	// SimplicialLLT<SparseMatrix<double>> llt_solver;
-	CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+	//IF CHOLMOD, COMMENT THIS IN**
+	// CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+	SimplicialLLT<SparseMatrix<double>> llt_solver;
 
 	SparseMatrix<double> forceGradient, CholeskyAnalyze;
 
