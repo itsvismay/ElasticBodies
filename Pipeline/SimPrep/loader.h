@@ -42,6 +42,12 @@ public:
 
     if (token[0] == 'O' && token[1] == 'F' && token[2] == 'F' && isSpace(token[3])) parseOffData(mesh, token += 4, numberOfVerts, numberOfFaces, numberOfNorms);
 
+    else if (token[0] == 'O' && token[1] == 'F' && token[2] == 'F' && (token[3] == '\n' || token[3] == '\0')) {
+        ifs.getline(line, sizeof(line), '\n');
+        token = line + strspn(line, " \t");
+        parseOffData(mesh, token, numberOfVerts, numberOfFaces, numberOfNorms);
+    }
+
     for (int i = 0; i < (*numberOfVerts); i++) {
       ifs.getline(line, sizeof(line), '\n');
       char* token = line + strspn(line, " \t");
