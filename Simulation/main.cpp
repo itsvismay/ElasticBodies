@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	Sim.render();
+	// Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -120,7 +120,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
-	viewer.data.add_points(RowVector3d(5.1869063659715744, 0.0081650755614386707, 13.955748806263978), RowVector3d(0,0,0));
+	// viewer.data.add_points(Sim.integrator->TV.row(80), RowVector3d(0,0,0));
+	viewer.data.add_points(Sim.integrator->TV.row(682), RowVector3d(0,0,0));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -132,7 +133,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	ifstream objFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj");
 	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
 
-	if (meshFile.good()) {
+	if (false) {
 		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (offFile.good()) {
 		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);

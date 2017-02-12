@@ -1,23 +1,23 @@
-.00001
+.000001
 t
 n
-2000
-0.000001
--10000000
+4000
+0.000150
+-100000000
 1
-2900000000
+8300000000
 .35
-pRa7.5
+pR
 neo
 newton
-tensile_beam/rawTensile
+bezier_spring/springFULL
 
 #1 timestep
 #2 headless t/f
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity UNIT: mm/s^2
+#6 gravity UNIT: mm/s^2 = 1000*m/s^2
 #7 object
 #8 youngs UNIT: g/mm*s^2
 #9 poissons
@@ -33,3 +33,4 @@ test_obj/testObject
 beam/beam
 bezier_spring/spring
 tensile_beam/tensileTest
+bezier_spring/bezierMirrorPrepedOrig
