@@ -30,7 +30,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	// cout<<TV.rows()<<endl;
-	setInitPosition(force, moveVertices, fixVertices);
+	setInitPosition(force, fixVertices, moveVertices);
 	// NON MIRRORED BEZ
 	// for(int i=0; i<TV.rows(); i++){
 	// 	if(TV.row(i)[1] < 1.5){
