@@ -1,23 +1,30 @@
+<<<<<<< HEAD
 1e-5
 t
 n
 400
+=======
+.001
+t
+n
+1
+>>>>>>> 2d84f5e571c108dc306cce3dd9f6f1b6704bd77d
 0.000150
--100000000
+-10
 1
 8300000000
 .35
 pRq100
 neo
 newton
-bezier_spring/springFULL
+didactic_test/Individual1
 
-#1 timestep
+#1 timestep UNIT: s
 #2 headless t/f
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity UNIT: mm/s^2 = 1000*m/s^2
+#6 gravity UNIT: m/s^2
 #7 object
 #8 youngs UNIT: g/mm*s^2
 #9 poissons
@@ -34,3 +41,4 @@ beam/beam
 bezier_spring/spring
 tensile_beam/tensileTest
 bezier_spring/bezierMirrorPrepedOrig
+bezier_spring/springFULL

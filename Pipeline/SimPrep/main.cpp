@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
   else if (settings->backFixed) fixedVolume = mesh->createBackBound(settings->fixedDepth);
 
   /////// temp code ///////
-  fixedVolume = mesh->createFrontBound(.01);
+  fixedVolume = mesh->createRightBound(36.0);
   /////////////////////////
 
   // translate the object to the origin
@@ -195,8 +195,8 @@ int main(int argc, char* argv[]) {
   else if (settings->backForce) forceVolume = mesh->createBackBound(settings->forceDepth);
 
   /////// temp code ///////
-  //forceVolume = mesh->createLineBound(mesh->xBnds()[1], 0.0, mesh->zBnds()[1], false, true, false);
-  forceVolume = mesh->createBackBound(0.01);
+  forceVolume = mesh->createLineBound(mesh->xBnds()[0], 0.0, mesh->zBnds()[1], false, true, false);
+  //forceVolume = mesh->createBackBound(0.03);
   /////////////////////////
 
   // distribute force per vert in volume

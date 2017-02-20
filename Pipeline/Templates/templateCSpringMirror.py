@@ -39,11 +39,11 @@ minOverlap = 0.0
 maxOverlap = 0.0
 
 inThk = 1.2
-inHei = 40.0
-sections = 5.0
-outThk = 10.0
-widthIn = 10.0
-overlap = 0.0
+inHei = 20.0
+sections = 3.0
+outThk = 6.0
+widthIn = 8.0
+overlap = 1.0
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "minInThk=", "maxInThk=", "minInHei=", "maxInHei=", "minSections=", "maxSections=", "minOutThk=", "maxOutThk=", "minWidthIn=", "maxWidthIn=", "minOverlap=", "maxOverlap=", "inThk=", "inHei", "sections=", "outThk=", "widthIn=", "overlap="])
@@ -181,3 +181,5 @@ file_write.write("}\n")
 file_write.write("}\n")
 file_write.write("\n")
 file_write.close()
+
+print name

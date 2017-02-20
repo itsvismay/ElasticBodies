@@ -4,6 +4,7 @@
 #include "externals.h"
 
 //MACROS
+<<<<<<< HEAD
  #define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
  #define OUTPUT_SAVED_PATH "/scratch/cluster/vismay/"
 
@@ -14,6 +15,17 @@
 
 // #define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
 // #define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/" 
+=======
+#define HOME_SAVED_PATH "/u/vismay/ElasticBodies/"
+#define OUTPUT_SAVED_PATH "/scratch/cluster/vismay/TestsResults/Didactic/"
+#define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
+#define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
+
+// #define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
+// #define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/TestsResults/Didactic/"
+// #define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
+// #define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/"
+>>>>>>> 2d84f5e571c108dc306cce3dd9f6f1b6704bd77d
 
 using namespace Eigen;
 using namespace std;
@@ -27,6 +39,7 @@ extern ofstream strainEnergyFile;
 extern ofstream kineticEnergyFile;
 extern ofstream gravityEnergyFile;
 extern ofstream optimizationFile;
+extern ofstream dampingPositionFile;
 
 extern double rayleighCoeff;
 extern double gravity;

@@ -37,17 +37,17 @@ import sys, getopt, os, math
 import numpy as np
 
 name = "bezier_test.scad"
-numberXCtrlPts = 7
-numberWidthCtrlPts = 7
-xCtrlPts = [0.0, 0.25, 0.75, 0.2, 0.5, 0.9, 1.0]
-widthCtrlPts = [0.6, 1.0, 0.7, 0.4, 0.2, 0.4, 0.5]
+numberXCtrlPts = 5
+numberWidthCtrlPts = 5
+xCtrlPts = [0.0, 0.25, 0.75, 0.2, 1.0]
+widthCtrlPts = [0.6, 1.0, 0.7, 0.4, 0.5]
 
-maxX = 40.0
-minX = -40.0
+maxX = 20.0
+minX = -20.0
 minWidth = 1.0
-maxWidth = 10.0
-height = 40.0
-depth = 10.0
+maxWidth = 7.0
+height = 20.0
+depth = 6.0
 resolution = 1000
 
 try:

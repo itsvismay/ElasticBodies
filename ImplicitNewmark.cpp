@@ -35,11 +35,11 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		if(i%2 == 0)
 			NewmarkCalculateElasticForceGradient(TVk, forceGradient);
 		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
-		for(int k=0; k<f.rows(); k++){
-			if(fabs(ext_force(k))>0.0001){
-				f(k) += ext_force(k);
-			}
-		}
+		// for(int k=0; k<f.rows(); k++){
+		// 	if(fabs(ext_force(k))>0.0001){
+		// 		f(k) += ext_force(k);
+		// 	}
+		// }
 
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);

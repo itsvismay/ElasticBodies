@@ -13,9 +13,15 @@ public:
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
+<<<<<<< HEAD
 	//IF CHOLMOD, COMMENT THIS IN**
 	// CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
 	SimplicialLLT<SparseMatrix<double>> llt_solver;
+=======
+	//IF CHOLMOD, COMMENT THIS IN** |^|comment above out
+	SimplicialLLT<SparseMatrix<double>> llt_solver;
+	// CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+>>>>>>> 2d84f5e571c108dc306cce3dd9f6f1b6704bd77d
 
 	SparseMatrix<double> forceGradient, CholeskyAnalyze;
 
@@ -40,6 +46,7 @@ public:
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);
+	void moveVertices(vector<int> moveMe);
 	void createXFromTet();
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 };

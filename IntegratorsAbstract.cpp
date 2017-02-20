@@ -192,10 +192,12 @@ void IntegratorAbstract::initMassMatrices(){
 		massVector(3*indices(3)+2) += vol;
 	}
 	vector<double>tempForMedian;
+	double totalMass =0;
 	for(int i=0; i<3*vertsNum; i++){
 		InvMass.coeffRef(i,i) = 1/massVector(i);
 		RegMass.coeffRef(i,i) = massVector(i);
 		tempForMedian.push_back(massVector(i));
+		totalMass += massVector(i);
 	}
 	sort(tempForMedian.begin(), tempForMedian.end());
 	if(tempForMedian.size()%2 == 0){
@@ -205,6 +207,8 @@ void IntegratorAbstract::initMassMatrices(){
 	}
 	cout<<"MEDIAN"<<endl;
 	cout<<this->convergence_scaling_paramter<<endl;
+	cout<<"TOTAL MASS"<<endl;
+	cout<<totalMass<<endl;
 	// cout<<"Mass Vector"<<endl;
 	// cout<<"Mass Vector"<<endl;
 	// cout<<massVector<<endl;
@@ -240,6 +244,31 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 	analyzeCholeskySetup();
 
 }
+
+void IntegratorAbstract::moveVertices(vector<int> moveMe){
+	double factor = 100000;
+	double totalMovingMass = 0;
+	for(int i=0; i<moveMe.size(); i++){
+		massVector(3*moveMe[i]) *= factor;
+		massVector(3*moveMe[i]+1) *= factor;
+		massVector(3*moveMe[i]+2) *= factor;
+
+		InvMass.coeffRef(3*moveMe[i], 3*moveMe[i]) /= factor;
+		InvMass.coeffRef(3*moveMe[i] + 1, 3*moveMe[i] + 1) /= factor;
+		InvMass.coeffRef(3*moveMe[i] + 2, 3*moveMe[i] + 2) /= factor;
+
+		RegMass.coeffRef(3*moveMe[i], 3*moveMe[i]) *= factor;
+		RegMass.coeffRef(3*moveMe[i] + 1, 3*moveMe[i] + 1) *= factor;
+		RegMass.coeffRef(3*moveMe[i] + 2, 3*moveMe[i] + 2) *= factor;
+		totalMovingMass += massVector(3*moveMe[i]) + massVector(3*moveMe[i]+1) + massVector(3*moveMe[i]+2);
+	}
+	cout<<"TOTAL MOVING MASS"<<endl;
+	cout<<totalMovingMass<<endl;
+	dampingPositionFile<<totalMovingMass<<", "<< "Spring Mass in Grams"<<endl;
+
+}
+
+
 
 void IntegratorAbstract::createXFromTet(){
 	x_old.setZero();

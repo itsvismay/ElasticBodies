@@ -30,14 +30,15 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	// cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices, moveVertices);
+	setInitPosition(force, moveVertices, fixVertices);
+
 	// NON MIRRORED BEZ
 	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[1] < 1.5){
-	// 		fixVertices.push_back(i);
+	// 	if(TV.row(i)[1] < 0.1){
+	// 		moveVertices.push_back(i);
 	// 	}
-	// 	if(TV.row(i)[1] < -40.5){
-	// 		// moveVertices.push_back(i);
+	// 	if(TV.row(i)[1] > 40.5){
+	// 		fixVertices.push_back(i);
 	// 	}
 	// }
 	//-----------------------
@@ -55,7 +56,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	// 	force(3*moveVertices[i] + 1) -= amountofforce;
 	// }
 	//-------------------
-	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	//BEAM FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
 	// 	if(TV.row(i)[0] < 1){
 	// 		moveVertices.push_back(i);
@@ -125,21 +126,15 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		if(moveVertices.size() != 0){
 			moveVertices = newMoveIndices;
 			this->moveVerticesStore = newMoveIndices;
-			//RECOMMENT
-			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
-			cout<<OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
-			if(meshFile.good()){
-				// igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
-			}else{
-				// applyStvaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			}
-			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
 		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
+		system(("mkdir -p "OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)).c_str());
+		dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt");
+		integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
 		igl::barycenter(TV, TT, B);
@@ -147,6 +142,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, TV, TT);
 		this->external_force = force;
 		integrator->fixVertices(fixVertices);
+		cout<<"YOU GOOFED"<<endl;
+		exit(0);
 	}
 
 	sB = &B;
@@ -159,16 +156,37 @@ void Simulation::applyExternalForces(){
 }
 
 void Simulation::headless(){
+	//TODO DO this in a cleaner/separater place
+	cout<<"SPRING LENGTH"<<endl;
+	double maxY = 0;
+	double minY =0;
+	for(int i=0; i< integrator->TV.rows(); i++){
+		if(integrator->TV.row(i)(1) > maxY){
+			maxY = integrator->TV.row(i)(1);
+		}else if(integrator->TV.row(i)(1) < minY){
+			minY = integrator->TV.row(i)(1);
+		}
+	}
+	if((maxY-minY)<1e-5){
+		cout<<"ERROR: Spring has no length"<<endl;
+		exit(0);
+	}else{
+		dampingPositionFile<<maxY - minY<<", "<<"Spring Length in mm"<<endl;
+	}
+
 	int printcount =0;
-	ofstream dampingPositionFile;
-	// dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/ConsistencyTests/"+objectName+"@"+tetgen_code+"position.txt");
-	integrator->external_f = this->external_force;
 	printDesigns(printcount, integrator->simTime);
+
+	cout<<"Results saved here"<<endl;
+	cout<<OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt"<<endl;
+
+	integrator->external_f = this->external_force;
 	printcount++;
 	double maxYVel = 0;
 	cout<<integrator->TV.row(682)<<endl;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
+<<<<<<< HEAD
 		//RECOMMENT
 		// double z_pos = 0;
 		// if(tetgen_code.compare("pRa5")==0)
@@ -184,6 +202,16 @@ void Simulation::headless(){
 		// 	maxYVel = yvel;
 		if((int)(integrator->simTime*integrator->h*1000) % 1 == 0)//print every x seconds
 		{
+=======
+		double z_pos = 0;
+		for(int i=0; i<this->moveVerticesStore.size(); i++){
+			z_pos += integrator->TV.row(this->moveVerticesStore[0])(1);
+		}
+		z_pos /= this->moveVerticesStore.size();
+
+		dampingPositionFile<<integrator->simTime*integrator->h<<", "<<z_pos<<endl;
+		if(integrator->simTime%1000==0){
+>>>>>>> 2d84f5e571c108dc306cce3dd9f6f1b6704bd77d
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}
@@ -193,7 +221,11 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
+<<<<<<< HEAD
 	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Consistency/"+to_string(integrator->h*1000)+"thousandths/"+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
+=======
+	string saveTestsHere = OUTPUT_SAVED_PATH ""+objectName+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
+>>>>>>> 2d84f5e571c108dc306cce3dd9f6f1b6704bd77d
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
@@ -329,9 +361,9 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		c++;
 		amount_moved+=step_size;
 	}
-	printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", c, TV, TT, B);
-	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
-	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
+	printObj(OUTPUT_SAVED_PATH, c, TV, TT, B);
+	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH ""+objectName+"/"+tetgen_code+".mesh"<<endl;
+	igl::writeMESH(OUTPUT_SAVED_PATH ""+objectName+"/"+tetgen_code+".mesh", TV, TT, TF);
 }
 void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, vector<int>& moveVertices, int ignorePastIndex, int step){
 	cout<<"------------Static Solve Newtons POSITION - Iteration"<< step<<"--------------"<<endl;
@@ -412,7 +444,7 @@ void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, Vect
 		VectorXd f = fixed_forces*1e-1*staticSolveSteps;
 		staticSolveNewtonsForces(TV, TT, B, f, moveVertices, ignorePastIndex, staticSolveSteps);
 		staticSolveSteps += 1;
-		printObj(OUTPUT_SAVED_PATH"Boba/StaticSolve/", staticSolveSteps, TV, TT, B);
+		printObj(OUTPUT_SAVED_PATH, staticSolveSteps, TV, TT, B);
 	}
 	//MAX
 	double maxd = 100.0;
