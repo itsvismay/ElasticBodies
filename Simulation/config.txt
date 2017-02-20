@@ -1,23 +1,23 @@
-.000001
-f
+.001
+t
 n
-4000
+10000
 0.000150
--100000000
+-10
 1
 8300000000
 .35
 pR
 neo
 newton
-bezier_spring/springFULL
+bezier_spring/spring
 
-#1 timestep
+#1 timestep UNIT: s
 #2 headless t/f
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity UNIT: mm/s^2 = 1000*m/s^2
+#6 gravity UNIT: m/s^2
 #7 object
 #8 youngs UNIT: g/mm*s^2
 #9 poissons

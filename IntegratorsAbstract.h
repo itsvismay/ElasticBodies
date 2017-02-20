@@ -40,6 +40,7 @@ public:
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);
+	void moveVertices(vector<int> moveMe);
 	void createXFromTet();
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 };

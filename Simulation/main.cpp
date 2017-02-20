@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		gravity = stod(line.c_str());
+		gravity *= 1000; //going from m/s^2 to mms^2
 		cout<<gravity<<endl;
 
 		getline(configFile, line);
