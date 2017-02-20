@@ -30,17 +30,17 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	// cout<<TV.rows()<<endl;
-	// setInitPosition(force, moveVertices, fixVertices);
+	setInitPosition(force, moveVertices, fixVertices);
 
 	// NON MIRRORED BEZ
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[1] < 0.1){
-			moveVertices.push_back(i);
-		}
-		if(TV.row(i)[1] > 40.5){
-			fixVertices.push_back(i);
-		}
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[1] < 0.1){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[1] > 40.5){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// }
 	//-----------------------
 	// MIRRORED BEZIER SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -132,7 +132,9 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
-		integrator->moveVertices(newMoveIndices);
+		system(("mkdir -p "OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)).c_str());
+		dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt");
+		integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
 		igl::barycenter(TV, TT, B);
@@ -140,6 +142,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		integrator->initializeIntegrator(deltaT, M, TV, TT);
 		this->external_force = force;
 		integrator->fixVertices(fixVertices);
+		cout<<"YOU GOOFED"<<endl;
+		exit(0);
 	}
 
 	sB = &B;
@@ -152,13 +156,30 @@ void Simulation::applyExternalForces(){
 }
 
 void Simulation::headless(){
+	//TODO DO this in a cleaner/separater place
+	cout<<"SPRING LENGTH"<<endl;
+	double maxY = 0;
+	double minY =0;
+	for(int i=0; i< integrator->TV.rows(); i++){
+		if(integrator->TV.row(i)(1) > maxY){
+			maxY = integrator->TV.row(i)(1);
+		}else if(integrator->TV.row(i)(1) < minY){
+			minY = integrator->TV.row(i)(1);
+		}
+	}
+	if((maxY-minY)<1e-5){
+		cout<<"ERROR: Spring has no length"<<endl;
+		exit(0);
+	}else{
+		dampingPositionFile<<maxY - minY<<", "<<"Spring Length in mm"<<endl;
+	}
+
 	int printcount =0;
 	printDesigns(printcount, integrator->simTime);
 
-	ofstream dampingPositionFile;
+	cout<<"Results saved here"<<endl;
 	cout<<OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt"<<endl;
 
-	dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt");
 	integrator->external_f = this->external_force;
 	printcount++;
 	double maxYVel = 0;

@@ -264,6 +264,8 @@ void IntegratorAbstract::moveVertices(vector<int> moveMe){
 	}
 	cout<<"TOTAL MOVING MASS"<<endl;
 	cout<<totalMovingMass<<endl;
+	dampingPositionFile<<totalMovingMass<<", "<< "Spring Mass in Grams"<<endl;
+
 }
 
 
