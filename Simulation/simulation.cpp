@@ -182,7 +182,8 @@ void Simulation::headless(){
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		if(integrator->simTime%10==0){
+		if((int)(integrator->simTime*integrator->h*1000) % 1 == 0)//print every x seconds
+		{
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}
@@ -192,7 +193,7 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Consistency/"+solver+"/"+to_string(integrator->h)+"/"+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Consistency/"+to_string(integrator->h*1000)+"thousandths/"+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }

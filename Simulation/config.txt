@@ -1,13 +1,13 @@
-.00001
+1e-5
 t
 n
-4000
+400
 0.000150
 -100000000
 1
 8300000000
 .35
-pR
+pRq100
 neo
 newton
 bezier_spring/springFULL
