@@ -1,7 +1,7 @@
-.001
+.00001
 t
 n
-1
+10000
 0.000150
 -10
 1
@@ -10,7 +10,7 @@ n
 pR
 neo
 newton
-didactic_test/Individual1
+didactic_test/Individual25
 
 #1 timestep UNIT: s
 #2 headless t/f
