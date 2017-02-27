@@ -30,6 +30,7 @@
 *.un~
 *.swo
 *.swp
+*.swn
 
 *.mesh
 
