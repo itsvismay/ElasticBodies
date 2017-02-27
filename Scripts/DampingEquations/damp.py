@@ -1,15 +1,23 @@
 import numpy as np
-import math
+import math, sys
 import matplotlib.pyplot as plt
 
 
+print("Mass: " + sys.argv[1] +" Gravity:" +sys.argv[2])
+m = 1
+g = 10
+#mg/k = L
+#|----l---|--L--|
+#initial diisplacment takes length back to original spring length l
+# u(0) = -L = -mg/k
+
+k = 4
 rayleigh1 = 0
 rayleigh2 = 0
-k = 4
-m = 1
-c = 4 #rayleigh1*m + rayleigh2*k
+c = 0 #rayleigh1*m + rayleigh2*k
 
-init_pos = 1
+#this is u
+init_pos = -1*m*g/k
 init_vel = 0
 check = c*c - 4*m*k
 #x = exp( -c*t/(2m)) *[c1 cos(wt) + c2 sin(wt)], w = sqrt(4mk - c^2)/(2m)

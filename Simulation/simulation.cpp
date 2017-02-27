@@ -193,7 +193,7 @@ void Simulation::headless(){
 		z_pos /= this->moveVerticesStore.size();
 
 		dampingPositionFile<<integrator->simTime*integrator->h<<", "<<z_pos<<endl;
-		if(integrator->simTime%1000==0){
+		if(integrator->simTime%100==0){
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}

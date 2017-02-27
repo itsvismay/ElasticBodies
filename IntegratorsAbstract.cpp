@@ -246,7 +246,7 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 }
 
 void IntegratorAbstract::moveVertices(vector<int> moveMe){
-	double factor = 100000;
+	double factor = 1000000;
 	double totalMovingMass = 0;
 	for(int i=0; i<moveMe.size(); i++){
 		massVector(3*moveMe[i]) *= factor;

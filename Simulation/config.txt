@@ -1,7 +1,7 @@
-.001
-t
+.0001
+f
 n
-1
+1000
 0.000150
 -10
 1
@@ -10,7 +10,7 @@ n
 pR
 neo
 newton
-didactic_test/Individual1
+bezier_spring/spring
 
 #1 timestep UNIT: s
 #2 headless t/f
@@ -35,3 +35,4 @@ bezier_spring/spring
 tensile_beam/tensileTest
 bezier_spring/bezierMirrorPrepedOrig
 bezier_spring/springFULL
+didactic_test/Individual25
