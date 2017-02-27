@@ -1,5 +1,5 @@
 .000001
-t
+f
 n
 4000
 0.000150
@@ -34,3 +34,4 @@ beam/beam
 bezier_spring/spring
 tensile_beam/tensileTest
 bezier_spring/bezierMirrorPrepedOrig
+bezier_spring/springFULL
