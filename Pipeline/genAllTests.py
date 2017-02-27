@@ -1,5 +1,7 @@
 import sys, os, subprocess
 
+##################### GEN CONSISTINCY TESTS #########################
+
 # inputs
 bezierPreped = 'bezierPreped'
 bezierMirrorPreped = 'bezierMirrorPreped'
@@ -31,3 +33,6 @@ subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templ
 # create the ring spring
 subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateRingSpring.py', '--createBase', 'optimizeTest.txt', '--sConfig', 'slic3rConfig.ini', '--preped', ringPreped + remeshExt, '-s', '-c'])
 subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateRingSpring.py', '--createBaseOrig', 'optimizeTest.txt', '--sConfig', 'slic3rConfig.ini', '--preped', ringPreped + origExt, '-s', '-c'])
+
+
+#######################################################################

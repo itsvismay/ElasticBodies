@@ -41,6 +41,21 @@ sections = 3.0
 outThk = 6.0
 widthIn = 8.0
 
+def calculateInThk(v):
+  return (maxInThk - minInThk) * v + minInThk
+
+def calculateInHei(v):
+  return (maxInHei - minInHei) * v + minInHei
+
+def calculateSections(v):
+  return (maxSections - minSections) * v + minSections
+
+def calculateWidthIn(v):
+  return (maxWidthIn - minWidthIn) * v + minWidthIn
+
+def calculateOutThk(v):
+  return (maxOutThk - minOutThk) * v + minOutThk
+
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "minInThk=", "maxInThk=", "minInHei=", "maxInHei=", "minSections=", "maxSections=", "minOutThk=", "maxOutThk=", "minWidthIn=", "maxWidthIn=", "inThk=", "inHei", "sections=", "outThk=", "widthIn="])
 except getopt.GetoptError:
@@ -80,36 +95,22 @@ for opt, arg in opts:
   elif opt == "--widthIn":
     widthIn = float(arg)
   elif opt == "-a":
-    minInThk = float(sys.argv[2])
-    maxInThk = float(sys.argv[3])
-    minInHei = float(sys.argv[4])
-    maxInHei = float(sys.argv[5])
-    minSections = float(sys.argv[6])
-    maxSections = float(sys.argv[7])
-    minOutThk = float(sys.argv[8])
-    maxOutThk = float(sys.argv[9])
-    minWidthIn = float(sys.argv[10])
-    maxWidthIn = float(sys.argv[11])
-    inThk = calculateInThk(float(sys.argv[12]))
-    inHei = calculateInHei(float(sys.argv[13]))
-    sections = calculateSections(float(sys.argv[14]))
-    outThk = calculateOutThk(float(sys.argv[15]))
-    widthIn = calculateWidthIn(float(sys.argv[16]))
-
-def calculateInThk(v):
-  return (maxInThk - minInThk) * v + minInThk
-
-def calculateInHei(v):
-  return (maxInHei - minInHei) * v + minInHei
-
-def calculateSections(v):
-  return (maxSections - minSections) * v + minSections
-
-def calculateWidthIn(v):
-  return (maxWidthIn - minWidthIn) * v + minWidthIn
-
-def calculateOutThk(v):
-  return (maxOutThk - minOutThk) * v + minOutThk
+    name = sys.argv[2]
+    minInThk = float(sys.argv[3])
+    maxInThk = float(sys.argv[4])
+    minInHei = float(sys.argv[5])
+    maxInHei = float(sys.argv[6])
+    minSections = float(sys.argv[7])
+    maxSections = float(sys.argv[8])
+    minOutThk = float(sys.argv[9])
+    maxOutThk = float(sys.argv[10])
+    minWidthIn = float(sys.argv[11])
+    maxWidthIn = float(sys.argv[12])
+    inThk = calculateInThk(float(sys.argv[13]))
+    inHei = calculateInHei(float(sys.argv[14]))
+    sections = calculateSections(float(sys.argv[15]))
+    outThk = calculateOutThk(float(sys.argv[16]))
+    widthIn = calculateWidthIn(float(sys.argv[17]))
 
 file_write = open(name, 'w')
 file_write.write("thkInPlane = %3.8f;\n" % inThk)

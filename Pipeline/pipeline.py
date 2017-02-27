@@ -101,33 +101,34 @@ layerScadFiles = []
 layerSTLFiles = []
 layerObjFiles = []
 
-#if isCreate == True:
-#  # generate all of the scad files based on the template
-#  batchData = open(name)
-#  for line in batchData.readlines():
-#    curLine = line.strip().split(' ')
-#    print 'Template:', template
-#    command = command = ['python', template]
-#    if isCreateBase == False:
-#      command = ['python', template, '-a']
-#    for obj in curLine:
-#      command.append(obj)
-#    result = subprocess.check_output(command)
-#    initialScadFiles.append(result.strip())
-#else:
-#  initialScadFiles.append(name)
+if isCreate == True:
+  # generate all of the scad files based on the template
+  batchData = open(name)
+  for line in batchData.readlines():
+    curLine = line.strip().split(' ')
+    print 'Template:', template
+    command = command = ['python', template]
+    if isCreateBase == False:
+      command = ['python', template, '-a']
+    for obj in curLine:
+      command.append(obj)
+    print command
+    result = subprocess.check_output(command)
+    initialScadFiles.append(result.strip())
+else:
+  initialScadFiles.append(name)
 
-#for i in range(len(initialScadFiles)):
-#  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
-#  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
-#  try:
-#    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
-#  except OSError as e:
-#    print 'There was a System Error: ', e, '\n'
-#  # add generated stl file to list for next step
-#  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
+for i in range(len(initialScadFiles)):
+  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
+  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
+  try:
+    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
+  except OSError as e:
+    print 'There was a System Error: ', e, '\n'
+  # add generated stl file to list for next step
+  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
-initialSTLFiles.append("ASTMD638_specimen.stl")
+#initialSTLFiles.append("ASTMD638_specimen.stl")
 
 if isOrig == False:
   for i in range(len(initialSTLFiles)):
