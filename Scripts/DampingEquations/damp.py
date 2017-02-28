@@ -80,4 +80,8 @@ plt.plot(time, data, "-", label="analytical")
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0.)
 plt.show()
 
-#----------- LEAST SQUARES DISTANCE CODE --------
+#----------- EUCLIDEAN DISTANCE CODE --------
+dist = np.linalg.norm(np.array(data)- np.array(r))
+print("EUCLIDEAN DISTANCE")
+newf = open("/home/vismay/ElasticBodies/TestsResults/Didactic/didactic_test/euc_norm.txt", "w")
+newf.write(str(dist))
