@@ -1,5 +1,5 @@
 from scipy.optimize import fmin_cobyla
-import sys, os, subprocess, numpy
+import sys, os, subprocess, numpy, getopt
 
 # inputs / simulation constants
 # --minInThk      minimum in plane thickness
@@ -14,16 +14,21 @@ import sys, os, subprocess, numpy
 # --maxWidthIn   maximum width in plane
 # -a                 read everything from cmd arguments
 
-minInThk = 0.0
-maxInThk = 0.0
-minInHei = 0.0
-maxInHei = 0.0
-minSections = 0.0
-maxSections = 0.0
-minOutThk = 0.0
-maxOutThk = 0.0
-minWidthIn = 0.0
-maxWidthIn = 0.0
+minInThk = 0.4
+maxInThk = 4.0
+minInHei = 12.0
+maxInHei = 38.0
+minSections = 4.0
+maxSections = 10.0
+minOutThk = 9.0
+maxOutThk = 12.0
+minWidthIn = 9.0
+maxWidthIn = 12.0
+
+baseName = 'Individual'
+counter = 0
+TEST = 3
+fileName = 'optimizeTest.txt'
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'a', ["minInThk=", "maxInThk=", "minInHei=", "maxInHei=", "minSections=", "maxSections=", "minOutThk=", "maxOutThk", "minWidthIn=", "maxWidthIn="])
@@ -67,7 +72,13 @@ for opt, arg in opts:
         exit(10)
 
 def objective(x):
-    # to be implemented
+    file_write = open(fileName, 'w')
+    file_write.write(fileName + ".scad "+str(minInThk)+" "+str(maxInThk)+" "+str(minInHei)+" "+str(maxInHei)+" "+str(minSections)+" "+str(maxSections)+" "+str(minOutThk)+" "+str(maxOutThk)+" "+str(minWidthIn)+" "+str(maxWidthIn)+" "+str(x[0])+" "+str(x[1])+" "+str(x[2])+" "+str(x[3])+" "+str(x[4]))
+    file_write.close()
+
+    subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateCSpring.py', '--create', 'optimizeTest.txt', '--sConfig', 'slic3rConfig.ini', '--preped', baseName+str(TEST), '-s', '-c'])
+
+    
     return 1.0
 
 def g0(x):
@@ -82,7 +93,7 @@ def g1(x):
             return -x[i]
     return 1.0
 
-h0 = [0.0, 0.0, 0.0, 0.0, 0.0]
+h0 = [0.5, 0.5, 0.5, 0.5, 0.5]
 constraints = [g0, g1]
 h_opt = fmin_cobyla(objective, h0, constraints, rhoend=1e-6, maxfun=100, catol=1e-6)
 print h_opt
