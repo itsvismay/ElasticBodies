@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 #-----------SIMULATED SOLN ----------
 time = []
 r = []
-f= open('/home/vismay/ElasticBodies/TestsResults/Didactic/didactic_test/ResultsIndividual20/0.000010/pR@position.txt', 'r')
+f= open('/home/firal/Documents/Research/Simulations/ElasticBodies/TestsResults/Didactic/didactic_test/' + sys.argv[3] + '/position.txt', 'r')
 i=0
 maxInt = 10000000
 for line in f:
@@ -32,9 +32,9 @@ g = 10
 #initial diisplacment takes length back to original spring length l
 # u(0) = -L = -mg/k
 
-k = 8e7
+k = 3e7
 rayleigh1 = 0
-rayleigh2 = 0.0005
+rayleigh2 = 0.0003
 c = rayleigh1*m + rayleigh2*k
 
 #this is u
