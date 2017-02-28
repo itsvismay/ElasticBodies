@@ -132,8 +132,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
-		system(("mkdir -p "OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)).c_str());
-		dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt");
+		system(("mkdir -p "OUTPUT_SAVED_PATH""+objectName+"/").c_str());
+		cout<<"Results saved here"<<endl;
+		cout<<OUTPUT_SAVED_PATH""+objectName+".txt"<<endl;
+		dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/position.txt");
 		integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
@@ -158,27 +160,25 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	//TODO DO this in a cleaner/separater place
 	cout<<"SPRING LENGTH"<<endl;
-	double maxY = 0;
-	double minY =0;
-	for(int i=0; i< integrator->TV.rows(); i++){
-		if(integrator->TV.row(i)(1) > maxY){
-			maxY = integrator->TV.row(i)(1);
-		}else if(integrator->TV.row(i)(1) < minY){
-			minY = integrator->TV.row(i)(1);
-		}
+	double spring_length = 0;
+	for(int i=0; i<this->moveVerticesStore.size(); i++){
+		spring_length += integrator->TV.row(this->moveVerticesStore[0])(1);
 	}
-	if((maxY-minY)<1e-5){
+	spring_length /= this->moveVerticesStore.size();
+
+	if(fabs(spring_length)<1e-5){
 		cout<<"ERROR: Spring has no length"<<endl;
 		exit(0);
 	}else{
-		dampingPositionFile<<maxY - minY<<", "<<"Spring Length in mm"<<endl;
+		dampingPositionFile<<fabs(spring_length)<<", "<<"Spring Length in mm"<<endl;
 	}
 
 	int printcount =0;
 	printDesigns(printcount, integrator->simTime);
-
-	cout<<"Results saved here"<<endl;
-	cout<<OUTPUT_SAVED_PATH""+objectName+"/"+to_string(integrator->h)+"/"+tetgen_code+"@position.txt"<<endl;
+	time_t rawtime;
+  struct tm * ptm;
+  time ( &rawtime );
+  ptm = gmtime ( &rawtime );
 
 	integrator->external_f = this->external_force;
 	printcount++;
@@ -203,7 +203,7 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH ""+objectName+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH ""+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
