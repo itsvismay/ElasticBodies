@@ -10,7 +10,7 @@ n
 pR
 neo
 newton
-didactic_test/Individual22
+didactic_test/Individual20
 
 #1 timestep UNIT: s
 #2 headless t/f
