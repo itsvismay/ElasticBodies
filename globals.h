@@ -9,6 +9,12 @@
 // #define TUTORIAL_SHARED_PATH "/u/vismay/ElasticBodies/"
 // #define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
 
+
+//#define HOME_SAVED_PATH "/scratch/cluster/zmisso/ElasticBodies/"
+//#define OUTPUT_SAVED_PATH "/scratch/cluster/zmisso/ElasticBodies/TestsResults/Didactic/"
+//#define TUTORIAL_SHARED_PATH "/scratch/cluster/zmisso/ElasticBodies/"
+//#define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/zmisso/ElasticBodies/"
+
 #define HOME_SAVED_PATH "/home/vismay/ElasticBodies/"
 #define OUTPUT_SAVED_PATH "/home/vismay/ElasticBodies/TestsResults/Didactic/"
 #define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
