@@ -20,6 +20,14 @@
 import sys, getopt, os, subprocess
 from subprocess import call
 
+pathsFile = 'paths.txt'
+pathToSlic3r = 'slic3r'
+pathToMeshlabServer = 'meshlabserver'
+pathToCgal = "../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathToSimPrep = "Simprep/simprep"
+pathToTempFiles = ''
+pathToGcode2Layers = 'gcode2layers.py'
+
 isCreate = False
 isCreateBase = False
 isInd = False
@@ -44,7 +52,6 @@ meshedFile = "unioned.off"
 fixedMeshedFile = "fixedUnion.off"
 largestOff = "largest.off"
 restOff = "rest.off"
-pathToCgal = "../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce="])
@@ -101,43 +108,43 @@ layerScadFiles = []
 layerSTLFiles = []
 layerObjFiles = []
 
-#if isCreate == True:
-#  # generate all of the scad files based on the template
-#  batchData = open(name)
-#  for line in batchData.readlines():
-#    curLine = line.strip().split(' ')
-#    print 'Template:', template
-#    command = command = ['python', template]
-#    if isCreateBase == False:
-#      command = ['python', template, '-a']
-#    for obj in curLine:
-#      command.append(obj)
-#    result = subprocess.check_output(command)
-#    initialScadFiles.append(result.strip())
-#else:
-#  initialScadFiles.append(name)
+if isCreate == True:
+  # generate all of the scad files based on the template
+  batchData = open(name)
+  for line in batchData.readlines():
+    curLine = line.strip().split(' ')
+    print 'Template:', template
+    command = command = ['python', template]
+    if isCreateBase == False:
+      command = ['python', template, '-a']
+    for obj in curLine:
+      command.append(obj)
+    result = subprocess.check_output(command)
+    initialScadFiles.append(result.strip())
+else:
+  initialScadFiles.append(name)
 
-#for i in range(len(initialScadFiles)):
-#  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
-#  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
-#  try:
-#    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
-#  except OSError as e:
-#    print 'There was a System Error: ', e, '\n'
-#  # add generated stl file to list for next step
-#  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
+for i in range(len(initialScadFiles)):
+  # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
+  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
+  try:
+    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
+  except OSError as e:
+    print 'There was a System Error Initial Openscad: ', e, '\n'
+  # add generated stl file to list for next step
+  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
 
-initialSTLFiles.append("ASTMD638_specimen.stl")
+#initialSTLFiles.append("ASTMD638_specimen.stl")
 
 if isOrig == False:
   for i in range(len(initialSTLFiles)):
     # run slic3r initialSTLFiles[i] --load sConfig
     print 'slic3r', initialSTLFiles[i], '--load', sConfig
     try:
-      result = subprocess.check_output(['slic3r', initialSTLFiles[i], '--load', sConfig])
+      result = subprocess.check_output([pathToSlic3r, initialSTLFiles[i], '--load', sConfig])
       print 'Finished Slic3r'
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: Initial Slic3r', e, '\n'
     # add generated gcode file to list for next step
     initialGCodeFiles.append(initialSTLFiles[i][:-4]+".gcode")
 
@@ -148,9 +155,9 @@ if isOrig == False:
     numberOfLayers = 0
     try:
       print 'Running gcode2layers.py'
-      numberOfLayers = int(subprocess.check_output(['python', 'gcode2layers.py', '--name', initialGCodeFiles[i]])) + 1
+      numberOfLayers = int(subprocess.check_output(['python', pathToGcode2Layers, '--name', initialGCodeFiles[i]])) + 1
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: GCODE', e, '\n'
 
     # add numberOfLayers to list
     initialLayerSizes.append(numberOfLayers)
@@ -165,7 +172,7 @@ if isOrig == False:
     try:
       result = subprocess.check_output(['openscad', '-o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]])
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: Gcode2Layers', e, '\n'
 
     # add generated file to layerSTLFiles
     layerSTLFiles.append(layerScadFiles[i][:-5] + '.stl')
@@ -175,9 +182,9 @@ if isOrig == False:
     #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
     print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
     try:
-      result = subprocess.check_output(['meshlabserver', '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'])
+      result = subprocess.check_output([pathToMeshlabServer, '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'])
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: MeshlabServer', e, '\n'
 
     layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
 
@@ -187,41 +194,41 @@ if isOrig == False:
     print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i]
     try:
       temp = 0
-      result = subprocess.check_output(['../../libigl/tutorial/build/3dUnion_bin', str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
+      result = subprocess.check_output([pathTo3DUnion, str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: 3DUnion', e, '\n'
 
   try:
     print 'split', meshedFile
-    result = subprocess.check_output(['./../3dUnion/build/remesh', meshedFile])
+    result = subprocess.check_output(['./'+pathToSplit, meshedFile])
   except OSError as e:
-    print 'There was a System Error', e, '\n'
+    print 'There was a System Error Split', e, '\n'
 
   try:
     print 'remesh', meshedFile
     result = subprocess.check_output(['./'+pathToCgal+'main', largestOff, restOff])
   except OSError as e:
-    print 'There was a System Error', e, '\n'
+    print 'There was a System Error Remesh', e, '\n'
 
   # pointless but used for legacy
   try:
     print 'cp', 'out.off', fixedMeshedFile
     result = subprocess.check_output(['cp', 'out.off', fixedMeshedFile])
   except OSError as e:
-    print 'There was a System Error', e, '\n'
+    print 'There was a System Error CP', e, '\n'
 else:
   for i in range(len(initialSTLFiles)):
     print initialSTLFiles[i]
     try:
-      result = subprocess.check_output(['meshlabserver', '-i', initialSTLFiles[i], '-o', initialSTLFiles[i][:-4]+'.off'])
+      result = subprocess.check_output([pathToMeshlabServer, '-i', initialSTLFiles[i], '-o', initialSTLFiles[i][:-4]+'.off'])
     except OSError as e:
-      print 'There was a System Error: ', e, '\n'
+      print 'There was a System Error: WHAT', e, '\n'
     fixedMeshedFile = initialSTLFiles[i][:-4]+'.off'
     print 'FIXED :: ', fixedMeshedFile
 
 try:
   print './simprep --inputMeshOff', fixedMeshedFile, '--outputM', prepedMesh, 'outputF', forceData, '--forceYAxis', '-1', '--maxForce', force, ''
-  result = subprocess.check_output(['./SimPrep/simprep', '--meshOff', fixedMeshedFile, '--outputM', prepedMesh, '--outputF', forceData, '--forceZAxis', '-1', '--maxForce', str(force)])
+  result = subprocess.check_output(['./'+pathToSimprep, '--meshOff', fixedMeshedFile, '--outputM', prepedMesh, '--outputF', forceData, '--forceZAxis', '-1', '--maxForce', str(force)])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
@@ -232,24 +239,24 @@ if skipRun == False:
   except OSError as e:
     print 'There was a System Error ', e, '\n'
 
-  try:
-    print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'
-    result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'])
-  except OSError as e:
-    print 'There was a System Error ', e, '\n'
+  #try:
+  #  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'
+  #  result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'])
+  #except OSError as e:
+  #  print 'There was a System Error ', e, '\n'
 
-  try:
-    print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'
-    result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'])
-  except OSError as e:
-    print 'There was a System Error ', e, '\n'
+  #try:
+  #  print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'
+  #  result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'])
+  #except OSError as e:
+  #  print 'There was a System Error ', e, '\n'
 
   # call simulation
   try:
     print './elastic', '\n'
-    result = subprocess.check_output(['./../elastic'])
+    result = subprocess.check_output([pathToElastic])
   except OSError as e:
-    print 'There was a System Error ', e, '\n'
+    print 'There was a System Error Elastic', e, '\n'
 
 # lists to clean
 # -- initialScadFiles

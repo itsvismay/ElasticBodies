@@ -1,0 +1,32 @@
+blah
+blah
+blah
+blah
+blah
+blah
+0
+0
+0
+0.1
+0.001
+0.2
+0.01
+-1
+0
+
+
+#1  Path To Data
+#2  Path To Analytical Config
+#3  Path To Base Surrogate
+#4  Path To Condor Script
+#5  Path To Design Bounds
+#6  Path To Iteration Queue
+#7  Random Sample Rate
+#8  Breadth Sample Rate
+#9  Convergence Rate
+#10 Base Convergence Radius
+#11 End Convergence Radius
+#12 Base Breadth Radius
+#13 End Breadth Radius
+#14 Spring Type
+#15 Iterations To Complete

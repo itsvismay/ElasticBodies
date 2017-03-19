@@ -1,0 +1,17 @@
+slic3r
+meshlabserver
+../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/
+Simprep/simprep
+gcode2layers.py
+3dUnion_bin
+split
+../../elastic
+
+#1 pathToSlic3r
+#2 pathToMeshlabServer
+#3 pathToRemesh
+#4 pathToSimprep
+#5 pathToGcode2Layers
+#6 pathTo3DUnion
+#7 pathToSplit
+#8 pathToElastic
