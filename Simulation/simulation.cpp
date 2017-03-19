@@ -30,7 +30,17 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices, moveVertices);
+	// setInitPosition(force, fixVertices, moveVertices);
+
+	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0] < 1){
+			moveVertices.push_back(i);
+		}
+		if(TV.row(i)[0] > 140.1){
+			fixVertices.push_back(i);
+		}
+	}
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -131,7 +141,8 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	}
 
 	sB = &B;
-
+	cout<<"Print this vert"<<endl;
+	cout<<integrator->TV.row(1121)<<endl;
 	return 1;
 }
 
@@ -143,29 +154,33 @@ void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
 	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Boba/"+objectName+"@"+tetgen_code+"position.txt");
+
 	integrator->external_f = this->external_force;
+	integrator->v_old.setZero();
+	integrator->external_f.setZero();
+	integrator->f.setZero();
 	printDesigns(printcount, integrator->simTime);
 	double maxYVel = 0;
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		//RECOMMENT
-		double z_pos = integrator->TV.row(369)[2] + 0.5;
-		// double z_pos = integrator->TV.row(65)[2] + 0.5;
+		// double z_pos = integrator->TV.row(369)[2] + 0.5;
+		double z_pos = integrator->TV.row(1121)[2] + 0.5;
 		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		// if(integrator->simTime%100==0){
-		// 	printDesigns(printcount, integrator->simTime);
-		// 	printcount += 1;
-		// }
+		if(integrator->simTime%1==0 && integrator->simTime<300){
+			printDesigns(printcount, integrator->simTime);
+			printcount += 1;
+		}
 	}
 	dampingPositionFile.close();
 
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/SolverTests/"+solver+"/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Boba/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
@@ -282,8 +297,8 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 	cout<<designZMax<<", "<<designZMin<<endl;
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
-	double distance_to_move = 17;
-	int number_of_moves = 102;
+	double distance_to_move = 45;
+	int number_of_moves = 180;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
@@ -319,7 +334,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	x.setZero();
 	setTVtoX(x, TV);
 
-	int NEWTON_MAX = 100, k=0;
+	int NEWTON_MAX = 300, k=0;
 	for(k=0; k<NEWTON_MAX; k++){
 		xToTV(x, TV);
 
