@@ -4,6 +4,8 @@ import sys
 import os
 import subprocess
 import csv
+import getopt
+import datetime
 #--------------------------------------
 # Input Descriptions
 #--------------------------------------
@@ -20,7 +22,7 @@ import csv
 #--------------------------------------
 # Input
 #--------------------------------------
-pathToConfig = ''
+pathToConfig = 'simulationConfig.txt'
 pathToData = ''
 pathToAnalyticalConfig = ''
 pathToBaseSurrogate = ''
@@ -45,7 +47,7 @@ runType = 0
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:], '', ["simulationConfig=", "runType="])
-except: getopt.GetoptError:
+except getopt.GetoptError:
 	print 'MAJOR ERROR'
 	sys.exit(-2)
 for opt, arg in opts:
@@ -55,20 +57,20 @@ for opt, arg in opts:
 		runType = int(arg)
 
 simconfig_read = open(pathToConfig, 'r').readlines()
-pathToData = simconfig_read[0]
-pathToAnalyticalConfig = simconfig_read[1]
-pathToBaseSurrogate = simconfig_read[2]
-pathToCondorScript = simconfig_read[3]
-pathToDesignBounds = simconfig_read[4]
-pathToIterationQueue = simconfig_read[5]
-baseRandomSampleRate = int(simconfig_read[6])
-baseBreadthSampleRate = int(simconfig_read[7])
-baseConvergenceRate = int(simconfig_read[8])
-baseConvergenceRadius = float(simconfig_read[9])
-endConvergenceRadius = float(simconfig_read[10])
-baseBreadthRadius = float(simconfig_read[11])
-endBreadthRadius = float(simconfig_read[12])
-springType = int(simconfig_read[13])
+pathToData = simconfig_read[0].strip()
+pathToAnalyticalConfig = simconfig_read[1].strip()
+pathToBaseSurrogate = simconfig_read[2].strip()
+pathToCondorScript = simconfig_read[3].strip()
+pathToDesignBounds = simconfig_read[4].strip()
+pathToIterationQueue = simconfig_read[5].strip()
+baseRandomSampleRate = int(simconfig_read[6].strip())
+baseBreadthSampleRate = int(simconfig_read[7].strip())
+baseConvergenceRate = int(simconfig_read[8].strip())
+baseConvergenceRadius = float(simconfig_read[9].strip())
+endConvergenceRadius = float(simconfig_read[10].strip())
+baseBreadthRadius = float(simconfig_read[11].strip())
+endBreadthRadius = float(simconfig_read[12].strip())
+springType = int(simconfig_read[13].strip())
 
 coef = []
 #--------------------------------------
@@ -141,15 +143,18 @@ def g1(x):
 # Parsing Experiment Data
 #--------------------------------------
 def parseExperimentData():
-	filesInData = os.listdir(pathToData)
 	variables = []
 	results = []
 	completedNames = []
 	queueNames = []
 	bounds = []
 	# parse bounds from design bounds file
+	boundsFile = open(pathToDesignBounds, 'r')
+	boundsFileReader = csv.reader(boundsFile, delimiter=',', quoting=csv.QUOTE_NONE)
+	bounds = list(boundsFileReader)
 	# parse queue names
-	for dataFile in filesInData:
+	#filesInData = os.listdir(pathToData)
+	#for dataFile in filesInData:
 		# run file through damp.py
 		# add params for test to list of params
 		# add results to list of results
@@ -159,28 +164,46 @@ def parseExperimentData():
 # Test Code
 #--------------------------------------
 
-fileID = open('OptimalLHS_05D_seed01.txt', 'rb')
-reader = csv.reader(fileID, delimiter=',', quoting=csv.QUOTE_NONE)
-data = list(reader)
-X = np.array(data).astype('double')
-m, n = X.shape
-print 'X Shape ', X.shape
-print X
-Y = map(sphere, X)
+#fileID = open('OptimalLHS_05D_seed01.txt', 'rb')
+#reader = csv.reader(fileID, delimiter=',', quoting=csv.QUOTE_NONE)
+#data = list(reader)
+#X = np.array(data).astype('double')
+#m, n = X.shape
+#print 'X Shape ', X.shape
+#print X
+#Y = map(sphere, X)
 
-coef = fitQuadSurface(X, Y)
-x = np.ones(n)
-y_hat = predict(x, coef)
+#coef = fitQuadSurface(X, Y)
+#x = np.ones(n)
+#y_hat = predict(x, coef)
 
-print y_hat
+#print y_hat
 
-constraints = [g0, g1]
-h_opt = fmin_cobyla(objective, x, constraints, rhoend = 1e-6, maxfun = 1000)
+#constraints = [g0, g1]
+#h_opt = fmin_cobyla(objective, x, constraints, rhoend = 1e-6, maxfun = 1000)
 
-print '\n', h_opt
+#print '\n', h_opt
 #print objective(h_opt)
 #print g0(h_opt)
 #print g1(h_opt)
+#--------------------------------------
+# Find Template
+#--------------------------------------
+def findTemplate(springType):
+	template = 'Templates/templateCSpring.py'
+	if runType == 0:
+		template = 'Templates/templateCSpring.py'
+	elif runType == 1:
+		template = 'Templates/templateCSpringMirror.py'
+	elif runType == 2:
+		template = 'Templates/templateRingSpring.py'
+	elif runType == 3:
+		template = 'Templates/templateBSpring.py'
+	elif runType == 4:
+		template = 'Templates/templateBSpringMirror.py'
+	elif runType == 5:
+		template = 'Templates/templateTSpring.py'
+	return template
 #--------------------------------------
 # Run Pipeline
 #--------------------------------------
@@ -195,9 +218,24 @@ def runPipeline(x, bounds, runType):
 # Run Pipeline Test
 #--------------------------------------
 def runPipelineTest(x, bounds, runType):
-	# to be implemented
 	# generate pipeline config
+	#tempFileName = pathToCondorScript + 'optimizeTest.txt'
+	tempFileName = 'optimizeTest.txt'
+	file_write = open(tempFileName, 'w')
+	contents = tempFileName + ".scad" + " "
+	print bounds
+	for ar in bounds:
+		for num in ar:
+			print num
+			contents = contents + str(num) + " "
+	print contents
+	for num in x:
+		contents = contents + str(num) + " "
+	file_write.write(contents)
+	file_write.close()
+	name = 'Individual_' + datetime.datetime.now().strftime("%I:%M%p_on_%B_%d_%Y")
 	# run pipeline
+	subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateCSpring.py', '--create', 'optimizeTest.txt', '--sConfig', 'slic3rConfig.ini', '--preped', name, '-s', '-c'])
 	return
 #--------------------------------------
 # Build Surrogate
@@ -348,4 +386,4 @@ def optimizationPipeline(runType):
 #--------------------------------------
 # Actual Pipeline
 #--------------------------------------
-#optimizationPipeline(runType)
+optimizationPipeline(runType)
