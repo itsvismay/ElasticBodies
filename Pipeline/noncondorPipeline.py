@@ -23,10 +23,10 @@ from subprocess import call
 pathsFile = 'paths.txt'
 pathToSlic3r = 'slic3r'
 pathToMeshlabServer = 'meshlabserver'
-pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
-pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/PipelineSimprep/simprep"
+pathToCgal = "../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathToSimPrep = "Simprep/simprep"
 pathToTempFiles = ''
-pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
+pathToGcode2Layers = 'gcode2layers.py'
 
 isCreate = False
 isCreateBase = False
@@ -49,14 +49,13 @@ currentPath = os.path.dirname(os.path.abspath(__file__))
 
 # fix mesh (do not change)
 meshedFile = "unioned.off"
-fixedMeshedFile = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixedUnion.off"
-largestOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/largest.off"
-restOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/rest.off"
-pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
-pathTo3DUnion = "/scratch/cluster/zmisso/libigl/tutorial/build/3dUnion_bin"
-pathToSplit = "/scratch/cluster/zmisso/ElasticBodies/3dUnion/build/remesh"
-pathToSimprep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/Simprep/simprep"
-pathToOpenscad = "/usr/bin/openscad"
+fixedMeshedFile = "fixedUnion.off"
+largestOff = "largest.off"
+restOff = "rest.off"
+pathToCgal = "../../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathTo3DUnion = "../../../libigl/tutorial/build/3dUnion_bin"
+pathToSplit = "../3dUnion/build/remesh"
+pathToSimprep = "Simprep/simprep"
 #pathToCgal = "../../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
 
 try:
@@ -134,7 +133,7 @@ for i in range(len(initialScadFiles)):
   # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
   print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
   try:
-    result = subprocess.check_output([pathToOpenscad, '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
+    result = subprocess.check_output(['openscad', '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
   except OSError as e:
     print 'There was a System Error Initial Openscad: ', e, '\n'
   # add generated stl file to list for next step
@@ -176,7 +175,7 @@ if isOrig == False:
     # run openscad -o layerScadFiles[i][:-5]+".stl" layerScadFiles[i]
     print 'openscad -o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]
     try:
-      result = subprocess.check_output([pathToOpenscad, '-o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]])
+      result = subprocess.check_output(['openscad', '-o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]])
     except OSError as e:
       print 'There was a System Error: Gcode2Layers', e, '\n'
 

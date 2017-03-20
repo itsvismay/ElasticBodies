@@ -22,7 +22,7 @@
 import sys, getopt, os, math
 import numpy as np
 
-name = 'curve_spring.scad'
+name = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/curve_spring.scad'
 
 minInThk = 0.0
 maxInThk = 0.0

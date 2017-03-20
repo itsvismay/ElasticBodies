@@ -1,13 +1,13 @@
 import sys, getopt, os
 
-initialDirPath = ''
-executablePath = ''
-arguments = ''
-notifyUser = ''
-logPath = ''
-outputPath = ''
-errorPath = ''
-filePath = ''
+initialDirPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
+executablePath = '/usr/bin/python'
+arguments = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genAllTests.py'
+notifyUser = 'zack441@mac.com'
+logPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/log/log$(Cluster)'
+outputPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/output/out$(Cluster)'
+errorPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/error/err$(Cluster)'
+filePath = 'testCondor'
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:], '', ["initialDir=", "executable=", "arguements=", "user=", 'log=', 'output=', 'error=', 'file='])
@@ -33,18 +33,18 @@ for opt, arg in opts:
 	if opt == '--file':
 		filePath = arg
 
-condorScript = fopen(filePath, 'w')
+condorScript = open(filePath, 'w')
 condorScript.write("universe=vanilla\n")
-condorScript.write("InitialDir="+initialDirPath+"\n")
+condorScript.write("Initialdir="+initialDirPath+"\n")
 condorScript.write("Executable="+executablePath+"\n")
-condorScript.write("Arguements="+arguements+"\n")
+condorScript.write("Arguments="+arguments+"\n")
 condorScript.write("+Group=\"GRAD\"\n")
 condorScript.write("+Project=\"INSTRUCTIONAL\"\n")
 condorScript.write("+ProjectDescription=\"Elastic\"\n")
 condorScript.write("#+GPUJob=true\n")
 condorScript.write("#requirements=(TARGET.GPUSlot)\n")
 condorScript.write("Notification=complete\n")
-condorScript.write("Notify_user="+user+"\n")
+condorScript.write("Notify_user="+notifyUser+"\n")
 condorScript.write("should_transfer_files=YES\n")
 condorScript.write("Log="+logPath+"\n")
 condorScript.write("Output="+outputPath+"\n")
