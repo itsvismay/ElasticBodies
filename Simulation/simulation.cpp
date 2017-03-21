@@ -3,7 +3,7 @@
 
 Simulation::Simulation(void){}
 
-int staticSolveDirection = 0;
+int staticSolveDirection = -2;
 
 int Simulation::initializeSimulation(double deltaT, int iterations, char method, MatrixXi& TT, MatrixXd& TV, MatrixXd& B, vector<int>& moveVertices, vector<int> fixVertices, double youngs, double poissons){
 	iters = iterations;
@@ -261,7 +261,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 	cout<<"***SETTING INITIAL POSITIONS***"<<endl;
 	double movePercentOfSpringLength = .1;
 	cout<<"DIRECTION of Static position solve: -z"<<endl;
-	int direction = -2; //-y
+	int direction = staticSolveDirection; //-y
 	cout<<"MOVING"<<endl;
 	cout<<moveVertices.size()<<endl;
 	double designZMax = 0.0;
@@ -326,7 +326,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	SparseMatrix<double> forceGradient;
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
 	SparseMatrix<double> forceGradientStaticBlock;
-	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	forceGradientStaticBlock.resize((3*ignorePastIndex + 2*moveVertices.size()), (3*ignorePastIndex + 2*moveVertices.size()));
 	VectorXd f, x;
 	f.resize(3*TV.rows());
 	f.setZero();
@@ -342,9 +342,31 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 		calculateElasticForces(f, TV);
 
 		//Block forceGrad and f to exclude the fixed verts
-		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		VectorXd fblock = f.head(ignorePastIndex*3);
+		forceGradientStaticBlock = forceGradient.block(0,0, 3*ignorePastIndex + 2*moveVertices.size(), 3*ignorePastIndex + 2*moveVertices.size());
+		VectorXd fblock;
+		fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
+		fblock.head(3*ignorePastIndex) = f.head(ignorePastIndex*3);
+		vector<Trip> triplets1;
+		triplets1.reserve(12*12*M.tets.size());
+		for(int i =0; i<moveVertices.size(); i++)
+		{
+			if(!abs(staticSolveDirection)==0)
+			{
+				fblock(3*ignorePastIndex + i) = f(3*ignorePastIndex + i);
+				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!=(3*ignorePastIndex + i); });
+			}
+			if(!abs(staticSolveDirection)==1)
+			{
+				fblock(3*ignorePastIndex + i+1) = f(3*ignorePastIndex + i+1);
+				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!=(3*ignorePastIndex+i+1); });
+			}
+			if(!abs(staticSolveDirection)==2)
+			{
+				fblock(3*ignorePastIndex + i+2) = f(3*ignorePastIndex + i+2);
+				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!= (3*ignorePastIndex+i+2); });
+			}
 
+		}
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> solver;
 		// solver.compute(forceGradientStaticBlock);
