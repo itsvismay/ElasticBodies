@@ -32,15 +32,21 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	cout<<TV.rows()<<endl;
 	// setInitPosition(force, fixVertices, moveVertices);
 
+	fixVertices.push_back(4);
+	fixVertices.push_back(3);
+	fixVertices.push_back(2);
+	moveVertices.push_back(1);
+
+
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0] < 1){
-			moveVertices.push_back(i);
-		}
-		if(TV.row(i)[0] > 140.1){
-			fixVertices.push_back(i);
-		}
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[0] < 1){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[0] > 140.1){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// }
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -122,6 +128,20 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			if(meshFile.good()){
 				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
 			}else{
+				cout<<"APPLYING STATIC POSITIONS"<<endl;
+				cout<<"new TV"<<endl;
+				cout<<newTV<<endl<<endl;
+				cout<<"new TT"<<endl;
+				cout<<newTT<<endl<<endl;
+				cout<<"moving"<<endl;
+				for(int m=0; m<newMoveIndices.size(); m++)
+					cout<<newMoveIndices[m]<<", ";
+				cout<<endl;
+				cout<<"fixed"<<endl;
+				for(int m=0; m<newfixIndices.size(); m++)
+					cout<<newfixIndices[m]<<", ";
+				cout<<endl;
+
 				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 			}
 			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
@@ -260,10 +280,8 @@ void Simulation::reIndexTVandTT(
 void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
 	cout<<"***SETTING INITIAL POSITIONS***"<<endl;
 	double movePercentOfSpringLength = .1;
-	cout<<"DIRECTION of Static position solve: -z"<<endl;
+	cout<<"		DIRECTION of Static position solve: "<<staticSolveDirection<<endl;
 	int direction = staticSolveDirection; //-y
-	cout<<"MOVING"<<endl;
-	cout<<moveVertices.size()<<endl;
 	double designZMax = 0.0;
 	double designZMin = 0.0;
 	double designXMax = 0.0;
@@ -298,7 +316,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
 	double distance_to_move = 45;
-	int number_of_moves = 180;
+	int number_of_moves = 720;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
@@ -309,13 +327,13 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		//Move vertices slightly in x,y,z direction
 		// [v, v, v..., m, m, ...f, f, f...]
 		for(unsigned int i=0; i<moveVertices.size(); i++){
-			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
+			TV.row(moveVertices[i])[abs(direction)] += 0.1*(direction/direction)*step_size;//step
 		}
-
 		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, c);
 		c++;
 		amount_moved+=step_size;
 	}
+	exit(0);
 	printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", c, TV, TT, B);
 	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
 	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
@@ -327,6 +345,9 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	forceGradient.resize(3*TV.rows(), 3*TV.rows());
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize((3*ignorePastIndex + 2*moveVertices.size()), (3*ignorePastIndex + 2*moveVertices.size()));
+	SparseMatrix<double> DeletionMatrix;
+	DeletionMatrix.resize((3*ignorePastIndex + 2*moveVertices.size()), (3*ignorePastIndex + 3*moveVertices.size()));
+
 	VectorXd f, x;
 	f.resize(3*TV.rows());
 	f.setZero();
@@ -335,68 +356,229 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	setTVtoX(x, TV);
 
 	int NEWTON_MAX = 300, k=0;
+	// for(k=0; k<NEWTON_MAX; k++){
+	// 	xToTV(x, TV);
+	//
+	// 	calculateForceGradient(TV, forceGradient);
+	// 	calculateElasticForces(f, TV);
+	// 	// cout<<"fg block"<<endl;
+	// 	// cout<<forceGradient<<endl<<endl;
+	//
+	// 	// cout<<"Finite Diff"<<endl;
+	// 	// double e = 1e-8;
+	// 	// MatrixXd TV_fd = TV;
+	// 	// TV_fd.coeffRef(0,0) += e;
+	// 	// VectorXd f_fd;
+	// 	// f_fd.resize(3*TV.rows());
+	// 	// calculateElasticForces(f_fd, TV_fd);
+	// 	// cout<<(f_fd - f )/e<<endl;
+	//
+	// 	DeletionMatrix.setZero();
+	//
+	// 	VectorXd fblock, fblocktail;
+	// 	fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
+	// 	fblock.setZero();
+	// 	fblock.head(3*ignorePastIndex) = f.head(ignorePastIndex*3);
+	//
+	// 	fblocktail.resize(2*moveVertices.size());
+	// 	fblocktail.setZero();
+	//
+	// 	int r=0, c=0;
+	// 	for(int i=0; i<3*ignorePastIndex; ++i)
+	// 	{
+	// 		DeletionMatrix.coeffRef(r, c) = 1;
+	// 		++r; ++c;
+	// 	}
+	// 	//because r, c went 1 step too far in the last iteration ^ for the next part to work
+	// 	--r;--c;
+	// 	for(int i =0; i<moveVertices.size(); ++i)
+	// 	{
+	// 		if(abs(staticSolveDirection)==0)
+	// 		{
+	// 			fblocktail(2*i) = f(3*ignorePastIndex + i + 1);
+	// 			fblock(2*i + 1) = f(3*ignorePastIndex + i + 2);
+	// 			++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++r;++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++r;++c;
+	// 		}
+	// 		if(abs(staticSolveDirection)==1)
+	// 		{
+	// 			fblocktail(2*i) = f(3*ignorePastIndex + i);
+	// 			fblock(2*i + 1) = f(3*ignorePastIndex + i + 2);
+	// 			++r; ++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++r;++c;
+	// 		}
+	// 		if(abs(staticSolveDirection)==2)
+	// 		{
+	// 			fblocktail(2*i) = f(3*ignorePastIndex + i);
+	// 			fblock(2*i + 1) = f(3*ignorePastIndex + i + 1);
+	// 			++r; ++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++r;++c;
+	// 			DeletionMatrix.coeffRef(r, c) = 1;
+	// 			++c;
+	// 		}
+	// 	}
+	//
+	// 	// cout<<"DELETION MATRIX"<<endl;
+	// 	//Block forceGrad and f to exclude the fixed verts
+	// 	forceGradientStaticBlock = DeletionMatrix*forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size())*DeletionMatrix.transpose();
+	// 	fblock.tail(2*moveVertices.size()) = fblocktail;
+	// 	// cout<<"fg"<<endl;
+	// 	// SparseMatrix<double> thing = forceGradientStaticBlock - SparseMatrix<double>(forceGradientStaticBlock.transpose());
+	// 	// cout<<thing <<endl<<endl;
+	// 	// cout<<"force"<<endl;
+	// 	// cout<<f<<endl<<endl;
+	// 	// cout<<"f block"<<endl;
+	// 	// cout<<fblock<<endl;
+	//
+	// 	// Conj Grad
+	// 	ConjugateGradient<SparseMatrix<double>> solver;
+	// 	solver.compute(forceGradient.block(0,0,3*ignorePastIndex, 3*ignorePastIndex));
+	// 	if(solver.info() == Eigen::NumericalIssue){
+	// 		cout<<"ConjugateGradient numerical issue"<<endl;
+	// 		exit(0);
+	// 	}
+	//
+	// 	VectorXd deltaX = -1*solver.solve(fblock.head(3*ignorePastIndex));
+	//
+	// 	// x.segment(0,3*(ignorePastIndex))+=deltaX.head(3*ignorePastIndex);
+	// 	// for(int i=0; i<moveVertices.size(); i++)
+	// 	// {
+	// 	// 	if(abs(staticSolveDirection)!=0)
+	// 	// 		x(3*ignorePastIndex +i) += deltaX(3*ignorePastIndex +i);
+	// 	// 	if(abs(staticSolveDirection)!=1)
+	// 	// 		x(3*ignorePastIndex +i+1) += deltaX(3*ignorePastIndex +i+1);
+	// 	// 	if(abs(staticSolveDirection)!=2)
+	// 	// 		x(3*ignorePastIndex +i+2) += deltaX(3*ignorePastIndex +i+2);
+	// 	// }
+	// 	x.segment(0, 3*ignorePastIndex) += deltaX;
+	// 	// cout<<"		Newton Iter "<<k<<endl;
+	// 	// cout<<x<<endl;
+	//
+	// 	if(x != x){
+	// 		cout<<"NAN"<<endl;
+	// 		exit(0);
+	// 	}
+	//
+	// 	cout<<"fblock/size"<<endl;
+	// 	cout<<fblock.squaredNorm()/fblock.size()<<endl;
+	// 	if (fblock.squaredNorm()/fblock.size() < 0.00001){
+	// 		break;
+	// 	}
+	// }
 	for(k=0; k<NEWTON_MAX; k++){
-		xToTV(x, TV);
+			DeletionMatrix.setZero();
+			xToTV(x, TV);
+			calculateForceGradient(TV, forceGradient);
+			calculateElasticForces(f, TV);
 
-		calculateForceGradient(TV, forceGradient);
-		calculateElasticForces(f, TV);
+			//Block forceGrad and f to exclude the fixed verts
+			VectorXd fblock, fblocktail;
+			fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
+			fblock.setZero();
+			fblocktail.resize(2*moveVertices.size());
+			fblocktail.setZero();
 
-		//Block forceGrad and f to exclude the fixed verts
-		forceGradientStaticBlock = forceGradient.block(0,0, 3*ignorePastIndex + 2*moveVertices.size(), 3*ignorePastIndex + 2*moveVertices.size());
-		VectorXd fblock;
-		fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
-		fblock.head(3*ignorePastIndex) = f.head(ignorePastIndex*3);
-		vector<Trip> triplets1;
-		triplets1.reserve(12*12*M.tets.size());
-		for(int i =0; i<moveVertices.size(); i++)
-		{
-			if(!abs(staticSolveDirection)==0)
+			int r=0, c=0;
+			for(int i=0; i<3*ignorePastIndex; ++i)
 			{
-				fblock(3*ignorePastIndex + i) = f(3*ignorePastIndex + i);
-				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!=(3*ignorePastIndex + i); });
+				DeletionMatrix.coeffRef(r, c) = 1;
+				++r; ++c;
 			}
-			if(!abs(staticSolveDirection)==1)
+			//because r, c went 1 step too far in the last iteration ^ for the next part to work
+			--r;--c;
+			for(int i =0; i<moveVertices.size(); ++i)
 			{
-				fblock(3*ignorePastIndex + i+1) = f(3*ignorePastIndex + i+1);
-				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!=(3*ignorePastIndex+i+1); });
-			}
-			if(!abs(staticSolveDirection)==2)
-			{
-				fblock(3*ignorePastIndex + i+2) = f(3*ignorePastIndex + i+2);
-				forceGradientStaticBlock.prune([](int i, int j, float ignorePastIndex) { return i!= (3*ignorePastIndex+i+2); });
+				if(abs(staticSolveDirection)==0)
+				{
+					fblocktail(2*i) = f(3*ignorePastIndex + i + 1);
+					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 2);
+					++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++r;++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++r;++c;
+				}
+				if(abs(staticSolveDirection)==1)
+				{
+					fblocktail(2*i) = f(3*ignorePastIndex + i);
+					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 2);
+					++r; ++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++r;++c;
+				}
+				if(abs(staticSolveDirection)==2)
+				{
+					cout<<3*ignorePastIndex+i<<endl;
+					fblocktail(2*i) = f(3*ignorePastIndex + i);
+					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 1);
+					++r; ++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++r;++c;
+					DeletionMatrix.coeffRef(r, c) = 1;
+					++c;
+				}
 			}
 
-		}
-		//Sparse QR
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> solver;
-		// solver.compute(forceGradientStaticBlock);
-		// VectorXd deltaX = -1*solver.solve(fblock);
+			fblock.segment(0, 3*ignorePastIndex) = f.head(ignorePastIndex*3);
+			cout<<DeletionMatrix<<endl;
+			fblock.segment(3*ignorePastIndex, 3*ignorePastIndex+2*moveVertices.size()) = fblocktail;
+			//Block forceGrad and f to exclude the fixed verts
+			forceGradientStaticBlock = DeletionMatrix*forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size())*DeletionMatrix.transpose();
 
-		// Conj Grad
-		ConjugateGradient<SparseMatrix<double>> solver;
-		solver.compute(forceGradientStaticBlock);
-		if(solver.info() == Eigen::NumericalIssue){
-			cout<<"ConjugateGradient numerical issue"<<endl;
+
+			cout<<"Deletion Matrix"<<endl;
+			cout<<DeletionMatrix<<endl;
+			cout<<"f"<<endl;
+			cout<<f<<endl;
+			cout<<"fblock"<<endl;
+			cout<<fblock<<endl;
+			cout<<"ftail"<<endl;
+			cout<<fblocktail<<endl;
+			cout<<"fgrad"<<endl;
+			cout<<forceGradient<<endl;
+			cout<<"fg block"<<endl;
+			SparseMatrix<double> thing = forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size());
+			cout<<thing<<endl;
+			cout<<"fg static block"<<endl;
+			cout<<forceGradientStaticBlock<<endl;
+
 			exit(0);
-		}
 
-		VectorXd deltaX = -1*solver.solve(fblock);
 
-		x.segment(0,3*(ignorePastIndex))+=deltaX;
-		cout<<"		Newton Iter "<<k<<endl;
+			//------------- Conj Grad------------------
+			ConjugateGradient<SparseMatrix<double>> solver;
+			solver.compute(forceGradientStaticBlock);
+			if(solver.info() == Eigen::NumericalIssue){
+				cout<<"ConjugateGradient numerical issue"<<endl;
+				exit(0);
+			}
+			//-----------------------------------------
 
-		if(x != x){
-			cout<<"NAN"<<endl;
-			exit(0);
-		}
+			VectorXd deltaX = -1*solver.solve(fblock);
 
-		cout<<"fblock/size"<<endl;
-		cout<<fblock.squaredNorm()/fblock.size()<<endl;
-		if (fblock.squaredNorm()/fblock.size() < 0.00001){
-			break;
-		}
+			x.segment(0,3*(ignorePastIndex))+=deltaX;
+			cout<<"		Newton Iter "<<k<<endl;
+
+			if(x != x){
+				cout<<"NAN"<<endl;
+				exit(0);
+			}
+
+			cout<<"fblock/size"<<endl;
+			cout<<fblock.squaredNorm()/fblock.size()<<endl;
+			if (fblock.squaredNorm()/fblock.size() < 0.00001){
+				break;
+			}
 	}
-
 	if(k== NEWTON_MAX){
 		cout<<"ERROR Static Solve: Newton max reached"<<endl;
 		cout<<k<<endl;
