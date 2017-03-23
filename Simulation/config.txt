@@ -1,14 +1,14 @@
 .00001
-t
+f
 n
-5000
+100
 0.000045
 -10000000
-1
+0
 8300000000
 .35
 pRa5
-neo
+svk
 newton
 tensile_beam/rawTensile
 

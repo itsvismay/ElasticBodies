@@ -72,7 +72,7 @@ Matrix3d Tetrahedron::computeDeltaDs(const Vector12d& dx){
 
 MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 
-    Matrix3d Ds; 
+    Matrix3d Ds;
     for(int i=0; i<3; i++){
         Ds.col(i) = TV.row(verticesIndex(i)) - TV.row(verticesIndex(3));
     }
@@ -99,7 +99,7 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
         Matrix3d P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));
         Matrix3d dE = 0.5*(F.transpose()*dF + dF.transpose()*F);
         dP = 2*mu*dF*E + 2*mu*F*dE + lambda*E.trace()*dF*MatrixXd::Identity(3,3) + lambda*dE.trace()*F*MatrixXd::Identity(3,3);
-    
+
     }
     else{
         cout<<"Material model not specified properly"<<endl;
@@ -119,13 +119,8 @@ MatrixXd Tetrahedron::computeForceDifferentials(MatrixXd& TV, Vector12d& dx){
 }
 
 void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
-    // Vector12d x;
-    // x.segment<3>(0) = TV.row(this->verticesIndex(0));
-    // x.segment<3>(3) = TV.row(this->verticesIndex(1));
-    // x.segment<3>(6) = TV.row(this->verticesIndex(2));
-    // x.segment<3>(9) = TV.row(this->verticesIndex(3));
 
-    Matrix3d Ds; 
+    Matrix3d Ds;
     for(int i=0; i<3; i++){
         Ds.col(i) = TV.row(verticesIndex(i)) - TV.row(verticesIndex(3));
     }
@@ -137,23 +132,21 @@ void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
     this->currentVol = (1.0/6)*fabs(Ds.determinant());
     if(material_model.compare("neo") == 0){
         //Neo
-        
-        double J = F.determinant();     
+        double J = F.determinant();
         double I1 = (F.transpose()*F).trace();
         double powj = pow(J, -2.0/3.0);
         double I1bar = powj*I1;
 
         P = mu*(powj * F) +
         (- mu/3.0 * I1 * powj + lambda*(J-1.0)*J)*F.inverse().transpose();
- 
-        this->energy = this->undeformedVol*(mu/2.0 * (I1bar - 3) + lambda/2.0 * (J-1.0) * (J-1.0));
 
+        this->energy = this->undeformedVol*(mu/2.0 * (I1bar - 3) + lambda/2.0 * (J-1.0) * (J-1.0));
 
     }else if(material_model.compare("svk") == 0){
         //SVK
         //TODO: Spring Constant value
         Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
-        P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff   
+        P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff
         this->energy = (mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace())*this->undeformedVol;
 
     }else{
@@ -183,7 +176,7 @@ void Tetrahedron::computeElasticForces(MatrixXd &TV, VectorXd& f){
 
 MatrixXd Tetrahedron::oldComputeElasticForces(MatrixXd &TV, int e){
 
-    Matrix3d Ds; 
+    Matrix3d Ds;
     for(int i=0; i<3; i++){
         Ds.col(i) = TV.row(verticesIndex(i)) - TV.row(verticesIndex(3));
     }
@@ -195,7 +188,7 @@ MatrixXd Tetrahedron::oldComputeElasticForces(MatrixXd &TV, int e){
     this->currentVol = (1.0/6)*fabs(Ds.determinant());
     if(material_model.compare("neo") == 0){
         //Neo
-        
+
         P = mu*(F - ((F.inverse()).transpose())) + lambda*log(F.determinant())*((F.inverse()).transpose());
         double firstTerm = ((mu/2.0)*((F.transpose()*F).trace() -3) - mu*log(F.determinant()));
         if(firstTerm<0 ){
@@ -208,7 +201,7 @@ MatrixXd Tetrahedron::oldComputeElasticForces(MatrixXd &TV, int e){
         //SVK
         //TODO: Spring Constant value
         Matrix3d E = 0.5*((F.transpose()*F) - MatrixXd::Identity(3,3));
-        P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff   
+        P = F*(2*mu*E + lambda*E.trace()*MatrixXd::Identity(3,3));//piola kirchoff
         this->energy = (mu*(E*E).trace() + (lambda/2)*E.trace()*E.trace())*this->undeformedVol;
 
     }else{
