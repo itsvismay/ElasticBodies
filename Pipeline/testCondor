@@ -1,0 +1,16 @@
+universe=vanilla
+Initialdir=/scratch/cluster/zmisso/ElasticBodies/Pipeline/
+Executable=/usr/bin/python
+Arguments=/scratch/cluster/zmisso/ElasticBodies/Pipeline/genAllTests.py
++Group="GRAD"
++Project="INSTRUCTIONAL"
++ProjectDescription="Elastic"
+#+GPUJob=true
+#requirements=(TARGET.GPUSlot)
+Notification=complete
+Notify_user=zack441@mac.com
+should_transfer_files=YES
+Log=/scratch/cluster/zmisso/ElasticBodies/Pipeline/log/log$(Cluster)
+Output=/scratch/cluster/zmisso/ElasticBodies/Pipeline/output/out$(Cluster)
+Error=/scratch/cluster/zmisso/ElasticBodies/Pipeline/error/err$(Cluster)
+Queue 1

@@ -56,7 +56,7 @@ pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Poly
 pathTo3DUnion = "/scratch/cluster/zmisso/libigl/tutorial/build/3dUnion_bin"
 pathToSplit = "/scratch/cluster/zmisso/ElasticBodies/3dUnion/build/remesh"
 pathToSimprep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/Simprep/simprep"
-pathToOpenscad = "/usr/bin/openscad"
+pathToOpenscad = "/lusr/opt/openscad-2015.03-2/bin/openscad"
 #pathToCgal = "../../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
 
 try:
