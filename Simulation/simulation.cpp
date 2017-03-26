@@ -327,7 +327,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		//Move vertices slightly in x,y,z direction
 		// [v, v, v..., m, m, ...f, f, f...]
 		for(unsigned int i=0; i<moveVertices.size(); i++){
-			TV.row(moveVertices[i])[abs(direction)] += 0.1*(direction/direction)*step_size;//step
+			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
 		}
 		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, c);
 		c++;
@@ -355,7 +355,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	x.setZero();
 	setTVtoX(x, TV);
 
-	int NEWTON_MAX = 300, k=0;
+	int NEWTON_MAX = 10, k=0;
 	// for(k=0; k<NEWTON_MAX; k++){
 	// 	xToTV(x, TV);
 	//
@@ -473,18 +473,14 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	// 	}
 	// }
 	for(k=0; k<NEWTON_MAX; k++){
-			DeletionMatrix.setZero();
+			DeletionMatrix.setZero();//optimize this by setting it only once
+			cout<<"		Newton Iter "<<k<<endl;
 			xToTV(x, TV);
 			calculateForceGradient(TV, forceGradient);
 			calculateElasticForces(f, TV);
 
+			//
 			//Block forceGrad and f to exclude the fixed verts
-			VectorXd fblock, fblocktail;
-			fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
-			fblock.setZero();
-			fblocktail.resize(2*moveVertices.size());
-			fblocktail.setZero();
-
 			int r=0, c=0;
 			for(int i=0; i<3*ignorePastIndex; ++i)
 			{
@@ -495,31 +491,24 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 			--r;--c;
 			for(int i =0; i<moveVertices.size(); ++i)
 			{
-				if(abs(staticSolveDirection)==0)
-				{
-					fblocktail(2*i) = f(3*ignorePastIndex + i + 1);
-					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 2);
-					++c;
-					DeletionMatrix.coeffRef(r, c) = 1;
-					++r;++c;
-					DeletionMatrix.coeffRef(r, c) = 1;
-					++r;++c;
-				}
-				if(abs(staticSolveDirection)==1)
-				{
-					fblocktail(2*i) = f(3*ignorePastIndex + i);
-					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 2);
-					++r; ++c;
-					DeletionMatrix.coeffRef(r, c) = 1;
-					++c;
-					DeletionMatrix.coeffRef(r, c) = 1;
-					++r;++c;
-				}
+				// if(abs(staticSolveDirection)==0)
+				// {
+				// 	++c;
+				// 	DeletionMatrix.coeffRef(r, c) = 1;
+				// 	++r;++c;
+				// 	DeletionMatrix.coeffRef(r, c) = 1;
+				// 	++r;++c;
+				// }
+				// if(abs(staticSolveDirection)==1)
+				// {
+				// 	++r; ++c;
+				// 	DeletionMatrix.coeffRef(r, c) = 1;
+				// 	++c;
+				// 	DeletionMatrix.coeffRef(r, c) = 1;
+				// 	++r;++c;
+				// }
 				if(abs(staticSolveDirection)==2)
 				{
-					cout<<3*ignorePastIndex+i<<endl;
-					fblocktail(2*i) = f(3*ignorePastIndex + i);
-					fblocktail(2*i + 1) = f(3*ignorePastIndex + i + 1);
 					++r; ++c;
 					DeletionMatrix.coeffRef(r, c) = 1;
 					++r;++c;
@@ -527,32 +516,26 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 					++c;
 				}
 			}
-
-			fblock.segment(0, 3*ignorePastIndex) = f.head(ignorePastIndex*3);
-			cout<<DeletionMatrix<<endl;
-			fblock.segment(3*ignorePastIndex, 3*ignorePastIndex+2*moveVertices.size()) = fblocktail;
 			//Block forceGrad and f to exclude the fixed verts
 			forceGradientStaticBlock = DeletionMatrix*forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size())*DeletionMatrix.transpose();
+			//
+			VectorXd fblock, fblocktail;
+			fblock.resize(3*ignorePastIndex + 2*moveVertices.size());
+			fblock.setZero();
+			fblocktail.resize(2*moveVertices.size());
+			fblocktail.setZero();
 
-
-			cout<<"Deletion Matrix"<<endl;
-			cout<<DeletionMatrix<<endl;
-			cout<<"f"<<endl;
-			cout<<f<<endl;
-			cout<<"fblock"<<endl;
-			cout<<fblock<<endl;
-			cout<<"ftail"<<endl;
-			cout<<fblocktail<<endl;
-			cout<<"fgrad"<<endl;
-			cout<<forceGradient<<endl;
-			cout<<"fg block"<<endl;
-			SparseMatrix<double> thing = forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size());
-			cout<<thing<<endl;
-			cout<<"fg static block"<<endl;
-			cout<<forceGradientStaticBlock<<endl;
-
-			exit(0);
-
+			for(int i=0; i<moveVertices.size(); i++){
+				// if(abs(staticSolveDirection) ==0)
+				// if(abs(staticSolveDirection) ==1)
+				if(abs(staticSolveDirection) ==2)
+				{
+					fblocktail(2*i) = f(3*ignorePastIndex + 3*i);
+					fblocktail(2*i + 1) = f(3*ignorePastIndex + 3*i + 1);
+				}
+			}
+			fblock.segment(0, 3*ignorePastIndex) = f.head(ignorePastIndex*3);
+			fblock.segment(3*ignorePastIndex, 2*moveVertices.size()) = fblocktail;
 
 			//------------- Conj Grad------------------
 			ConjugateGradient<SparseMatrix<double>> solver;
@@ -562,11 +545,50 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 				exit(0);
 			}
 			//-----------------------------------------
-
 			VectorXd deltaX = -1*solver.solve(fblock);
 
-			x.segment(0,3*(ignorePastIndex))+=deltaX;
-			cout<<"		Newton Iter "<<k<<endl;
+			x.segment(0, 3*ignorePastIndex) += deltaX.head(3*ignorePastIndex);
+			for(int i=0; i<moveVertices.size(); i++)
+			{
+				// if(abs(staticSolveDirection)==0)
+				// {
+				// 	x(3*ignorePastIndex + 2*i+1) += deltaX(3*ignorePastIndex +i);
+				// 	x(3*ignorePastIndex + 2*i+2) += deltaX(3*ignorePastIndex +i +1);
+				// }
+				// if(abs(staticSolveDirection)==1)
+				// {
+				// 	x(3*ignorePastIndex + 2*i) += deltaX(3*ignorePastIndex +i);
+				// 	x(3*ignorePastIndex + 2*i+2) += deltaX(3*ignorePastIndex +i +1);
+				// }
+				if(abs(staticSolveDirection)==2)
+				{
+					x(3*ignorePastIndex + 3*i) += deltaX(3*ignorePastIndex + 2*i);
+					x(3*ignorePastIndex + 3*i+1) += deltaX(3*ignorePastIndex + 2*i +1);
+				}
+			}
+
+			cout<<"Deletion Matrix"<<endl;
+			cout<<DeletionMatrix<<endl;
+			cout<<"f"<<endl;
+			cout<<f<<endl;
+			cout<<"fblock"<<endl;
+			cout<<fblock<<endl;
+			cout<<"ftail"<<endl;
+			cout<<fblocktail<<endl;
+			// cout<<"fgrad3"<<endl;
+			// cout<<forceGradient.rows()<<", "<<forceGradient.cols()<<endl;
+			// // cout<<"fg block"<<endl;
+			// // SparseMatrix<double> thing = forceGradient.block(0,0, 3*ignorePastIndex + 3*moveVertices.size(), 3*ignorePastIndex + 3*moveVertices.size());
+			// // cout<<thing<<endl;
+			cout<<"fg static block"<<endl;
+			cout<<forceGradientStaticBlock<<endl;
+			cout<<"deltaX"<<endl;
+			cout<<deltaX<<endl;
+			cout<<"x"<<endl;
+			cout<<x<<endl;
+
+
+
 
 			if(x != x){
 				cout<<"NAN"<<endl;
@@ -574,8 +596,8 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 			}
 
 			cout<<"fblock/size"<<endl;
-			cout<<fblock.squaredNorm()/fblock.size()<<endl;
-			if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			cout<<f.squaredNorm()/f.size()<<endl;
+			if (f.squaredNorm()/f.size() < 0.00001){
 				break;
 			}
 	}
@@ -591,6 +613,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 	cout<<"strain E"<<strainE<<endl;
 	cout<<"x[0] "<<x(0)<<endl;
 	cout<<"x[1] "<<x(1)<<endl;
+	exit(0);
 }
 
 void Simulation::applyStaticForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, VectorXd& fixed_forces, vector<int>& moveVertices, vector<int>& fixVertices){
@@ -733,6 +756,7 @@ void Simulation::calculateForceGradient(MatrixXd &TVk, SparseMatrix<double>& for
 
 	vector<Trip> triplets1;
 	triplets1.reserve(12*12*M.tets.size());
+
 	for(unsigned int i=0; i<M.tets.size(); i++){
 		//Get P(dxn), dx = [1,0, 0...], then [0,1,0,....], and so on... for all 4 vert's x, y, z
 		//P is the compute Force Differentials blackbox fxn
