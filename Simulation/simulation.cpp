@@ -32,21 +32,21 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	cout<<TV.rows()<<endl;
 	// setInitPosition(force, fixVertices, moveVertices);
 
-	fixVertices.push_back(4);
-	fixVertices.push_back(3);
-	fixVertices.push_back(2);
-	moveVertices.push_back(1);
+	// fixVertices.push_back(4);
+	// fixVertices.push_back(3);
+	// fixVertices.push_back(2);
+	// moveVertices.push_back(1);
 
 
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[0] < 1){
-	// 		moveVertices.push_back(i);
-	// 	}
-	// 	if(TV.row(i)[0] > 140.1){
-	// 		fixVertices.push_back(i);
-	// 	}
-	// }
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0] < 1){
+			moveVertices.push_back(i);
+		}
+		if(TV.row(i)[0] > 140.1){
+			fixVertices.push_back(i);
+		}
+	}
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -129,19 +129,6 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
 			}else{
 				cout<<"APPLYING STATIC POSITIONS"<<endl;
-				cout<<"new TV"<<endl;
-				cout<<newTV<<endl<<endl;
-				cout<<"new TT"<<endl;
-				cout<<newTT<<endl<<endl;
-				cout<<"moving"<<endl;
-				for(int m=0; m<newMoveIndices.size(); m++)
-					cout<<newMoveIndices[m]<<", ";
-				cout<<endl;
-				cout<<"fixed"<<endl;
-				for(int m=0; m<newfixIndices.size(); m++)
-					cout<<newfixIndices[m]<<", ";
-				cout<<endl;
-
 				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 			}
 			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
@@ -333,7 +320,6 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		c++;
 		amount_moved+=step_size;
 	}
-	exit(0);
 	printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", c, TV, TT, B);
 	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
 	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
