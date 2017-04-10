@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	Sim.render();
+	// Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -109,7 +109,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(120,0,0), RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
 

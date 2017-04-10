@@ -12,6 +12,7 @@
 #include <igl/hausdorff.h>
 #include <igl/readOBJ.h>
 #include <igl/readMESH.h>
+#include <Eigen/SPQRSupport>
 class Simulation{
 
 public:

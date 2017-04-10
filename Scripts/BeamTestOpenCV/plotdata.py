@@ -1,8 +1,12 @@
 import matplotlib.pyplot as plt
+import sys
 t = []
 x = []
 f = open('redbeamdata.txt')
-f1 = open('../../TestsResults/Boba/tensile_beam/rawTensile@pRa5position.txt')
+# filename = "8300000000.000000@0.000001@43257tets@pRa0.6@position.txt"
+# f1 = open('../../TestsResults/Damping/'+filename)
+filename = sys.argv[1]
+f1 = open(filename)
 for line in f:
 	
 	step = line.strip("\n").split(",")

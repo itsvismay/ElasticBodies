@@ -13,7 +13,7 @@
 // #define CONSISTENCY_TEST_SAVE_PATH "/scratch/cluster/vismay/"
 
 #define TUTORIAL_SHARED_PATH "/home/vismay/ElasticBodies/"
-#define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/" 
+#define CONSISTENCY_TEST_SAVE_PATH "/home/vismay/ElasticBodies/"
 
 using namespace Eigen;
 using namespace std;
@@ -35,6 +35,7 @@ extern string material_model;
 extern string tetgen_code;
 extern string solver;
 extern string objectName;
+extern double youngs;
 
 extern MatrixXi TF;
 #endif
