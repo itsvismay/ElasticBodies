@@ -9,6 +9,7 @@
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 #include <igl/read_triangle_mesh.h>
+#include <Eigen/SPQRSupport>
 
 class Simulation{
 

@@ -7,7 +7,7 @@ i
 1
 6900000
 .35
--pRa0.2
+pRa0.5
 neo
 newton
 tensile_beam/rawTensile

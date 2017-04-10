@@ -642,18 +642,18 @@ void Simulation::staticSolveStepNewtonsMethod(double move_step, int ignorePastIn
 		// cout<<(forceGradientStaticBlockTranspose - forceGradientStaticBlock).norm()<<endl;
 
 		//Sparse QR
-		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
-		// sqr.compute(forceGradientStaticBlock);
-		// VectorXd deltaX = -1*sqr.solve(fblock);
+		SPQR<SparseMatrix<double>> sqr;
+		sqr.compute(forceGradientStaticBlock);
+		VectorXd deltaX = -1*sqr.solve(fblock);
 
 		// Conj Grad
-		ConjugateGradient<SparseMatrix<double>> cg;
-		cg.compute(forceGradientStaticBlock);
-		if(cg.info() == Eigen::NumericalIssue){
-			cout<<"ConjugateGradient numerical issue"<<endl;
-			exit(0);
-		}
-		VectorXd deltaX = -1*cg.solve(fblock);
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(forceGradientStaticBlock);
+		// if(cg.info() == Eigen::NumericalIssue){
+		// 	cout<<"ConjugateGradient numerical issue"<<endl;
+		// 	exit(0);
+		// }
+		// VectorXd deltaX = -1*cg.solve(fblock);
 
 		// // Sparse Cholesky LL^T
 		// SimplicialLLT<SparseMatrix<double>> llt;

@@ -40,7 +40,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0] < 1){
+		if(TV.row(i)[0] < 1 && TV.row(i)[2]<-2.5){
 			moveVertices.push_back(i);
 		}
 		if(TV.row(i)[0] > 140.1){
@@ -123,10 +123,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			moveVertices = newMoveIndices;
 			this->moveVerticesStore = newMoveIndices;
 			//RECOMMENT
-			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh");
-			cout<<OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
+			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh");
+			cout<<OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh"<<endl;
 			if(meshFile.good()){
-				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
+				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
 			}else{
 				cout<<"APPLYING STATIC POSITIONS"<<endl;
 				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
@@ -160,7 +160,7 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
-	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Boba/"+objectName+"@"+tetgen_code+"position.txt");
+	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+"position.txt");
 
 	integrator->external_f = this->external_force;
 	integrator->v_old.setZero();
@@ -171,13 +171,16 @@ void Simulation::headless(){
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		//RECOMMENT
-		// double z_pos = integrator->TV.row(369)[2] + 0.5;
-		double z_pos = integrator->TV.row(1121)[2] + 0.5;
-		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
+		double z_pos =0;
+		// z_pos = integrator->TV.row(1121)[2] + 0.5;//For pRa5
+		for(int i=0; i<this->moveVerticesStore.size(); i++){
+			z_pos += integrator->x_old(3*this->moveVerticesStore[i]+2); //avg in the y direction
+		}
+		dampingPositionFile<<integrator->simTime<<", "<<z_pos/this->moveVerticesStore.size()<<endl;
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		if(integrator->simTime%1==0 && integrator->simTime<300){
+		if(integrator->simTime%10==0 && integrator->simTime<3000){
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}
@@ -187,7 +190,7 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Boba/"+to_string(integrator->h)+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
@@ -303,7 +306,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
 	double distance_to_move = 45;
-	int number_of_moves = 1440;
+	int number_of_moves = 450;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
@@ -320,9 +323,9 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		c++;
 		amount_moved+=step_size;
 	}
-	printObj(OUTPUT_SAVED_PATH "TestsResults/Boba/", c, TV, TT, B);
-	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh"<<endl;
-	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Boba/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
+	printObj(OUTPUT_SAVED_PATH "TestsResults/Damping/", c, TV, TT, B);
+	cout<<"WRITE MESH HERE: "<< OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh"<<endl;
+	igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh", TV, TT, TF);
 }
 void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, vector<int>& moveVertices, int ignorePastIndex, int step){
 	cout<<"------------Static Solve Newtons POSITION - Iteration"<< step<<"--------------"<<endl;
@@ -412,7 +415,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 			fblock.segment(3*ignorePastIndex, 2*moveVertices.size()) = fblocktail;
 
 			//Sparse QR
-			SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> solver;
+			SPQR<SparseMatrix<double>> solver;
 			solver.compute(forceGradientStaticBlock);
 			//------------- Conj Grad------------------
 			// ConjugateGradient<SparseMatrix<double>> solver;
@@ -452,7 +455,7 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 
 			cout<<"fblock/size"<<endl;
 			cout<<fblock.squaredNorm()/fblock.size()<<endl;
-			if (fblock.squaredNorm()/fblock.size() < 0.00001){
+			if (fblock.squaredNorm()/fblock.size() < 0.001){
 				break;
 			}
 	}
@@ -551,7 +554,7 @@ void Simulation::staticSolveNewtonsForces(MatrixXd& TV, MatrixXi& TT, MatrixXd& 
 
 		cout<<"fblock"<<endl;
 		cout<<fblock.squaredNorm()/fblock.size()<<endl;
-		if (fblock.squaredNorm()/fblock.size() < 0.00001){
+		if (fblock.squaredNorm()/fblock.size() < 0.0001){
 			break;
 		}
 
