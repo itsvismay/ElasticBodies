@@ -40,7 +40,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0] < 1 && TV.row(i)[2]<-2.5){
+		if(TV.row(i)[0] < 0.1 && TV.row(i)[2]<-3.0){
 			moveVertices.push_back(i);
 		}
 		if(TV.row(i)[0] > 140.1){
@@ -306,7 +306,7 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 
 	// double distance_to_move = (designZMax - designZMin)*movePercentOfSpringLength;
 	double distance_to_move = 45;
-	int number_of_moves = 450;
+	int number_of_moves = 900;
 	double step_size = distance_to_move/number_of_moves;
 	cout<<"STEP SIZE"<<endl;
 	cout<<step_size<<endl;
@@ -319,6 +319,8 @@ void Simulation::applyStaticPositions(MatrixXd& TV, MatrixXi& TT, MatrixXd& B, V
 		for(unsigned int i=0; i<moveVertices.size(); i++){
 			TV.row(moveVertices[i])[abs(direction)] += (direction/direction)*step_size;//step
 		}
+		// if(c%10==0)
+		// 	printObj(OUTPUT_SAVED_PATH"TestsResults/Damping/StaticSolve/", c, TV, TT, B);
 		staticSolveNewtonsPosition(TV, TT, B, moveVertices, ignorePastIndex, c);
 		c++;
 		amount_moved+=step_size;

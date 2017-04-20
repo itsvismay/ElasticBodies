@@ -12,7 +12,7 @@ for line in f:
 	step = line.strip("\n").split(",")
 	#t.append(int(step[0]))
 	#t.append(((int(step[0]) - 982)/2051.0)-0.08678)#*86/2051)	
-	t.append(((int(step[0]) - 982)/2051.0)-0.01)
+	t.append(((int(step[0]) - 995)/371.0)-0.01)
 	x.append(float(step[1]))
 
 t1 = []
