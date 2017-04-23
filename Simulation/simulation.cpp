@@ -160,6 +160,7 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
+//	cout<<OUTPUT_SAVED_PATH"TestsResults/Damping/"<<endl;
 	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+"position.txt");
 
 	integrator->external_f = this->external_force;
@@ -417,15 +418,16 @@ void Simulation::staticSolveNewtonsPosition(MatrixXd& TV, MatrixXi& TT, MatrixXd
 			fblock.segment(3*ignorePastIndex, 2*moveVertices.size()) = fblocktail;
 
 			//Sparse QR
-			SPQR<SparseMatrix<double>> solver;
-			solver.compute(forceGradientStaticBlock);
+			//SPQR<SparseMatrix<double>> solver;
+			//SparseQR<SparseMatrix<double>> solver;
+			//solver.compute(forceGradientStaticBlock);
 			//------------- Conj Grad------------------
-			// ConjugateGradient<SparseMatrix<double>> solver;
-			// solver.compute(forceGradient);
-			// if(solver.info() == Eigen::NumericalIssue){
-			// 	cout<<"ConjugateGradient numerical issue"<<endl;
-			// 	exit(0);
-			// }
+			 ConjugateGradient<SparseMatrix<double>> solver;
+			 solver.compute(forceGradient);
+			 if(solver.info() == Eigen::NumericalIssue){
+			 	cout<<"ConjugateGradient numerical issue"<<endl;
+			 	exit(0);
+			 }
 			// //-----------------------------------------
 			VectorXd deltaX = -1*solver.solve(fblock);
 

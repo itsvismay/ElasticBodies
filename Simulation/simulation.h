@@ -12,7 +12,9 @@
 #include <igl/hausdorff.h>
 #include <igl/readOBJ.h>
 #include <igl/readMESH.h>
-#include <Eigen/SPQRSupport>
+//#include <Eigen/SPQRSupport>
+#include <Eigen/SparseQR>
+
 class Simulation{
 
 public:
