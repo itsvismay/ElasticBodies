@@ -658,8 +658,8 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vect
 	//hard coded the force file for now
 	vector<int> temp;
 	//cout<<force.rows()<<endl;
-	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/"+objectName+".txt");
-	cout<<TUTORIAL_SHARED_PATH "shared/"+objectName+".txt"<<endl;
+	ifstream forceInputFile (HOME_SAVED_PATH "shared/"+objectName+".txt");
+	cout<<HOME_SAVED_PATH "shared/"+objectName+".txt"<<endl;
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;
