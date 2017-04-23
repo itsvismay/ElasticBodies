@@ -129,20 +129,20 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	ifstream offFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".off");
-	ifstream objFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj");
-	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
+	ifstream offFile(HOME_SAVED_PATH "shared/"+objectName+".off");
+	ifstream objFile(HOME_SAVED_PATH "shared/"+objectName+".obj");
+	ifstream meshFile(HOME_SAVED_PATH "shared/"+objectName+".mesh");
 
 	if (false) {
-		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+		igl::readMESH(HOME_SAVED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (offFile.good()) {
-		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+		igl::readOFF(HOME_SAVED_PATH "shared/"+objectName+".off", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+		igl::writeMESH(HOME_SAVED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (objFile.good()) {
-		igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
+		igl::readOBJ(HOME_SAVED_PATH "shared/"+objectName+".obj", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		// igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+		// igl::writeMESH(HOME_SAVED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else {
 		cout << "MAIN ERROR :: MESH FILE WAS NOT FOUND" << endl;
 		exit(0);
