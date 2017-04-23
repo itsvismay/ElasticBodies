@@ -1,0 +1,13 @@
+.00001
+t
+n
+1600
+0.000150
+-10
+1
+8300000000
+.35
+pR
+neo
+newton
+/scratch/cluster/zmisso/ElasticBodies/PipelineTests/Individual_563/curvePrepedRemesh

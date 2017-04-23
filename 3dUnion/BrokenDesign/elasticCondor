@@ -1,0 +1,16 @@
+universe=vanilla
+Initialdir=/scratch/cluster/zmisso/ElasticBodies/PipelineTests/Individual_563/
+Executable=/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic
+Arguments=/scratch/cluster/zmisso/ElasticBodies/PipelineTests/Individual_563/
++Group="GRAD"
++Project="INSTRUCTIONAL"
++ProjectDescription="Elastic"
+#+GPUJob=true
+#requirements=(TARGET.GPUSlot)
+Notification=complete
+Notify_user=zack.misso@utexas.edu
+should_transfer_files=YES
+Log=/scratch/cluster/zmisso/ElasticBodies/Pipeline/log/log$(Cluster)
+Output=/scratch/cluster/zmisso/ElasticBodies/Pipeline/output/out$(Cluster)
+Error=/scratch/cluster/zmisso/ElasticBodies/Pipeline/error/err$(Cluster)
+Queue 1
