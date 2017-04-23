@@ -2,12 +2,12 @@
 t
 n
 10000
-0.0006
+0.008
 -10000
 1
-83000000000
+9300000000
 .35
-pRa0.3
+pRa1
 neo
 newton
 tensile_beam/rawTensile
