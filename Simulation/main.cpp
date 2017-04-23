@@ -1,5 +1,4 @@
 #include "simulation.h"
-
 #include <igl/viewer/Viewer.h>
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/barycenter.h>
@@ -13,6 +12,7 @@ ofstream strainEnergyFile;
 ofstream kineticEnergyFile;
 ofstream gravityEnergyFile;
 ofstream optimizationFile;
+ofstream dampingPositionFile;
 
 double rayleighCoeff;
 double gravity;
@@ -109,7 +109,7 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(120,0,0), RowVector3d(1,0,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
 	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
 
@@ -120,9 +120,8 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
-	viewer.data.add_points(RowVector3d(Sim.integrator->TV.row(1121)[0],
-																		 Sim.integrator->TV.row(1121)[1],
-																		 Sim.integrator->TV.row(1121)[2]), RowVector3d(0,0,0));
+	// viewer.data.add_points(Sim.integrator->TV.row(80), RowVector3d(0,0,0));
+	viewer.data.add_points(Sim.integrator->TV.row(682), RowVector3d(0,0,0));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -134,7 +133,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	ifstream objFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj");
 	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
 
-	if (meshFile.good()) {
+	if (false) {
 		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (offFile.good()) {
 		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
@@ -265,6 +264,7 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		gravity = stod(line.c_str());
+		gravity *= 1000; //going from m/s^2 to mms^2
 		cout<<gravity<<endl;
 
 		getline(configFile, line);
