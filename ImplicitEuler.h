@@ -2,9 +2,12 @@
 #define implicit_euler_h
 
 #include "IntegratorsAbstract.h"
+#include "../alglib-cpp/src/optimization.h"
+
 
 using namespace Eigen;
 using namespace std;
+using namespace alglib;
 
 class ImplicitEuler: public IntegratorAbstract{
 
@@ -26,7 +29,6 @@ public:
 	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS(VectorXd& ext_force);
 	int alglibLBFGSVismay(VectorXd& ext_force);
-	int alglibLBFGSVouga(VectorXd& ext_force);
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);

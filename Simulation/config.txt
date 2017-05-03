@@ -1,16 +1,16 @@
 .000001
-t
-n
+f
+i
 10
 0.008
 -10000
 1
 9300000000
 .35
-pRa1
+pR
 neo
-newton
-tensile_beam/rawTensile
+lbfgsvismay
+bezier_spring/springFULL
 
 #1 timestep
 #2 headless t/f
