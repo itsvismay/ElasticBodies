@@ -3,7 +3,7 @@
 
 #include "solidmesh.h"
 //IF CHOLMOD, COMMENT THIS IN**
-//#include <Eigen/CholmodSupport>
+#include <Eigen/CholmodSupport>
 
 
 class IntegratorAbstract{
@@ -13,9 +13,9 @@ public:
 	double h; //timestep
 	SparseMatrix<double> InvMass;
 	SparseMatrix<double> RegMass;
-	SimplicialLLT<SparseMatrix<double>> llt_solver;
+	// SimplicialLLT<SparseMatrix<double>> llt_solver;
 	//IF CHOLMOD, COMMENT THIS IN** |^|comment above out
-	//CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
+	CholmodSupernodalLLT<SparseMatrix<double>> llt_solver;
 	SparseMatrix<double> forceGradient, CholeskyAnalyze;
 
 	vector<int> fixedVerts;
@@ -39,6 +39,7 @@ public:
 	void initVectors();
 	void initMassMatrices();
 	void fixVertices(vector<int> fixMe);
+	void moveVertices(vector<int> moveMe);
 	void createXFromTet();
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 };

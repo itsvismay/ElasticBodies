@@ -50,10 +50,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[1] > -1.5){
+	// 	if(TV.row(i)[1] > 39){
 	// 		moveVertices.push_back(i);
 	// 	}
-	// 	if(TV.row(i)[1] < -40.5){
+	// 	if(TV.row(i)[1] < 5){
 	// 		fixVertices.push_back(i);
 	// 	}
 	// }
@@ -138,6 +138,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
+		// integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
 		igl::barycenter(TV, TT, B);

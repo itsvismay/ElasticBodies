@@ -61,6 +61,8 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 
 	// cout<<"Func"<<endl;
 	// cout<<func<<endl;
+	// cout<<"positions diff"<<endl;
+	// cout<<(in->x_k - in->x_old).norm()<<endl;
 	// cout<<"GRAD"<<endl;
 	// cout<<g<<endl;
 	// cout<<"-----End of run---------------------"<<endl;
@@ -86,7 +88,7 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     real_1d_array x;
     double *positions= new double[N];
    	for(int i=0; i<N; i++){
-   		positions[i] = 0;//x_old(i);
+   		positions[i] = x_old(i);
    	}
 
    	ImplicitTVtoX(x_k, TV);
@@ -112,6 +114,7 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     minlbfgsresults(state, x, rep);
 
     // printf("TERMINATION TYPE: %d\n", int(rep.terminationtype)); // EXPECTED: 4
+
     // cout << "final x ";
     for(int i=0; i<N; i++){
     	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
