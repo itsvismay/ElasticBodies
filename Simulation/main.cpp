@@ -78,7 +78,7 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	// Sim.render();
+	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;

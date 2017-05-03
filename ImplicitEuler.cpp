@@ -2,9 +2,127 @@
 
 using namespace Eigen;
 using namespace std;
+using namespace alglib;
 
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
+
+void rep_grad(const real_1d_array &x, double func, void *impe){
+	// cout<<"*********FUNC***********"<<endl;
+	// cout<<func<<endl;
+	// for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
+	// 	cout << x[i] << " ";
+	// cout << endl;
+}
+
+void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, void *impe)
+{
+	ImplicitEuler* in = (ImplicitEuler*) impe;
+
+    int n = 3*(in->vertsNum - in->fixedVerts.size());
+
+    VectorXd y_vec; y_vec.resize(in->vertsNum*3); y_vec.setZero();
+    for(int i=0; i<n; i++){
+    	in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
+    	y_vec(i) = y[i];
+    }
+    // cout<<"Pre bfgs x_k"<<endl;
+    // cout<<in->x_k<<endl;
+
+    in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
+	in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+
+	//ENERGY SCALAR
+	func = 0.0;
+	double kineticE =0.0;
+	kineticE = (0.5*y_vec.transpose()*in->RegMass*y_vec);
+	func += kineticE;
+	// func =0.0;
+	double strainE=0.0;
+	for(unsigned int i=0; i<in->M.tets.size(); i++){
+		strainE += in->M.tets[i].energy;
+	}
+
+    func += strainE;
+
+    double gravE =0.0;
+    for(unsigned int i=0; i<n/3; i++){
+    	gravE += in->massVector(3*i+1)*in->x_k(3*i+1)*gravity;
+    }
+    func -=gravE;
+    func = func/in->convergence_scaling_paramter;
+
+    //GRADIENT VECTcout<<"potential term"<<endl;
+
+    VectorXd g = (in->RegMass*y_vec - in->h*in->f)/in->convergence_scaling_paramter;
+	for(int i=0; i<n; i++){
+		grad[i] = g(i);
+	}
+
+	// cout<<"Func"<<endl;
+	// cout<<func<<endl;
+	// cout<<"GRAD"<<endl;
+	// cout<<g<<endl;
+	// cout<<"-----End of run---------------------"<<endl;
+	// cout<<"-----"<<"Positions"<<endl;
+	// cout<<y_vec<<endl;
+	// cout<<"kinetic term"<<endl;
+	// cout<<kineticE/in->convergence_scaling_paramter<<endl;
+	// cout<<"potential term"<<endl;
+	// cout<<strainE/in->convergence_scaling_paramter<<endl;
+	// cout<<"gravity term"<<endl;
+	// cout<<gravE/in->convergence_scaling_paramter<<endl;
+	// // cout<<"Masses"<<endl;
+	// // cout<<in->RegMass<<endl;
+	// cout<<"--**---"<<func<<endl;
+	// cout<<"--**---"<<g<<endl;
+}
+
+int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
+  	external_f = ext_force;
+    int N = 3*(vertsNum - fixedVerts.size());
+    // cout<<"N value"<<endl;
+    // cout<<N<<endl;
+    real_1d_array x;
+    double *positions= new double[N];
+   	for(int i=0; i<N; i++){
+   		positions[i] = 0;//x_old(i);
+   	}
+
+   	ImplicitTVtoX(x_k, TV);
+
+    x.setcontent(N, positions);
+    double epsg = sqrt(1e-11)/sqrt(convergence_scaling_paramter);
+    //  cout<<"EPSG"<<endl;
+    // cout<<epsg<<endl;
+    double epsf = 0;
+    double epsx = 0;
+    double stpmax = 0;
+    ae_int_t maxits = 0;
+    minlbfgsstate state;
+    minlbfgsreport rep;
+    double teststep = 0;
+
+    minlbfgscreate(12, x, state);
+    minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+    minlbfgssetxrep(state, true);
+
+
+    alglib::minlbfgsoptimize(state, function1_grad, rep_grad, this);
+    minlbfgsresults(state, x, rep);
+
+    // printf("TERMINATION TYPE: %d\n", int(rep.terminationtype)); // EXPECTED: 4
+    // cout << "final x ";
+    for(int i=0; i<N; i++){
+    	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
+		// cout << x_k(i) <<endl;
+    }
+    cout << endl;
+    v_old = (x_k - x_old)/h;
+    x_old = x_k;
+    ImplicitXtoTV(x_old, TV);
+    return 0;
+}
 
 void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast){
 	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
@@ -183,6 +301,10 @@ void ImplicitEuler::render(VectorXd& ext_force){
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
+
+	}else if(solver.compare("lbfgsvismay")==0){
+		alglibLBFGSVismay(ext_force);
+
 	}else{
 		cout<<"Solver not specified properly"<<endl;
 		exit(0);

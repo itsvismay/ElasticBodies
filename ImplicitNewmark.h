@@ -2,6 +2,9 @@
 #define implicit_newmark_h
 
 #include "IntegratorsAbstract.h"
+#include "../alglib-cpp/src/optimization.h"
+
+using namespace alglib;
 
 class ImplicitNewmark: public IntegratorAbstract{
 
@@ -16,11 +19,12 @@ public:
 	MatrixXd TVk;
 	double gamma = 0.5;
 	double beta =0.25;
-	
+
 	void render(VectorXd& ext_force);
 	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS();
-	
+	int alglibLBFGSVismay(VectorXd& ext_force);
+
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta);
 	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
 	void NewmarkCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
