@@ -78,7 +78,6 @@ bool drawLoopTest(igl::viewer::Viewer& viewer){
 }
 
 bool drawLoop(igl::viewer::Viewer& viewer){
-	Sim.render();
 
 	double refinement = 9;
 	double t = ((refinement - 1)+1) / 9.0;
@@ -109,19 +108,23 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 	}
 	viewer.data.clear();
 
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(20,0,0), RowVector3d(1,0,0));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,40,0), RowVector3d(0,1,0));
-	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,60), RowVector3d(0,0,1));
-
-	// int totalRows = Sim.integrator->TV.rows();
-	// for (int i=0; i<Sim.putForceOnTheseVerts.rows(); i++) {
-	// 	ForcesTV.row(i) = Sim.integrator->TV.row(Sim.putForceOnTheseVerts(i));
-	// }
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(200,0,0), RowVector3d(1,0,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,400,0), RowVector3d(0,1,0));
+	viewer.data.add_edges(RowVector3d(0,0,0), RowVector3d(0,0,600), RowVector3d(0,0,1));
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
 	// viewer.data.add_points(Sim.integrator->TV.row(80), RowVector3d(0,0,0));
-	viewer.data.add_points(Sim.integrator->TV.row(682), RowVector3d(0,0,0));
+	viewer.data.add_points(Sim.integrator->TV.row(55), RowVector3d(0,0,0));
+	for(int i=0; i<Sim.integrator->TV.rows() - Sim.integrator->fixedVerts.size(); i++)
+	{
+		double x = Sim.integrator->TV.row(i)(0);
+		double y = Sim.integrator->TV.row(i)(1);
+		double z = Sim.integrator->TV.row(i)(2);
+		// viewer.data.add_edges(RowVector3d(x, y, z), RowVector3d(Sim.integrator->f(3*i)*x/1e2, y, z), RowVector3d(0, 0, 0));
+		// viewer.data.add_edges(RowVector3d(x, y, z), RowVector3d(x, Sim.integrator->f(3*i+1)*y/1e2, z), RowVector3d(0, 0, 0));
+		// viewer.data.add_edges(RowVector3d(x, y, z), RowVector3d(x, y, Sim.integrator->f(3*i+2)*z/1e2), RowVector3d(0, 0, 0));
+	}
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
@@ -170,6 +173,7 @@ void useFullObject(bool headless, double timestep, int iterations, char method){
 	if(headless){
 		Sim.headless();
 	}else{
+		Sim.headless();
 		igl::viewer::Viewer viewer;
 		viewer.callback_pre_draw = &drawLoop;
 		viewer.core.is_animating = true;
@@ -264,7 +268,7 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		gravity = stod(line.c_str());
-		gravity *= 1000; //going from m/s^2 to mms^2
+		gravity *= 1000; //UNITS: going from m/s^2 to mm/s^2
 		cout<<gravity<<endl;
 
 		getline(configFile, line);
@@ -273,6 +277,7 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		youngs = stod(line.c_str());
+		youngs *= 1e9; //UNITS: g/mm*s^2
 		cout<<youngs<<endl;
 
 		getline(configFile, line);

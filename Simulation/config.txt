@@ -1,11 +1,11 @@
 .000001
-t
+f
 i
-25
-0.00
--10000
 1
-9300000000
+0.00
+-10
+1
+9.3
 .35
 pRa1
 neo
@@ -13,7 +13,10 @@ newton
 tensile_beam/rawTensile
 
 
+test_obj/testObject
 bezier_spring/springFULL
+newton
+
 
 
 
@@ -22,7 +25,7 @@ bezier_spring/springFULL
 #3 explicit/implicit
 #4 number of steps if headless
 #5 rayleigh
-#6 gravity UNIT: mm/s^2
+#6 gravity UNIT: m/s^2
 #7 object
 #8 youngs UNIT: g/mm*s^2
 #9 poissons
@@ -34,7 +37,6 @@ bezier_spring/springFULL
 -pqa15000
 -pRq1.18
 low_detail_beam/lowDetailBeam
-test_obj/testObject
 beam/beam
 bezier_spring/spring
 tensile_beam/tensileTest

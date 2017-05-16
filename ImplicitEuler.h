@@ -24,6 +24,7 @@ public:
 
 	VectorXd x_k, v_k;
 	MatrixXd TVk;
+	int bfgsIterations = 0;
 
 	void render(VectorXd& ext_force);
 	void renderNewtonsMethod(VectorXd& ext_force);
@@ -31,7 +32,8 @@ public:
 	int alglibLBFGSVismay(VectorXd& ext_force);
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast);
 
-	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT);
+	double ImplicitCalculateEnergyFunction();
+	void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT, MatrixXd& pB);
 	void ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseMatrix<double>& forceGradient);
 	void ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f);
 	void ImplicitTVtoX(VectorXd& x_tv, MatrixXd& TVk);

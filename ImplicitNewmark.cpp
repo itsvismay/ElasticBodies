@@ -304,8 +304,8 @@ void ImplicitNewmark::render(VectorXd& ext_force){
 }
 
 
-void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT){
-	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT);
+void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT, MatrixXd& pB){
+	IntegratorAbstract::initializeIntegrator(ph, pM, pTV, pTT, pB);
 	ZeroMatrix.resize(3*vertsNum, 3*vertsNum);
 	ZeroMatrix.setZero();
 	Ident.resize(3*vertsNum, 3*vertsNum);

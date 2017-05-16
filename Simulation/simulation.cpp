@@ -30,23 +30,22 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	setInitPosition(force, fixVertices, moveVertices);
+	// setInitPosition(force, fixVertices, moveVertices);
 
-	// fixVertices.push_back(4);
-	// fixVertices.push_back(3);
 	// fixVertices.push_back(2);
-	// moveVertices.push_back(1);
+	// fixVertices.push_back(1);
+	// moveVertices.push_back(0);
 
 
-	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	// for(int i=0; i<TV.rows(); i++){
-	// 	if(TV.row(i)[0] < 0.1 && TV.row(i)[2]<-3.0){
-	// 		moveVertices.push_back(i);
-	// 	}
-	// 	if(TV.row(i)[0] > 140.1){
-	// 		fixVertices.push_back(i);
-	// 	}
-	// }
+	//BEAM FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
+	for(int i=0; i<TV.rows(); i++){
+		if(TV.row(i)[0] < 0.1 && TV.row(i)[2]<-3.0){
+			moveVertices.push_back(i);
+		}
+		if(TV.row(i)[0] > 140.1){
+			fixVertices.push_back(i);
+		}
+	}
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -134,7 +133,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
-		integrator->initializeIntegrator(deltaT, M, newTV, newTT);
+		integrator->initializeIntegrator(deltaT, M, newTV, newTT, B);
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
@@ -143,7 +142,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	}else{
 		igl::barycenter(TV, TT, B);
 		M.initializeMesh(TT, TV, youngs, poissons);
-		integrator->initializeIntegrator(deltaT, M, TV, TT);
+		integrator->initializeIntegrator(deltaT, M, TV, TT, B);
 		this->external_force = force;
 		integrator->fixVertices(fixVertices);
 	}
@@ -191,6 +190,15 @@ void Simulation::headless(){
 
 }
 
+bool Simulation::render(){
+	//These changes are for the spring
+	if(integrator->simTime < 1)
+		integrator->render(this->external_force);
+	// printOptimizationOutput();
+
+	return true;
+}
+
 void Simulation::printDesigns(int printcount, int simTime){
 	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
@@ -217,13 +225,6 @@ double Simulation::printOptimizationOutput(){
 	return avgV/this->moveVerticesStore.size();
 }
 
-bool Simulation::render(){
-	//These changes are for the spring
-	integrator->render(this->external_force);
-	// printOptimizationOutput();
-
-	return true;
-}
 
 
 //TODO: Clean up function params size Fixed and size Move are not needed
@@ -756,7 +757,7 @@ void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, 
 	// F = F_temp;
 	// cout<<"**** Hausdorff Between this and prev it"<<endl;
 	// cout<< hausdorffDist<<endl;
-	igl::writeOFF(printToHere + to_string(numberOfPrints)+".off", V_temp, F_temp);
+	// igl::writeOFF(printToHere + to_string(numberOfPrints)+".off", V_temp, F_temp);
 
 	return;
 }

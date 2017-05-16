@@ -2,6 +2,8 @@
 #define integrators_abstract_h
 
 #include "solidmesh.h"
+#include <igl/writeOFF.h>
+
 //IF CHOLMOD, COMMENT THIS IN**
 #include <Eigen/CholmodSupport>
 
@@ -24,6 +26,7 @@ public:
 	SolidMesh M; //NEW IDEA: Pass in from simulation
 	MatrixXd TV;
 	MatrixXi TT;
+	MatrixXd B;
 
 	VectorXd x_old, v_old, f, massVector, external_f;
 	int width;
@@ -32,8 +35,9 @@ public:
 
 	bool isFixed(int vert);
 	void printInfo();
+	void printObject(string printToHere, int numberOfPrints, MatrixXd& TV, MatrixXi& TT, MatrixXd& B);
 	virtual void render(VectorXd& ext_force)=0; //pure virtual render class
-	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT)=0;
+	virtual void initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV, MatrixXi& pTT, MatrixXd& pB)=0;
 	void analyzeCholeskySetup();
 
 	void initVectors();
