@@ -181,7 +181,7 @@ void Simulation::headless(){
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		if(integrator->simTime%10==0 && integrator->simTime<3000){
+		if(integrator->simTime%1==0 && integrator->simTime<3000){
 			printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}
@@ -192,7 +192,6 @@ void Simulation::headless(){
 
 bool Simulation::render(){
 	//These changes are for the spring
-	if(integrator->simTime < 1)
 		integrator->render(this->external_force);
 	// printOptimizationOutput();
 
@@ -745,9 +744,9 @@ void Simulation::printObj(string printToHere, int numberOfPrints, MatrixXd& TV, 
 		F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
 		F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
 	}
-
-	system(("mkdir -p " +printToHere).c_str());
-	cout<<printToHere<<numberOfPrints<< endl;
+	//
+	// system(("mkdir -p " +printToHere).c_str());
+	// cout<<printToHere<<numberOfPrints<< endl;
 
 	// double hausdorffDist;
 	// if(integrator->simTime > 1){

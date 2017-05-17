@@ -242,7 +242,7 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 }
 
 void IntegratorAbstract::moveVertices(vector<int> moveMe){
-	double hard_coded_mass = 40000; //mass in grams
+	double hard_coded_mass = 00; //mass in grams
 	double factor = hard_coded_mass/(3*moveMe.size());
 	double totalMovingMass = 0;
 	for(int i=0; i<moveMe.size(); i++){

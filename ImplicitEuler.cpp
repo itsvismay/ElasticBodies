@@ -164,11 +164,20 @@ double ImplicitEuler::ImplicitCalculateEnergyFunction()
 		return func;
 }
 
-void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast){
-	// VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
-	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
-	g_block = g.head(ignorePast*3);
+void ImplicitEuler::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ignorePastIndex){
+	//new formulation
+	// g_block = ((RegMass*y_k - h*f).head(3*ignorePastIndex))/convergence_scaling_paramter;
+	// cout<<"Kinetic ||df|| term: "<< (RegMass*y_k).norm()/convergence_scaling_paramter<<endl;
 
+	//old formulation
+	g_block = (RegMass*(x_k - x_old + h*v_old) - h*h*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
+
+}
+
+void ImplicitEuler::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, SparseMatrix<double>& forceGradientStaticBlock, SparseMatrix<double>& RegMassBlock)
+{
+	//new and old formulation
+	grad_g_block = (RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*RegMassBlock*forceGradientStaticBlock)/convergence_scaling_paramter;
 }
 
 void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
@@ -177,37 +186,37 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	x_k.setZero();
 	x_k = x_old;
 	v_k = v_old;
+	VectorXd f_old = f;
+	double gamma = 0.5;
+	double beta =0.25;
 
 	clock_t t0 = clock();
 
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+	clock_t t1 = clock();
+
 
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
 
+
+	clock_t t2 = clock();
+	cout<<"t2 t1"<<endl;
+	cout<<"SECONDS"<<double(t2 - t1)/CLOCKS_PER_SEC<<endl;
+
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
-	VectorXd y_vec = (((x_k - x_old)/h) - v_old);
-	for(int i=3*ignorePastIndex; i<y_vec.size(); i++){
-		y_vec(i) =0;
-	}
 
 	for( i=0; i<NEWTON_MAX; i++){
-		//Convert from y to x for forces
-		// for(int i=0; i<3*ignorePastIndex; i++){
-    // 	x_k(i) = h*y_vec(i) + h*v_old(i) + x_old(i);
-    // }
-		x_k = h*(y_vec + v_old) + x_old;
-
+		clock_t t3 = clock();
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
-
 		for(int k=0; k<f.rows(); k++){
 			if(fabs(ext_force(k))>0.0001){
 				f(k) += ext_force(k);
@@ -219,10 +228,9 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		VectorXd g_block = (RegMass*y_vec - h*f).head(3*ignorePastIndex);
+		VectorXd g_block = ((RegMass*x_k - RegMass*x_old) - (RegMass*v_old*h) - h*h*f).head(3*ignorePastIndex);
+		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
-		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*RegMassBlock*forceGradientStaticBlock;
-		cout<<g_block.norm()<<endl;
 		// Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
@@ -230,6 +238,14 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		}
 		llt_solver.factorize(grad_g);
 		VectorXd deltaX = -1* llt_solver.solve(g_block);
+
+		// ConjugateGradient<SparseMatrix<double>> cg;
+		// cg.compute(grad_g);
+		// if(cg.info() == Eigen::NumericalIssue){
+		// 	cout<<"ConjugateGradient numerical issue"<<endl;
+		// 	exit(0);
+		// }
+		// VectorXd deltaX = -1*llt.solve(g_block);
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
@@ -243,7 +259,8 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			break;
 		}
 
-		cout<<"g block norm: "<<g_block.squaredNorm()<<endl;
+		cout<<"g norm"<<endl;
+		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
 		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
 			break;
 		}
@@ -260,9 +277,115 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		exit(0);
 	}
 	v_old = (x_k - x_old)/h;
-	cout<<"True value for x: "<< (x_k - x_old).norm()<<endl;
 	x_old = x_k;
 }
+
+// void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
+// 	//Implicit Code
+// 	v_k.setZero();
+// 	x_k.setZero();
+// 	x_k = x_old;
+// 	v_k = v_old;
+//
+// 	clock_t t0 = clock();
+//
+// 	int ignorePastIndex = TV.rows() - fixedVerts.size();
+// 	SparseMatrix<double> forceGradientStaticBlock;
+// 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+//
+// 	SparseMatrix<double> RegMassBlock;
+// 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
+// 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
+//
+// 	forceGradient.setZero();
+// 	bool Nan=false;
+// 	int NEWTON_MAX = 100, i =0;
+// 	VectorXd y_k = (((x_k - x_old)/h) - v_old);
+// 	for(int i=3*ignorePastIndex; i<y_k.size(); i++){
+// 		y_k(i) =0;
+// 	}
+//
+// 	for( i=0; i<NEWTON_MAX; i++){
+// 		//Convert from y to x for forces
+// 		// for(int i=0; i<3*ignorePastIndex; i++){
+//     // 	x_k(i) = h*y_k(i) + h*v_old(i) + x_old(i);
+//     // }
+// 		// x_k = h*(y_k + v_old) + x_old;
+// 		cout<<"x_k going into the force fxn: "<<x_k.norm()<<endl;
+//
+// 		grad_g.setZero();
+// 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
+// 		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
+// 		ImplicitCalculateForces(TVk, forceGradient, x_k, f);
+//
+// 		for(int k=0; k<f.rows(); k++){
+// 			if(fabs(ext_force(k))>0.0001){
+// 				f(k) += ext_force(k);
+// 			}
+// 		}
+//
+// 		//Block forceGrad and f to exclude the fixed verts
+// 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
+// 		VectorXd g_block;
+// 		find_dEnergyBlock(g_block, y_k, ignorePastIndex);
+// 		find_d_dEnergyBlock(grad_g, forceGradientStaticBlock, RegMassBlock);
+//
+// 		// Sparse Cholesky LL^T
+// 		if(llt_solver.info() == Eigen::NumericalIssue){
+// 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;
+// 			exit(0);
+// 		}
+// 		llt_solver.factorize(grad_g);
+// 		VectorXd Delta = -1* llt_solver.solve(g_block);
+//
+// 		//Sparse QR
+// 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
+// 		// sqr.compute(grad_g);
+// 		// VectorXd deltaX = -1*sqr.solve(g_block);
+// 		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+// 		cout<<"Delta: "<<Delta.norm()<<endl;
+//
+// 		cout<<"g block norm: "<<g_block.norm()<<endl;
+//
+// 		x_k.segment(0, 3*(ignorePastIndex)) += Delta;
+// 		if(x_k != x_k){
+// 			Nan = true;
+// 			break;
+// 		}
+// 		if(g_block.norm() < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
+// 			break;
+// 		}
+//
+// 		// y_k.segment(0, 3*(ignorePastIndex)) += Delta;
+// 		// if(y_k != y_k){
+// 		// 	Nan = true;
+// 		// 	break;
+// 		// }
+// 		// if(g_block.norm() < sqrt(1e-11)/h/convergence_scaling_paramter){
+// 		// 	break;
+// 		// }
+// 		// x_k = h*(y_k + v_old) + x_old;
+//
+// 		cout<<"end of iter x: "<< x_k.norm()<<endl;
+// 		cout<<"end of iter y: "<<y_k.norm()<<endl;
+//
+// 		cout<<ImplicitCalculateEnergyFunction()<<", "<< g_block.squaredNorm()<<", "<<(x_k - x_old).norm()<<", "<<(y_k).norm() <<endl<<endl;
+// 	}
+// 	if(Nan){
+// 		cout<<"ERROR: Newton's method doesn't converge"<<endl;
+// 		cout<<i<<endl;
+// 		exit(0);
+// 	}
+// 	if(i== NEWTON_MAX){
+// 		cout<<"ERROR: Newton max reached"<<endl;
+// 		cout<<i<<endl;
+// 		exit(0);
+// 	}
+//
+// 	v_old = (x_k - x_old)/h;
+// 	cout<<"True value for x: "<< (x_k - x_old).norm()<<endl;
+// 	x_old = x_k;
+// }
 
 void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>& forceGradient, VectorXd& x_k, VectorXd& f){
 	// //gravity
@@ -335,14 +458,13 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 }
 
 void ImplicitEuler::render(VectorXd& ext_force){
-	simTime+=1;
 	cout<<"i"<<simTime<<endl;
 
-	cout<<"Timestep 0 "<<endl;
 	ImplicitTVtoX(x_k, TV);
 	ImplicitCalculateForces(TV, forceGradient, x_k, f);
 	IntegratorAbstract::printInfo();
 
+	simTime+=1;
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
@@ -355,12 +477,15 @@ void ImplicitEuler::render(VectorXd& ext_force){
 		exit(0);
 	}
 
-	// cout<<"*******************"<<endl;
-	// cout<< "New Pos"<<simTime<<endl;
-	// cout<<x_old<<endl<<endl;
-	// cout<< "New Vels"<<simTime<<endl;
-	// cout<<v_old<<endl;
-	// cout<<"*****************"<<endl<<endl;
+	if(simTime == 2)
+	{
+		cout<<"*******************"<<endl;
+		cout<< "New Pos "<<simTime<<endl;
+		cout<<x_old.norm()<<endl;
+		cout<< "New Vels "<<simTime<<endl;
+		cout<<v_old.norm()<<endl;
+		cout<<"*****************"<<endl<<endl;
+	}
 	IntegratorAbstract::printInfo();
 
 	ImplicitXtoTV(x_old, TV);
