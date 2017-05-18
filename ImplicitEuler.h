@@ -25,7 +25,7 @@ public:
 	VectorXd x_k, v_k;
 	MatrixXd TVk;
 	int bfgsIterations = 0;
-	int formulation = 0; //0 for old , 1 for new
+	int formulation = 1; //0 for old , 1 for new
 
 	void render(VectorXd& ext_force);
 	void renderNewtonsMethod(VectorXd& ext_force);
