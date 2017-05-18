@@ -39,8 +39,6 @@ void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, v
 
 		//ENERGY SCALAR
 		func = in->ImplicitCalculateEnergyFunction();
-    func = func/in->convergence_scaling_paramter;
-
 
 		double grad_g =0;
 		for(int i=0; i<n; i++){
@@ -99,8 +97,6 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     double teststep = 0;
 
     minlbfgscreate(12, x, state);
-		cout<<"EPSG"<<endl;
-		cout<<epsg<<endl;
     minlbfgssetcond(state, epsg, epsf, epsx, maxits);
     minlbfgssetxrep(state, true);
 
@@ -160,7 +156,7 @@ double ImplicitEuler::ImplicitCalculateEnergyFunction()
 		cout<<"S E: "<<strainE/convergence_scaling_paramter<<endl;
 		cout<<"G E: "<<gravE/convergence_scaling_paramter<<endl;
 		cout<<"Energy: "<<func/convergence_scaling_paramter<<endl;
-		return func;
+		return func/convergence_scaling_paramter;
 }
 
 void ImplicitEuler::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ignorePastIndex){
@@ -189,8 +185,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	double gamma = 0.5;
 	double beta =0.25;
 
-	clock_t t0 = clock();
-
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
@@ -200,11 +194,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	SparseMatrix<double> RegMassBlock;
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
-
-
-	clock_t t2 = clock();
-	cout<<"t2 t1"<<endl;
-	cout<<"SECONDS"<<double(t2 - t1)/CLOCKS_PER_SEC<<endl;
 
 	forceGradient.setZero();
 	bool Nan=false;
@@ -245,7 +234,7 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		}
 		llt_solver.factorize(grad_g);
 		VectorXd Delta = -1* llt_solver.solve(g_block);
-		cout<<ImplicitCalculateEnergyFunction()<<", "<< g_block.squaredNorm()<<", "<<(x_k - x_old).norm()<<", "<<(y_k).norm() <<endl<<endl;
+		cout<<ImplicitCalculateEnergyFunction()<<", "<< g_block.norm()<<", "<<(x_k - x_old).norm()<<", "<<(y_k).norm() <<endl<<endl;
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
