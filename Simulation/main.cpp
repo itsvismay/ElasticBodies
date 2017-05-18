@@ -120,8 +120,6 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 	viewer.data.add_points(ForcesTV, RowVector3d(1,0,0));
 	viewer.data.add_points(FixedTV, RowVector3d(0,1,0));
-	// viewer.data.add_points(Sim.integrator->TV.row(80), RowVector3d(0,0,0));
-	viewer.data.add_points(Sim.integrator->TV.row(682), RowVector3d(0,0,0));
 	viewer.data.set_mesh(V_temp,F_temp);
 	viewer.data.set_face_based(true);
 	return false;
