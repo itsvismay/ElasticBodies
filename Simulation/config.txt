@@ -1,17 +1,19 @@
 .000001
-f
+t
 i
-10
-0.008
+1
+0.00
 -10000
 1
 9300000000
 .35
-pR
+pRa1
 neo
 lbfgsvismay
-bezier_spring/springFULL
+tensile_beam/rawTensile
 
+
+bezier_spring/springFULL
 #1 timestep
 #2 headless t/f
 #3 explicit/implicit
@@ -32,4 +34,3 @@ low_detail_beam/lowDetailBeam
 test_obj/testObject
 beam/beam
 bezier_spring/spring
-tensile_beam/tensileTest
