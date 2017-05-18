@@ -1,7 +1,7 @@
 .000001
 t
 i
-1
+29
 0.00
 -10000
 1
@@ -9,7 +9,7 @@ i
 .35
 pRa1
 neo
-lbfgsvismay
+newton
 tensile_beam/rawTensile
 
 
