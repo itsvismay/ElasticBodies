@@ -172,8 +172,10 @@ void ImplicitEuler::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int igno
 		cout<<"Kinetic ||df|| term: "<< (RegMass*y_k).norm()/convergence_scaling_paramter<<endl;
 	}else{
 		//old formulation
-		g_block = (RegMass*(x_k - x_old + h*v_old) - h*h*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
-
+		// VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
+		// g_block = g.head(ignorePast*3)/convergence_scaling_paramter;
+		g_block = (RegMass*(x_k - x_old - h*v_old) - h*h*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
+		cout<<"Kinetic ||df|| term: "<< (RegMass*(x_k - x_old + h*v_old)).norm()/convergence_scaling_paramter<<endl;
 	}
 
 

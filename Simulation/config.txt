@@ -9,11 +9,11 @@ i
 .35
 pRa1
 neo
-newton
+lbfgsvismay
 tensile_beam/rawTensile
 
-
 bezier_spring/springFULL
+
 #1 timestep
 #2 headless t/f
 #3 explicit/implicit
