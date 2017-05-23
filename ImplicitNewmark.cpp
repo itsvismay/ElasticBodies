@@ -272,7 +272,7 @@ void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& p
 	v_k.setZero();
 	TVk = TV;
 
-	formulation = 0;
+	formulation = 1;
 }
 
 void ImplicitNewmark::NewmarkXtoTV(VectorXd& x_tv, MatrixXd& TVk){
