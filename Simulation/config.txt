@@ -1,7 +1,7 @@
 .000001
 t
-i
-10000
+n
+10
 0.00
 -10
 1
@@ -9,7 +9,7 @@ i
 .35
 pRa1
 neo
-lbfgsvismay
+newton
 tensile_beam/rawTensile
 
 bezier_spring/springFULL

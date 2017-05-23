@@ -6,6 +6,61 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
+double ImplicitNewmark::find_Energy(){
+	double func = 0;
+	int n = 3*(vertsNum - fixedVerts.size());
+	VectorXd y_vec = (((x_k - x_old)/h) - v_old);
+	for(int i=n; i<y_vec.size(); i++){
+		y_vec(i) = 0;
+	}
+	// cout<<"x_k"<<x_k.norm()<<endl;
+	// cout<<"x_old"<<x_old.norm()<<endl;
+	// cout<<"v_old"<<v_old.norm()<<endl;
+	// cout<<"xk-xo "<<(x_k - x_old).norm()<<endl;
+	// cout<<"xk-xo /h "<<(1/h)*(x_k - x_old).norm()<<endl;
+	// cout<<"y_vec "<< y_vec.norm()<<endl;
+
+	double kineticE =0.0;
+	kineticE = (0.5*y_vec.transpose()*RegMass*y_vec);
+	func += kineticE;
+	// func =0.0;
+	double strainE=0.0;
+	for(unsigned int i=0; i<M.tets.size(); i++){
+		strainE += M.tets[i].energy;
+	}
+
+	func += strainE;
+
+	double gravE =0.0;
+	for(unsigned int i=0; i<n/3; i++){
+		gravE += massVector(3*i+1) * (x_k(3*i+1) - x_old(3*i+1)) * gravity * (-1);
+	}
+	func += gravE;
+
+	// cout<<"start ke"<<endl;
+	// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
+	// cout<<"S E: "<<strainE/convergence_scaling_paramter<<endl;
+	// cout<<"G E: "<<gravE/convergence_scaling_paramter<<endl;
+	// cout<<"Energy: "<<func/convergence_scaling_paramter<<endl;
+	return func/convergence_scaling_paramter;
+}
+
+void ImplicitNewmark::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ignorePastIndex){
+	if(formulation != 0)
+	{
+		g_block = (RegMass*y_k - 0.5*(1-2*beta)*h*f_old - h*beta*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
+	}
+	else
+	{
+		g_block = (RegMass*x_k - RegMass*x_old - h*RegMass*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
+	}
+}
+
+void ImplicitNewmark::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, SparseMatrix<double>& forceGradientStaticBlock, SparseMatrix<double>& RegMassBlock)
+{
+	grad_g_block = (RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock))/convergence_scaling_paramter;
+}
+
 void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
 	v_k.setZero();
@@ -29,7 +84,16 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
 
+	VectorXd y_k = (((x_k - x_old)/h) - v_old);
+	for(int i=3*ignorePastIndex; i<y_k.size(); i++){
+		y_k(i) =0;
+	}
 	for( i=0; i<NEWTON_MAX; i++){
+		if(formulation != 0)
+		{
+			x_k = h*(y_k + v_old) + x_old;
+		}
+
 		grad_g.setZero();
 		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
 		NewmarkCalculateElasticForceGradient(TVk, forceGradient);
@@ -42,9 +106,9 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
-		VectorXd g = RegMass*x_k - RegMass*x_old - h*RegMass*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f;
-		VectorXd g_block = g.head(ignorePastIndex*3);
-		grad_g = RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock);
+		VectorXd g_block;
+		find_dEnergyBlock(g_block, y_k, ignorePastIndex);
+		find_d_dEnergyBlock(grad_g, forceGradientStaticBlock, RegMassBlock);
 
 		// Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
@@ -52,33 +116,38 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 			exit(0);
 		}
 		llt_solver.factorize(grad_g);
-		VectorXd deltaX = -1* llt_solver.solve(g_block);
-
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// if(cg.info() == Eigen::NumericalIssue){
-		// 	cout<<"ConjugateGradient numerical issue"<<endl;
-		// 	exit(0);
-		// }
-		// VectorXd deltaX = -1*llt.solve(g_block);
+		VectorXd Delta = -1* llt_solver.solve(g_block);
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
-		// VectorXd deltaX = -1*sqr.solve(g_block);
-		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
-
-		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
-		if(x_k != x_k){
-			Nan = true;
-			break;
+		// VectorXd Delta = -1*sqr.solve(g_block);
+		// x_k.segment(0, 3*(ignorePastIndex)) += Delta;
+		if(formulation == 0)
+		{
+			x_k.segment(0, 3*(ignorePastIndex)) += Delta;
+			if(x_k != x_k){
+				Nan = true;
+				break;
+			}
+			if(g_block.squaredNorm() < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
+				break;
+			}
+		}
+		else
+		{
+			y_k.segment(0, 3*(ignorePastIndex)) += Delta;
+			if(y_k != y_k)
+			{
+				Nan = true;
+				break;
+			}
+			if(g_block.squaredNorm() < sqrt(1e-11)/h/h/sqrt(convergence_scaling_paramter))
+			{
+				break;
+			}
 		}
 
-		cout<<"g norm"<<endl;
-		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
-		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
-			break;
-		}
 
 	}
 	if(Nan){
@@ -91,6 +160,11 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<i<<endl;
 		exit(0);
 	}
+	if(formulation != 0)
+	{
+		x_k = h*(y_k + v_old) + x_old;
+	}
+	cout<<"End of newmark newton x - xo: "<< (x_k - x_old).norm()<<endl;
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
 }
@@ -160,7 +234,7 @@ void ImplicitNewmark::NewmarkCalculateElasticForceGradient(MatrixXd& TVk, Sparse
 
 void ImplicitNewmark::render(VectorXd& ext_force){
 	simTime+=1;
-	cout<<"i"<<simTime<<endl;
+	cout<<"i"<<simTime<<" solver: "<<solver<<" formulation: "<<formulation<<endl;
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
@@ -197,6 +271,8 @@ void ImplicitNewmark::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& p
 	x_k.setZero();
 	v_k.setZero();
 	TVk = TV;
+
+	formulation = 0;
 }
 
 void ImplicitNewmark::NewmarkXtoTV(VectorXd& x_tv, MatrixXd& TVk){
