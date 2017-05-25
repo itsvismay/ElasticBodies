@@ -39,7 +39,7 @@ void newmark_bfgs(const real_1d_array &y, double &func, real_1d_array &grad, voi
 		// }
 	}
 
-	cout<<func<<", "<< g.norm()<<", "<<(in->x_k - in->x_old).norm()<<", "<<(y_vec).norm() <<endl<<endl;
+	// cout<<func<<", "<< g.norm()<<", "<<(in->x_k - in->x_old).norm()<<", "<<(y_vec).norm() <<endl<<endl;
 
 	in->bfgsIterations +=1;
 }
@@ -57,7 +57,8 @@ int ImplicitNewmark::alglibBFGS(VectorXd &ext_force)
 	NewmarkTVtoX(x_k, TV);
 
 	y.setcontent(N, positions);
-	double epsg = sqrt(sqrt(1e-11)/h/h/sqrt(convergence_scaling_paramter));
+	double epsg = sqrt(1e-11)/h/sqrt(convergence_scaling_paramter);
+	cout<<"EPSG: "<<epsg<<endl;
 	double epsf = 0;
 	double epsx = 0;
 	double stpmax = 0;
@@ -221,7 +222,7 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 				Nan = true;
 				break;
 			}
-			if(g_block.squaredNorm() < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
+			if(g_block.squaredNorm() < h*sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
 				break;
 			}
 		}
@@ -233,8 +234,10 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 				Nan = true;
 				break;
 			}
-			if(g_block.squaredNorm() < sqrt(1e-11)/h/h/sqrt(convergence_scaling_paramter))
+			if(g_block.squaredNorm() < sqrt(1e-11)/h/sqrt(convergence_scaling_paramter))
 			{
+				cout<<"EPSG: "<< sqrt(1e-11)/h/sqrt(convergence_scaling_paramter) <<endl;
+				cout<<g_block.squaredNorm()<<endl;
 				break;
 			}
 		}

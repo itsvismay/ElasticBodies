@@ -271,6 +271,7 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		youngs = stod(line.c_str());
+		youngs *= 1e9;
 		cout<<youngs<<endl;
 
 		getline(configFile, line);

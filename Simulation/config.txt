@@ -1,13 +1,13 @@
 .000001
 t
 n
-1
+10000
 0.00
 -10
 1
-9300000000
+9.3
 .35
-pR
+pRa0.3
 neo
 lbfgsvismay
 tensile_beam/rawTensile
