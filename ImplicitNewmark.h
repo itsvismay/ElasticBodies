@@ -26,7 +26,7 @@ public:
 	void render(VectorXd& ext_force);
 	void renderNewtonsMethod(VectorXd& ext_force);
 	void renderLBFGS();
-	int alglibLBFGSVismay(VectorXd& ext_force);
+	int alglibBFGS(VectorXd &ext_force);
 
 	void findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast, double gamma, double beta);
 	void find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ignorePastIndex);

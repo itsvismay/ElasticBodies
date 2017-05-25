@@ -78,7 +78,7 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     int N = 3*(vertsNum - fixedVerts.size());
     // cout<<"N value"<<endl;
     // cout<<N<<endl;
-    real_1d_array x;
+    real_1d_array y;
     double *positions= new double[N];
    	for(int i=0; i<N; i++){
    		positions[i] = 0 - v_old(i); // y = (x_k -x_o)/h - v // y = 0 - v
@@ -86,7 +86,7 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
 
    	ImplicitTVtoX(x_k, TV);
 
-    x.setcontent(N, positions);
+    y.setcontent(N, positions);
     double epsg = sqrt(1e-11)/h/sqrt(convergence_scaling_paramter);
     double epsf = 0;
     double epsx = 0;
@@ -96,23 +96,23 @@ int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
     minlbfgsreport rep;
     double teststep = 0;
 
-    minlbfgscreate(12, x, state);
+    minlbfgscreate(12, y, state);
     minlbfgssetcond(state, epsg, epsf, epsx, maxits);
     minlbfgssetxrep(state, true);
 
 
     alglib::minlbfgsoptimize(state, function1_grad, rep_grad, this);
-    minlbfgsresults(state, x, rep);
+    minlbfgsresults(state, y, rep);
 
 		if(int(rep.terminationtype) != 4)
 		{
-			printf("ERROR: BFGS TERMINATION TYPE %d\n", int(rep.terminationtype)); // EXPECTED: 4
+			printf("ERROR: EULER BFGS TERMINATION TYPE %d\n", int(rep.terminationtype)); // EXPECTED: 4
 			exit(0);
 		}
 
     // cout << "final x ";
     for(int i=0; i<N; i++){
-    	x_k(i) = x_old[i] + h*v_old[i] + h*x[i];
+    	x_k(i) = x_old[i] + h*v_old[i] + h*y[i];
 		// cout << x_k(i) <<endl;
     }
 
@@ -186,6 +186,7 @@ void ImplicitEuler::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, Spar
 	//new and old formulation
 	grad_g_block = (RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*RegMassBlock*forceGradientStaticBlock)/convergence_scaling_paramter;
 }
+
 
 void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
@@ -334,7 +335,6 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 		f += strainF;
 		VectorXd strainBlocked = strainF.head(3*(vertsNum - fixedVerts.size()));
 		// cout<<"Strain ||df|| term: "<< strainBlocked.norm()<<endl;
-
 
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;

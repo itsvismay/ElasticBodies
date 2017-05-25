@@ -6,6 +6,92 @@ using namespace std;
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
+void newmark_rep(const real_1d_array &x, double func, void *impn)
+{
+
+}
+
+void newmark_bfgs(const real_1d_array &y, double &func, real_1d_array &grad, void *impn)
+{
+	ImplicitNewmark* in = (ImplicitNewmark*) impn;
+	int n = 3*(in->vertsNum - in->fixedVerts.size());
+
+	VectorXd y_vec; y_vec.resize(in->vertsNum*3); y_vec.setZero();
+	for(int i=0; i<n; i++){
+		in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
+		y_vec(i) = y[i];
+	}
+
+	in->NewmarkXtoTV(in->x_k, in->TVk);
+	in->NewmarkCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+
+	VectorXd g;
+	in->find_dEnergyBlock(g, y_vec, n/3);
+
+	func = in->find_Energy();
+
+	double grad_g =0;
+	for(int i=0; i<n; i++){
+		grad[i] = g(i);
+		grad_g += g(i)*g(i);
+		// if(g(i)> 1){
+		// 	cout<<i<<" - "<<g(i)<<", "<<y_vec(i)<<", "<<in->f(i)<<endl;
+		// }
+	}
+
+	cout<<func<<", "<< g.norm()<<", "<<(in->x_k - in->x_old).norm()<<", "<<(y_vec).norm() <<endl<<endl;
+
+	in->bfgsIterations +=1;
+}
+
+int ImplicitNewmark::alglibBFGS(VectorXd &ext_force)
+{
+	f_old = f;
+	int N = 3*(vertsNum - fixedVerts.size());
+	real_1d_array y;
+	double *positions= new double[N];
+	for(int i=0; i<N; i++){
+		positions[i] = 0 - v_old(i); // y = (x_k -x_o)/h - v // y = 0 - v
+	}
+
+	NewmarkTVtoX(x_k, TV);
+
+	y.setcontent(N, positions);
+	double epsg = sqrt(sqrt(1e-11)/h/h/sqrt(convergence_scaling_paramter));
+	double epsf = 0;
+	double epsx = 0;
+	double stpmax = 0;
+	ae_int_t maxits = 0;
+	minlbfgsstate state;
+	minlbfgsreport rep;
+	double teststep = 0;
+
+	minlbfgscreate(12, y, state);
+	minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+	minlbfgssetxrep(state, true);
+
+
+	alglib::minlbfgsoptimize(state, newmark_bfgs, newmark_rep, this);
+	minlbfgsresults(state, y, rep);
+
+	if(int(rep.terminationtype) != 4)
+	{
+		printf("ERROR: NEWMARK BFGS TERMINATION TYPE %d\n", int(rep.terminationtype)); // EXPECTED: 4
+		exit(0);
+	}
+
+	// cout << "final x ";
+	for(int i=0; i<N; i++){
+		x_k(i) = x_old[i] + h*v_old[i] + h*y[i];
+	}
+
+	cout <<"End of newmark L - bfgs: "<<(x_k - x_old).norm()<< endl;
+	v_old = (x_k - x_old)/h;
+	x_old = x_k;
+	NewmarkXtoTV(x_old, TV);
+	return 0;
+}
+
 double ImplicitNewmark::find_Energy(){
 	double func = 0;
 	int n = 3*(vertsNum - fixedVerts.size());
@@ -22,6 +108,7 @@ double ImplicitNewmark::find_Energy(){
 
 	double kineticE =0.0;
 	kineticE = (0.5*y_vec.transpose()*RegMass*y_vec);
+	kineticE -= 0.5*(1-2*beta)*h*y_vec.transpose()*f_old;
 	func += kineticE;
 	// func =0.0;
 	double strainE=0.0;
@@ -29,13 +116,13 @@ double ImplicitNewmark::find_Energy(){
 		strainE += M.tets[i].energy;
 	}
 
-	func += strainE;
+	func += beta*strainE;
 
 	double gravE =0.0;
 	for(unsigned int i=0; i<n/3; i++){
 		gravE += massVector(3*i+1) * (x_k(3*i+1) - x_old(3*i+1)) * gravity * (-1);
 	}
-	func += gravE;
+	func += beta*gravE;
 
 	// cout<<"start ke"<<endl;
 	// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
@@ -60,6 +147,7 @@ void ImplicitNewmark::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, Sp
 {
 	grad_g_block = (RegMassBlock - h*h*beta*(forceGradientStaticBlock+(rayleighCoeff/h)*forceGradientStaticBlock))/convergence_scaling_paramter;
 }
+
 
 void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
@@ -88,6 +176,7 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 	for(int i=3*ignorePastIndex; i<y_k.size(); i++){
 		y_k(i) =0;
 	}
+
 	for( i=0; i<NEWTON_MAX; i++){
 		if(formulation != 0)
 		{
@@ -117,6 +206,8 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		}
 		llt_solver.factorize(grad_g);
 		VectorXd Delta = -1* llt_solver.solve(g_block);
+
+		cout<<find_Energy()<<", "<< g_block.norm()<<", "<<Delta.norm()<<", "<<(y_k).norm() <<endl<<endl;
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
@@ -165,6 +256,7 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		x_k = h*(y_k + v_old) + x_old;
 	}
 	cout<<"End of newmark newton x - xo: "<< (x_k - x_old).norm()<<endl;
+
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
 }
@@ -238,6 +330,11 @@ void ImplicitNewmark::render(VectorXd& ext_force){
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
+
+	}else if(solver.compare("lbfgsvismay") == 0)
+	{
+		alglibBFGS(ext_force);
+
 	}else{
 		cout<<"Solver not specified properly"<<endl;
 		exit(0);
