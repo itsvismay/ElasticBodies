@@ -91,6 +91,7 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<i<<endl;
 		exit(0);
 	}
+	cout<<"End of newmark newton x - xo: "<<(x_k - x_old).norm()<<endl;
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
 }
