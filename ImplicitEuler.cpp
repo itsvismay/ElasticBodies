@@ -2,16 +2,191 @@
 
 using namespace Eigen;
 using namespace std;
+using namespace alglib;
 
 typedef Eigen::Triplet<double> Trip;
 typedef Matrix<double, 12, 1> Vector12d;
 
-void ImplicitEuler::findgBlock(VectorXd& g_block, VectorXd& x, VectorXd& x_old, int ignorePast){
-	//VectorXd g = (RegMass*x - RegMass*x_old)/h - RegMass*v_old - h*f;
-	VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
-	g_block = g.head(ignorePast*3);
+void rep_grad(const real_1d_array &x, double func, void *impe){
+	// cout<<"*********FUNC***********"<<endl;
+	// cout<<func<<endl;
+	// for(int i=0; i< ((ImplicitEuler *)impe)->x_k.rows(); i++)
+	// 	cout << x[i] << " ";
+	// cout << endl;
+}
+
+void function1_grad(const real_1d_array &y, double &func, real_1d_array &grad, void *impe)
+{
+		ImplicitEuler* in = (ImplicitEuler*) impe;
+
+    int n = 3*(in->vertsNum - in->fixedVerts.size());
+
+
+    VectorXd y_vec; y_vec.resize(in->vertsNum*3); y_vec.setZero();
+    for(int i=0; i<n; i++){
+    	in->x_k(i) = y[i]*in->h + in->h*in->v_old(i)+in->x_old(i);
+    	y_vec(i) = y[i];
+    }
+    // cout<<"Pre bfgs x_k"<<endl;
+    // cout<<in->x_k<<endl;
+
+    in->ImplicitXtoTV(in->x_k, in->TVk);//TVk value changed in function
+		in->ImplicitCalculateForces(in->TVk, in->forceGradient, in->x_k, in->f);
+		//GRADIENT VECTcout<<"potential term"<<endl;
+		// VectorXd g = (in->RegMass*y_vec - in->h*in->f);
+		VectorXd g;
+		in->find_dEnergyBlock(g, y_vec, n/3);
+
+		//ENERGY SCALAR
+		func = in->ImplicitCalculateEnergyFunction();
+
+		double grad_g =0;
+		for(int i=0; i<n; i++){
+			grad[i] = g(i);
+			grad_g += g(i)*g(i);
+			// if(g(i)> 1){
+			// 	cout<<i<<" - "<<g(i)<<", "<<y_vec(i)<<", "<<in->f(i)<<endl;
+			// }
+		}
+
+	// cout<<func<<", "<< g.norm()<<", "<<(in->x_k - in->x_old).norm()<<", "<<(y_vec).norm() <<endl<<endl;
+
+	// MatrixXd ScaledTV = in->TV;
+	// VectorXd scaledX = 100*in->x_k;
+	// in->ImplicitXtoTV(scaledX, ScaledTV);
+	// in->printObject(saveTestsHere, in->bfgsIterations, ScaledTV, in->TT, in->B);
+	in->bfgsIterations +=1;
+	// cout<<"positions diff"<<endl;
+	// cout<<(in->x_k - in->x_old).norm()<<endl;
+	// cout<<"-----End of run---------------------"<<endl;
+	// cout<<"-----"<<"Positions"<<endl;
+	// cout<<y_vec<<endl;
+	// cout<<"kinetic term"<<endl;
+	// cout<<kineticE/in->convergence_scaling_paramter<<endl;
+	// cout<<"potential term"<<endl;
+	// cout<<strainE/in->convergence_scaling_paramter<<endl;
+	// cout<<"gravity term"<<endl;
+	// cout<<gravE/in->convergence_scaling_paramter<<endl;
+	// // cout<<"Masses"<<endl;
+	// // cout<<in->RegMass<<endl;
+	// cout<<"--**---"<<func<<endl;
+	// cout<<"--**---"<<g<<endl;
+}
+
+int ImplicitEuler::alglibLBFGSVismay(VectorXd& ext_force){
+  	external_f = ext_force;
+    int N = 3*(vertsNum - fixedVerts.size());
+    // cout<<"N value"<<endl;
+    // cout<<N<<endl;
+    real_1d_array y;
+    double *positions= new double[N];
+   	for(int i=0; i<N; i++){
+   		positions[i] = 0 - v_old(i); // y = (x_k -x_o)/h - v // y = 0 - v
+   	}
+
+   	ImplicitTVtoX(x_k, TV);
+
+    y.setcontent(N, positions);
+    double epsg = sqrt(1e-11)/h/sqrt(convergence_scaling_paramter);
+    double epsf = 0;
+    double epsx = 0;
+    double stpmax = 0;
+    ae_int_t maxits = 0;
+    minlbfgsstate state;
+    minlbfgsreport rep;
+    double teststep = 0;
+
+    minlbfgscreate(12, y, state);
+    minlbfgssetcond(state, epsg, epsf, epsx, maxits);
+    minlbfgssetxrep(state, true);
+
+
+    alglib::minlbfgsoptimize(state, function1_grad, rep_grad, this);
+    minlbfgsresults(state, y, rep);
+
+		if(int(rep.terminationtype) != 4)
+		{
+			printf("ERROR: EULER BFGS TERMINATION TYPE %d\n", int(rep.terminationtype)); // EXPECTED: 4
+			exit(0);
+		}
+
+    // cout << "final x ";
+    for(int i=0; i<N; i++){
+    	x_k(i) = x_old[i] + h*v_old[i] + h*y[i];
+		// cout << x_k(i) <<endl;
+    }
+
+    cout <<"End of L - bfgs: "<<(x_k - x_old).norm()<< endl;
+    v_old = (x_k - x_old)/h;
+    x_old = x_k;
+    ImplicitXtoTV(x_old, TV);
+    return 0;
+}
+
+double ImplicitEuler::ImplicitCalculateEnergyFunction()
+{
+		double func = 0;
+		int n = 3*(vertsNum - fixedVerts.size());
+
+		VectorXd y_vec = (((x_k - x_old)/h) - v_old);
+		for(int i=n; i<y_vec.size(); i++){
+			y_vec(i) = 0;
+		}
+		// cout<<"x_k"<<x_k.norm()<<endl;
+		// cout<<"x_old"<<x_old.norm()<<endl;
+		// cout<<"v_old"<<v_old.norm()<<endl;
+		// cout<<"xk-xo "<<(x_k - x_old).norm()<<endl;
+		// cout<<"xk-xo /h "<<(1/h)*(x_k - x_old).norm()<<endl;
+		// cout<<"y_vec "<< y_vec.norm()<<endl;
+
+		double kineticE =0.0;
+		kineticE = (0.5*y_vec.transpose()*RegMass*y_vec);
+		func += kineticE;
+		// func =0.0;
+		double strainE=0.0;
+		for(unsigned int i=0; i<M.tets.size(); i++){
+			strainE += M.tets[i].energy;
+		}
+
+    func += strainE;
+
+    double gravE =0.0;
+    for(unsigned int i=0; i<n/3; i++){
+    	gravE += massVector(3*i+1) * (x_k(3*i+1) - x_old(3*i+1)) * gravity * (-1);
+		}
+    func += gravE;
+
+		// cout<<"start ke"<<endl;
+		// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
+		// cout<<"S E: "<<strainE/convergence_scaling_paramter<<endl;
+		// cout<<"G E: "<<gravE/convergence_scaling_paramter<<endl;
+		// cout<<"Energy: "<<func/convergence_scaling_paramter<<endl;
+		return func/convergence_scaling_paramter;
+}
+
+void ImplicitEuler::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ignorePastIndex){
+	//new formulation
+	if(formulation != 0)
+	{
+		g_block = ((RegMass*y_k - h*f).head(3*ignorePastIndex))/convergence_scaling_paramter;
+		// cout<<"Kinetic ||df|| term: "<< (RegMass*y_k).norm()/convergence_scaling_paramter<<endl;
+	}else{
+		//old formulation
+		// VectorXd g = (RegMass*x - RegMass*x_old) - (RegMass*v_old*h) - h*h*f;
+		// g_block = g.head(ignorePast*3)/convergence_scaling_paramter;
+		g_block = (RegMass*(x_k - x_old - h*v_old) - h*h*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
+		// cout<<"Kinetic ||df|| term: "<< (RegMass*(x_k - x_old - h*v_old)).norm()/convergence_scaling_paramter<<endl;
+	}
+
 
 }
+
+void ImplicitEuler::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, SparseMatrix<double>& forceGradientStaticBlock, SparseMatrix<double>& RegMassBlock)
+{
+	//new and old formulation
+	grad_g_block = (RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*RegMassBlock*forceGradientStaticBlock)/convergence_scaling_paramter;
+}
+
 
 void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	//Implicit Code
@@ -23,8 +198,6 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	double gamma = 0.5;
 	double beta =0.25;
 
-	clock_t t0 = clock();
-
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	SparseMatrix<double> forceGradientStaticBlock;
 	forceGradientStaticBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
@@ -35,17 +208,20 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 	RegMassBlock.resize(3*ignorePastIndex, 3*ignorePastIndex);
 	RegMassBlock = RegMass.block(0, 0, 3*ignorePastIndex, 3*ignorePastIndex);
 
-
-	clock_t t2 = clock();
-	cout<<"t2 t1"<<endl;
-	cout<<"SECONDS"<<double(t2 - t1)/CLOCKS_PER_SEC<<endl;
-
 	forceGradient.setZero();
 	bool Nan=false;
 	int NEWTON_MAX = 100, i =0;
 
+	VectorXd y_k = (((x_k - x_old)/h) - v_old);
+	for(int i=3*ignorePastIndex; i<y_k.size(); i++){
+ 		y_k(i) =0;
+ 	}
 	for( i=0; i<NEWTON_MAX; i++){
-		clock_t t3 = clock();
+		if(formulation != 0)
+		{
+			x_k = h*(y_k + v_old) + x_old;
+		}
+
 		grad_g.setZero();
 		ImplicitXtoTV(x_k, TVk);//TVk value changed in function
 		ImplicitCalculateElasticForceGradient(TVk, forceGradient);
@@ -62,8 +238,10 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		//Block forceGrad and f to exclude the fixed verts
 		forceGradientStaticBlock = forceGradient.block(0,0, 3*(ignorePastIndex), 3*ignorePastIndex);
 		VectorXd g_block;
-		findgBlock(g_block, x_k, x_old, ignorePastIndex);
-		grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
+		find_dEnergyBlock(g_block, y_k, ignorePastIndex);
+		find_d_dEnergyBlock(grad_g, forceGradientStaticBlock, RegMassBlock);
+		// findgBlock(g_block, x_k, x_old, ignorePastIndex);
+		// grad_g = RegMassBlock - h*h*forceGradientStaticBlock - h*rayleighCoeff*forceGradientStaticBlock;
 
 		// Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
@@ -71,33 +249,40 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 			exit(0);
 		}
 		llt_solver.factorize(grad_g);
-		VectorXd deltaX = -1* llt_solver.solve(g_block);
-
-		// ConjugateGradient<SparseMatrix<double>> cg;
-		// cg.compute(grad_g);
-		// if(cg.info() == Eigen::NumericalIssue){
-		// 	cout<<"ConjugateGradient numerical issue"<<endl;
-		// 	exit(0);
-		// }
-		// VectorXd deltaX = -1*llt.solve(g_block);
+		VectorXd Delta = -1* llt_solver.solve(g_block);
+		// cout<<ImplicitCalculateEnergyFunction()<<", "<< g_block.norm()<<", "<<Delta.norm()<<", "<<(y_k).norm() <<endl<<endl;
 
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
-		// VectorXd deltaX = -1*sqr.solve(g_block);
-		// x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
+		// VectorXd Delta = -1*sqr.solve(g_block);
+		// x_k.segment(0, 3*(ignorePastIndex)) += Delta;
 
-		x_k.segment(0, 3*(ignorePastIndex)) += deltaX;
-		if(x_k != x_k){
-			Nan = true;
-			break;
+		if(formulation == 0)
+		{
+			x_k.segment(0, 3*(ignorePastIndex)) += Delta;
+			if(x_k != x_k){
+				Nan = true;
+				break;
+			}
+			if(g_block.squaredNorm() < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
+				break;
+			}
+		}else
+		{
+			y_k.segment(0, 3*(ignorePastIndex)) += Delta;
+			if(y_k != y_k){
+				Nan = true;
+				break;
+			}
+			if(g_block.squaredNorm() < sqrt(1e-11)/h/h/sqrt(convergence_scaling_paramter)){
+				break;
+			}
 		}
 
-		cout<<"g norm"<<endl;
-		cout<<g_block.squaredNorm()/convergence_scaling_paramter<<endl;
-		if(g_block.squaredNorm()/convergence_scaling_paramter < sqrt(1e-11)/sqrt(convergence_scaling_paramter)){
-			break;
-		}
+
+
+
 
 	}
 	if(Nan){
@@ -110,6 +295,16 @@ void ImplicitEuler::renderNewtonsMethod(VectorXd& ext_force){
 		cout<<i<<endl;
 		exit(0);
 	}
+	if(formulation != 0)
+	{
+		x_k = h*(y_k + v_old) + x_old;
+	}
+	// ofstream xfiles;
+	// xfiles.open(OUTPUT_SAVED_PATH"TestsResults/temp/newton-"+to_string(formulation)+"-"+to_string(simTime)+".txt");
+	// for(int k =0; k<x_k.size(); k++)
+	// 	xfiles<<x_k(k)<<endl;
+	// xfiles.close();
+	cout<<"End of timestep x - xo: "<< (x_k - x_old).norm()<<endl;
 	v_old = (x_k - x_old)/h;
 	x_old = x_k;
 }
@@ -121,17 +316,25 @@ void ImplicitEuler::ImplicitCalculateForces( MatrixXd& TVk, SparseMatrix<double>
 	for(unsigned int i=0; i<f.size()/3; i++){
 		f(3*i+1) += massVector(3*i+1)*gravity;
 	}
+	VectorXd q = f.head(3*(vertsNum - fixedVerts.size()));
+	// cout<<"Gravity ||df|| term: "<< h*q.norm()/convergence_scaling_paramter<<endl;
 
-	//elastic
-	if(solver.compare("newton")==0){
-		for(unsigned int i=0; i<M.tets.size(); i++){
-			M.tets[i].computeElasticForces(TVk, f);
+	VectorXd strainF;
+		strainF.resize(3*vertsNum);
+		strainF.setZero();
+		//elastic
+		if(solver.compare("newton")==0){
+			for(unsigned int i=0; i<M.tets.size(); i++){
+				M.tets[i].computeElasticForces(TVk, strainF);
+			}
+		}else{
+			for(unsigned int i=0; i<M.tets.size(); i++){
+				M.tets[i].computeElasticForces(TVk, strainF);
+			}
 		}
-	}else{
-		for(unsigned int i=0; i<M.tets.size(); i++){
-			M.tets[i].computeElasticForces(TVk, f);
-		}
-	}
+		f += strainF;
+		VectorXd strainBlocked = strainF.head(3*(vertsNum - fixedVerts.size()));
+		// cout<<"Strain ||df|| term: "<< strainBlocked.norm()<<endl;
 
 	// f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
@@ -179,10 +382,14 @@ void ImplicitEuler::ImplicitCalculateElasticForceGradient(MatrixXd& TVk, SparseM
 
 void ImplicitEuler::render(VectorXd& ext_force){
 	simTime+=1;
-	cout<<"i"<<simTime<<endl;
+	cout<<"i"<<simTime<<" with: "<<solver<<endl;
 
 	if(solver.compare("newton")==0){
 		renderNewtonsMethod(ext_force);
+
+	}else if(solver.compare("lbfgsvismay")==0){
+		alglibLBFGSVismay(ext_force);
+
 	}else{
 		cout<<"Solver not specified properly"<<endl;
 		exit(0);
@@ -216,6 +423,8 @@ void ImplicitEuler::initializeIntegrator(double ph, SolidMesh& pM, MatrixXd& pTV
 	x_k.setZero();
 	v_k.setZero();
 	TVk = TV;
+
+	formulation = 1;
 }
 
 void ImplicitEuler::ImplicitXtoTV(VectorXd& x_tv, MatrixXd& TVk){

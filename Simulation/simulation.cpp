@@ -161,7 +161,7 @@ void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
 //	cout<<OUTPUT_SAVED_PATH"TestsResults/Damping/"<<endl;
-	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+"position.txt");
+	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Damping/"+solver+"_Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+"position.txt");
 
 	integrator->external_f = this->external_force;
 	integrator->v_old.setZero();
@@ -181,8 +181,9 @@ void Simulation::headless(){
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;
-		if(integrator->simTime%10==0 && integrator->simTime<3000){
+		if(integrator->simTime%100==0){
 			printDesigns(printcount, integrator->simTime);
+			// igl::writeMESH(OUTPUT_SAVED_PATH "TestsResults/temp/"+solver+"/"+to_string(printcount), integrator->TV, integrator->TT, TF);
 			printcount += 1;
 		}
 	}
@@ -191,7 +192,7 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Damping/Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
+	string saveTestsHere = OUTPUT_SAVED_PATH"TestsResults/Damping/"+solver+"_Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+objectName+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
