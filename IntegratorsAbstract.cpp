@@ -118,7 +118,6 @@ void IntegratorAbstract::initVectors(){
 	f.setZero();
 	massVector.setZero();
 
-	v_old(0) = 10;
 }
 
 void IntegratorAbstract::analyzeCholeskySetup(){
