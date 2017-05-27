@@ -117,13 +117,13 @@ double ImplicitNewmark::find_Energy(){
 		strainE += M.tets[i].energy;
 	}
 
-	func += beta*strainE;
 
 	double gravE =0.0;
 	for(unsigned int i=0; i<n/3; i++){
 		gravE += massVector(3*i+1) * (x_k(3*i+1) - x_old(3*i+1)) * gravity * (-1);
 	}
-	func += beta*gravE;
+
+	func += beta*(strainE + gravE  - (rayleighCoeff/h)*(f.dot(x_k) + strainE + gravE + f.dot(x_old)));
 
 	// cout<<"start ke"<<endl;
 	// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
