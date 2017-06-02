@@ -23,10 +23,11 @@ int main(int argc, char * argv[])
   MatrixXi Fs;
   MatrixXd Vs;
  	// Read arguements 
-  string name(argv[1]);
+  string input(argv[1]);
+  string output(argv[2]);
   // Read in inputs as double precision floating point meshes
-  readOFF(name,Vs,Fs);
-  // Write as Off
-  writeOBJ(PATH_TO_OBJ_FILES"testConvert.obj", Vs, Fs);
+  read_triangle_mesh(input,Vs,Fs);
+  // Write as Obj
+  writeOBJ(output, Vs, Fs);
 }
 

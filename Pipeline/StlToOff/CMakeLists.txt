@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(3dUnion)
+project(StlToOff)
 
 add_executable(${PROJECT_NAME}_bin main.cpp)
 
