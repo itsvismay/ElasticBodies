@@ -1,3 +1,0 @@
-/home/vismay/libigl/tutorial/610_CSGTree/build/CMakeFiles/rebuild_cache.dir
-/home/vismay/libigl/tutorial/610_CSGTree/build/CMakeFiles/edit_cache.dir
-/home/vismay/libigl/tutorial/610_CSGTree/build/CMakeFiles/610_CSGTree_bin.dir

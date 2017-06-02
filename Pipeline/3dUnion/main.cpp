@@ -5,10 +5,11 @@
 #include <Eigen/Core>
 #include <vector>
 #include <igl/writeOBJ.h>
+#include <igl/writeOFF.h>
 
 #include "tutorial_shared_path.h"
 
-#define PATH_TO_OBJ_FILES "/home/firal/Documents/Research/ElasticBodies/Pipeline/"
+//#define PATH_TO_OBJ_FILES "/home/firal/Documents/Research/ElasticBodies/Pipeline/"
 
 using namespace Eigen;
 using namespace igl::copyleft::cgal;
@@ -44,8 +45,6 @@ CSGTree* binaryMergeTreeCreation(vector<MatrixXd>& Vs, vector<MatrixXi>& Fs){
   }
 }
 
-
-
 int main(int argc, char * argv[])
 {
   vector<MatrixXi> Fs;
@@ -53,30 +52,31 @@ int main(int argc, char * argv[])
   // Read arguements
   int num_of_layers = atoi(argv[2]);
   string name(argv[1]);
+	string output(argv[3]);
   // Read in inputs as double precision floating point meshes
-  if (argc == 3) {
-    for(int i=0; i<num_of_layers; i++){
-      MatrixXi F;
-      MatrixXd V;
-      read_triangle_mesh(PATH_TO_OBJ_FILES +name+"_layer_" + to_string(i)+".obj",V,F);
-      Fs.push_back(F);
-      Vs.push_back(V);  
-    }
-  } else if (argc == 4){
-    string path(argv[3]);
-    for(int i=0; i<num_of_layers; i++) {
-      MatrixXi F;
-      MatrixXd V;
-      read_triangle_mesh(path + name + "_layer_" + to_string(i) + ".obj", V, F);
-      Fs.push_back(F);
-      Vs.push_back(V);
-    }
+  //if (argc == 3) {
+  for(int i=0; i<num_of_layers; i++){
+    MatrixXi F;
+    MatrixXd V;
+    read_triangle_mesh(name+"_layer_" + to_string(i)+".off",V,F);
+    Fs.push_back(F);
+    Vs.push_back(V);  
   }
+  //} else if (argc == 4){
+  //  string path(argv[3]);
+  //  for(int i=0; i<num_of_layers; i++) {
+  //    MatrixXi F;
+  //    MatrixXd V;
+  //    read_triangle_mesh(path + name + "_layer_" + to_string(i) + ".obj", V, F);
+  //    Fs.push_back(F);
+  //    Vs.push_back(V);
+  //  }
+  //}
 
   CSGTree* M;
 
   M = binaryMergeTreeCreation( Vs, Fs);
   
-  writeOBJ(PATH_TO_OBJ_FILES"unioned.obj", M->cast_V<MatrixXd>(), M->F());
+  writeOFF(output, M->cast_V<MatrixXd>(), M->F());
 }
 
