@@ -130,16 +130,16 @@ bool drawLoop(igl::viewer::Viewer& viewer){
 
 void useFullObject(bool headless, double timestep, int iterations, char method){
 	// Load a surface mesh
-	ifstream offFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".off");
-	ifstream objFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj");
-	ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
+	ifstream offFile(objectName+".off");
+	ifstream objFile(objectName+".obj");
+	//ifstream meshFile(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh");
 
 	if (false) {
 		igl::readMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (offFile.good()) {
-		igl::readOFF(TUTORIAL_SHARED_PATH "shared/"+objectName+".off", V, F);
+		igl::readOFF(objectName+".off", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
-		igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
+		//igl::writeMESH(TUTORIAL_SHARED_PATH "shared/"+objectName+".mesh", TV, TT, TF);
 	} else if (objFile.good()) {
 		igl::readOBJ(TUTORIAL_SHARED_PATH "shared/"+objectName+".obj", V, F);
 		igl::copyleft::tetgen::tetrahedralize(V,F, tetgen_code, TV,TT,TF);
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 	int iterations;
 	string line;
 
-	ifstream configFile (HOME_SAVED_PATH "Simulation/config.txt");
+	ifstream configFile ((string(argv[1]) + "config.txt").c_str());
 	if(configFile.is_open()){
 		getline(configFile, line);
 		timestep = stod(line.c_str());
@@ -306,12 +306,12 @@ int main(int argc, char *argv[])
 	if(runHeadless=='t'){
 		headless = true;
 	}
-	momentumFile.open("../Scripts/momentum.txt");
-	energyFile.open("../Scripts/energy.txt");
-	strainEnergyFile.open("../Scripts/senergy.txt");
-	kineticEnergyFile.open("../Scripts/kenergy.txt");
-	gravityEnergyFile.open("../Scripts/genergy.txt");
-	optimizationFile.open("../../TestsResults/opt.txt");
+	//momentumFile.open("../Scripts/momentum.txt");
+	//energyFile.open("../Scripts/energy.txt");
+	//strainEnergyFile.open("../Scripts/senergy.txt");
+	//kineticEnergyFile.open("../Scripts/kenergy.txt");
+	//gravityEnergyFile.open("../Scripts/genergy.txt");
+	//optimizationFile.open("../../TestsResults/opt.txt");
 
 	if(object ==0){
 		useMyObject(headless, timestep, iterations, method);

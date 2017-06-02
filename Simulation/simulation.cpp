@@ -132,10 +132,10 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
-		system(("mkdir -p "OUTPUT_SAVED_PATH""+objectName+"/").c_str());
+		system(("mkdir -p "+objectName+"/").c_str());
 		cout<<"Results saved here"<<endl;
-		cout<<OUTPUT_SAVED_PATH""+objectName+".txt"<<endl;
-		dampingPositionFile.open(OUTPUT_SAVED_PATH""+objectName+"/position.txt");
+		cout<<objectName+".txt"<<endl;
+		dampingPositionFile.open(objectName+"/position.txt");
 		integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
@@ -174,7 +174,7 @@ void Simulation::headless(){
 	}
 
 	int printcount =0;
-	printDesigns(printcount, integrator->simTime);
+	//printDesigns(printcount, integrator->simTime);
 	time_t rawtime;
   struct tm * ptm;
   time ( &rawtime );
@@ -193,8 +193,9 @@ void Simulation::headless(){
 		z_pos /= this->moveVerticesStore.size();
 
 		dampingPositionFile<<integrator->simTime*integrator->h<<", "<<z_pos<<endl;
-		if(integrator->simTime%100==0){
-			printDesigns(printcount, integrator->simTime);
+		cout<<"TimePos,"<<integrator->simTime*integrator->h<<","<<z_pos<<endl;
+    if(integrator->simTime%100==0){
+			//printDesigns(printcount, integrator->simTime);
 			printcount += 1;
 		}
 	}
@@ -203,7 +204,7 @@ void Simulation::headless(){
 }
 
 void Simulation::printDesigns(int printcount, int simTime){
-	string saveTestsHere = OUTPUT_SAVED_PATH ""+objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
+	string saveTestsHere = objectName+"/"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"/";
 	printObj(saveTestsHere, printcount, integrator->TV, integrator->TT, *sB);
 	cout<<printcount<<endl;
 }
@@ -592,8 +593,8 @@ void Simulation::setInitPosition(VectorXd& force, vector<int>& fixVertices, vect
 	//hard coded the force file for now
 	vector<int> temp;
 	//cout<<force.rows()<<endl;
-	ifstream forceInputFile (TUTORIAL_SHARED_PATH "shared/"+objectName+".txt");
-	cout<<TUTORIAL_SHARED_PATH "shared/"+objectName+".txt"<<endl;
+	ifstream forceInputFile (objectName+".txt");
+	cout<<objectName+".txt"<<endl;
 	if(forceInputFile.is_open()){
 		string line;
 		int index =0;

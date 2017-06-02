@@ -47,13 +47,13 @@ void BoundingVolume::makeFixed() {
 // 6 = -x,-y,-z
 // 7 = +x,-y,-z
 dvec3 BoundingVolume::getNewOrigin(int corner) {
-  if (corner == 0) return vec3(xBounds[1], yBounds[1], zBounds[1]);
-  if (corner == 1) return vec3(xBounds[0], yBounds[1], zBounds[1]);
-  if (corner == 2) return vec3(xBounds[0], yBounds[0], zBounds[1]);
-  if (corner == 3) return vec3(xBounds[1], yBounds[0], zBounds[1]);
-  if (corner == 4) return vec3(xBounds[1], yBounds[1], zBounds[0]);
-  if (corner == 5) return vec3(xBounds[0], yBounds[1], zBounds[0]);
-  if (corner == 6) return vec3(xBounds[0], yBounds[0], zBounds[0]);
-  if (corner == 7) return vec3(xBounds[1], yBounds[0], zBounds[0]);
+  if (corner == 0) return dvec3(xBounds[1], yBounds[1], zBounds[1]);
+  if (corner == 1) return dvec3(xBounds[0], yBounds[1], zBounds[1]);
+  if (corner == 2) return dvec3(xBounds[0], yBounds[0], zBounds[1]);
+  if (corner == 3) return dvec3(xBounds[1], yBounds[0], zBounds[1]);
+  if (corner == 4) return dvec3(xBounds[1], yBounds[1], zBounds[0]);
+  if (corner == 5) return dvec3(xBounds[0], yBounds[1], zBounds[0]);
+  if (corner == 6) return dvec3(xBounds[0], yBounds[0], zBounds[0]);
+  if (corner == 7) return dvec3(xBounds[1], yBounds[0], zBounds[0]);
   return dvec3(0.0, 0.0, 0.0);
 }

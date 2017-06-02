@@ -1,0 +1,5 @@
+/scratch/cluster/zmisso/ElasticBodies/3dUnion/nanogui/ext_build/glfw/src/CMakeFiles/glfw.dir
+/scratch/cluster/zmisso/ElasticBodies/3dUnion/nanogui/ext_build/glfw/src/CMakeFiles/glfw_objects.dir
+/scratch/cluster/zmisso/ElasticBodies/3dUnion/nanogui/CMakeFiles/nanogui.dir
+/scratch/cluster/zmisso/ElasticBodies/3dUnion/nanogui/CMakeFiles/nanogui-obj.dir
+/scratch/cluster/zmisso/ElasticBodies/3dUnion/CMakeFiles/remesh.dir

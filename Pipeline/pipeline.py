@@ -17,15 +17,15 @@
 # name, ind, gen are completely optional
 # ind just defines the index of the first individual
 
-import sys, getopt, os, subprocess
+import sys, getopt, os, subprocess, time
 from subprocess import call
 
 pathsFile = 'paths.txt'
-pathToSlic3r = 'slic3r'
-pathToMeshlabServer = 'meshlabserver'
-pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathToSlic3r = '/scratch/cluster/zmisso/Slic3r/bin/slic3r'
+pathToSlic3rConfig = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/slic3rConfig.ini'
+pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/build/main"
 pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/PipelineSimprep/simprep"
-pathToTempFiles = ''
+pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
 pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
 
 isCreate = False
@@ -38,7 +38,7 @@ template = ""
 name = ""
 generation = 0
 individual = 0
-sConfig = "slic3rConfig.ini"
+#sConfig = "slic3rConfig.ini"
 force = 10000000;
 preped = '../shared/beam'
 prepedMesh = '../shared/beam.off'
@@ -48,19 +48,21 @@ resultMeshes = '../PipelineTests/'
 currentPath = os.path.dirname(os.path.abspath(__file__))
 
 # fix mesh (do not change)
-meshedFile = "unioned.off"
 fixedMeshedFile = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixedUnion.off"
 largestOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/largest.off"
 restOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/rest.off"
-pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/build/main"
 pathTo3DUnion = "/scratch/cluster/zmisso/libigl/tutorial/build/3dUnion_bin"
-pathToSplit = "/scratch/cluster/zmisso/ElasticBodies/3dUnion/build/remesh"
-pathToSimprep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/Simprep/simprep"
+pathToSplit = "/scratch/cluster/zmisso/ElasticBodies/3dUnion/remesh"
+pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/SimPrep/simprep"
 pathToOpenscad = "/lusr/opt/openscad-2015.03-2/bin/openscad"
+pathToConvertStlOff = "/scratch/cluster/zmisso/libigl/tutorial/build/StlToOff_bin"
+pathToConvertOffObj = "/scratch/cluster/zmisso/libigl/tutorial/build/OffToObj_bin"
 #pathToCgal = "../../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
+pathToCleanMesh = "/scratch/cluster/zmisso/meshfix/build/libigl_example"
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce="])
+  opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce=", "temp="])
 except getopt.GetoptError:
   print 'Error Bad Input'
   sys.exit(-2)
@@ -103,16 +105,23 @@ for opt, arg in opts:
     cleanAll = True
   if opt == "-s":
     skipRun = True
-  if opt == "sConfig":
+  if opt == "--sConfig":
     sConfig = arg
+  if opt == "--temp":
+    pathToTempFiles = arg
 
 initialScadFiles = []
 initialSTLFiles = []
+initialOBJFiles = []
 initialGCodeFiles = []
 initialLayerSizes = []
 layerScadFiles = []
 layerSTLFiles = []
 layerObjFiles = []
+
+meshedFile = pathToTempFiles + "unioned.off"
+largestOff = pathToTempFiles + "largest.off"
+restOff = pathToTempFiles + "rest.off"
 
 if isCreate == True:
   # generate all of the scad files based on the template
@@ -132,27 +141,35 @@ else:
 
 for i in range(len(initialScadFiles)):
   # run openscad -o initialScadFiles[i][:-5]+".stl" initialScadFiles[i]
-  print 'openscad -o ' + initialScadFiles[i][:-5] + '.stl ' + initialScadFiles[i]
+  print 'openscad -o ' + initialScadFiles[i][:-5] + '.off ' + initialScadFiles[i]
   try:
-    result = subprocess.check_output([pathToOpenscad, '-o', initialScadFiles[i][:-5] + '.stl', initialScadFiles[i]])
+    result = subprocess.check_output([pathToOpenscad, '-o', initialScadFiles[i][:-5] + '.off', initialScadFiles[i]])
   except OSError as e:
     print 'There was a System Error Initial Openscad: ', e, '\n'
   # add generated stl file to list for next step
-  initialSTLFiles.append(initialScadFiles[i][:-5]+".stl")
+  initialSTLFiles.append(initialScadFiles[i][:-5]+".off")
+
+for i in range(len(initialSTLFiles)):
+  print 'OffToObj', initialSTLFiles[i]
+  try:
+    result = subprocess.check_output([pathToConvertOffObj, initialSTLFiles[i], initialSTLFiles[i][:-4] + '.obj'])
+  except OSError as e:
+    print 'There was a System Error Initial Off:', e, '\n'
+  initialOBJFiles.append(initialSTLFiles[i][:-4] + '.obj')
 
 #initialSTLFiles.append("ASTMD638_specimen.stl")
 
 if isOrig == False:
-  for i in range(len(initialSTLFiles)):
+  for i in range(len(initialOBJFiles)):
     # run slic3r initialSTLFiles[i] --load sConfig
-    print 'slic3r', initialSTLFiles[i], '--load', sConfig
+    print 'slic3r', initialOBJFiles[i], '--load', pathToSlic3rConfig
     try:
-      result = subprocess.check_output([pathToSlic3r, initialSTLFiles[i], '--load', sConfig])
+      result = subprocess.check_output([pathToSlic3r, initialOBJFiles[i], '--load', pathToSlic3rConfig])
       print 'Finished Slic3r'
     except OSError as e:
       print 'There was a System Error: Initial Slic3r', e, '\n'
     # add generated gcode file to list for next step
-    initialGCodeFiles.append(initialSTLFiles[i][:-4]+".gcode")
+    initialGCodeFiles.append(initialOBJFiles[i][:-4]+".gcode")
 
   for i in range(len(initialGCodeFiles)):
     # run python gcode2layers.py --name initialGCodeFiles[i]
@@ -174,21 +191,21 @@ if isOrig == False:
 
   for i in range(len(layerScadFiles)):
     # run openscad -o layerScadFiles[i][:-5]+".stl" layerScadFiles[i]
-    print 'openscad -o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]
+    print 'openscad -o', layerScadFiles[i][:-5]+'.off', layerScadFiles[i]
     try:
-      result = subprocess.check_output([pathToOpenscad, '-o', layerScadFiles[i][:-5]+'.stl', layerScadFiles[i]])
+      result = subprocess.check_output([pathToOpenscad, '-o', layerScadFiles[i][:-5]+'.off', layerScadFiles[i]])
     except OSError as e:
       print 'There was a System Error: Gcode2Layers', e, '\n'
 
     # add generated file to layerSTLFiles
-    layerSTLFiles.append(layerScadFiles[i][:-5] + '.stl')
+    layerSTLFiles.append(layerScadFiles[i][:-5] + '.off')
 
 # convert stl layer files to off files
   for i in range(len(layerSTLFiles)):
     #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
     print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
     try:
-      result = subprocess.check_output([pathToMeshlabServer, '-i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'])
+      result = subprocess.check_output([pathToCleanMesh, layerSTLFiles[i], layerSTLFiles[i][:-4]+'.off'])
     except OSError as e:
       print 'There was a System Error: MeshlabServer', e, '\n'
 
@@ -197,29 +214,39 @@ if isOrig == False:
   # combine obj files into one file
   for i in range(len(initialGCodeFiles)):
     # run ./3dUnion_bin initialGCodeFiles[i][:-6] initialLayerSizes[i]
-    print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i]
+    print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i], pathToTempFiles
     try:
       temp = 0
-      result = subprocess.check_output([pathTo3DUnion, str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i])])
+      result = subprocess.check_output([pathTo3DUnion, str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i]), meshedFile])
     except OSError as e:
       print 'There was a System Error: 3DUnion', e, '\n'
 
   try:
-    print 'split', meshedFile
-    result = subprocess.check_output(['./'+pathToSplit, meshedFile])
+    print pathToSplit, meshedFile, pathToTempFiles
+    result = subprocess.check_output([pathToSplit, meshedFile, pathToTempFiles])
+    #time.sleep(300)
+		#print result
+    #result.communicate()
+    print 'Finished Split'
   except OSError as e:
     print 'There was a System Error Split', e, '\n'
 
+  temp = ''
+
   try:
-    print 'remesh', meshedFile
-    result = subprocess.check_output(['./'+pathToCgal+'main', largestOff, restOff])
+    print pathToCgal, largestOff, restOff, pathToTempFiles
+    print os.listdir(pathToTempFiles)
+    temp = subprocess.check_output([pathToCgal, largestOff, restOff, pathToTempFiles])
+    print temp
+    print 'Finished Remesh'
   except OSError as e:
+    print temp
     print 'There was a System Error Remesh', e, '\n'
 
-  # pointless but used for legacy
+  # clean mesh
   try:
-    print 'cp', 'out.off', fixedMeshedFile
-    result = subprocess.check_output(['cp', 'out.off', fixedMeshedFile])
+    print pathToCleanMesh, 'out.off', fixedMeshedFile
+    result = subprocess.check_output([pathToCleanMesh, pathToTempFiles + 'out.off', fixedMeshedFile])
   except OSError as e:
     print 'There was a System Error CP', e, '\n'
 else:
@@ -234,16 +261,16 @@ else:
 
 try:
   print './simprep --inputMeshOff', fixedMeshedFile, '--outputM', prepedMesh, 'outputF', forceData, '--forceYAxis', '-1', '--maxForce', force, ''
-  result = subprocess.check_output(['./'+pathToSimprep, '--meshOff', fixedMeshedFile, '--outputM', prepedMesh, '--outputF', forceData, '--forceZAxis', '-1', '--maxForce', str(force)])
+  result = subprocess.check_output([pathToSimPrep, '--meshOff', fixedMeshedFile, '--outputM', prepedMesh, '--outputF', forceData, '--forceZAxis', '-1', '--maxForce', str(force)])
 except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 if skipRun == False:
-  try:
-    print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'
-    result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'])
-  except OSError as e:
-    print 'There was a System Error ', e, '\n'
+  #try:
+  #  print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'
+  #  result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'])
+  #except OSError as e:
+  #  print 'There was a System Error ', e, '\n'
 
   #try:
   #  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'
@@ -276,7 +303,7 @@ if skipRun == False:
 # -- prepedMesh
 # -- forceData
 
-if cleanAll == True:
+if True:
   for i in range(len(initialScadFiles)):
     if isCreate == True:
       print 'rm', initialScadFiles[i]
@@ -296,11 +323,11 @@ if cleanAll == True:
   for i in range(len(layerObjFiles)):
     print 'rm', layerObjFiles[i]
     result = subprocess.check_output(['rm', layerObjFiles[i]])
-  if isOrig == False:
-    print 'rm', meshedFile
-    result = subprocess.check_output(['rm', meshedFile])
-  print 'rm', fixedMeshedFile
-  result = subprocess.check_output(['rm', fixedMeshedFile])
+  #if isOrig == False:
+  #  print 'rm', meshedFile
+  #  result = subprocess.check_output(['rm', meshedFile])
+  #print 'rm', fixedMeshedFile
+  #result = subprocess.check_output(['rm', fixedMeshedFile])
   #print 'rm', prepedMesh
   #result = subprocess.check_output(['rm', prepedMesh])
   #print 'rm', forceData

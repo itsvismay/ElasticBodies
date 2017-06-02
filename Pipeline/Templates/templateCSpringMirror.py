@@ -35,8 +35,6 @@ minOutThk = 0.0
 maxOutThk = 0.0
 minWidthIn = 0.0
 maxWidthIn = 0.0
-minOverlap = 0.0
-maxOverlap = 0.0
 
 inThk = 1.2
 inHei = 20.0
@@ -45,8 +43,27 @@ outThk = 6.0
 widthIn = 8.0
 overlap = 1.0
 
+def calculateInThk(v):
+  return (maxInThk - minInThk) * v + minInThk
+
+def calculateInHei(v):
+  return (maxInHei - minInHei) * v + minInHei
+
+def calculateSections(v):
+  return (maxSections - minSections) * v + minSections
+
+def calculateWidthIn(v):
+  return (maxWidthIn - minWidthIn) * v + minWidthIn
+
+def calculateOutThk(v):
+  return (maxOutThk - minOutThk) * v + minOutThk
+
+def calculateOverlap(v):
+  return 2.0 * v * widthIn
+
+file_write = open(name, 'w')
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "minInThk=", "maxInThk=", "minInHei=", "maxInHei=", "minSections=", "maxSections=", "minOutThk=", "maxOutThk=", "minWidthIn=", "maxWidthIn=", "minOverlap=", "maxOverlap=", "inThk=", "inHei", "sections=", "outThk=", "widthIn=", "overlap="])
+  opts, args = getopt.getopt(sys.argv[1:], 'a', ["name=", "minInThk=", "maxInThk=", "minInHei=", "maxInHei=", "minSections=", "maxSections=", "minOutThk=", "maxOutThk=", "minWidthIn=", "maxWidthIn=", "inThk=", "inHei", "sections=", "outThk=", "widthIn="])
 except getopt.GetoptError:
   print 'Error Bad Input'
   sys.exit(-2)
@@ -73,10 +90,6 @@ for opt, arg in opts:
     minWidthIn = float(arg)
   elif opt == "--maxWidthIn":
     maxWidthIn = float(arg)
-  elif opt == "--minOverlap":
-    minOverlap = float(arg)
-  elif opt == "--maxOverlap":
-    maxOverlap = float(arg)
   elif opt == "--inThk":
     inThk = float(arg)
   elif opt == "--inHei":
@@ -88,42 +101,23 @@ for opt, arg in opts:
   elif opt == "--widthIn":
     widthIn = float(arg)
   elif opt == "-a":
-    minInThk = float(sys.argv[2])
-    maxInThk = float(sys.argv[3])
-    minInHei = float(sys.argv[4])
-    maxInHei = float(sys.argv[5])
-    minSections = float(sys.argv[6])
-    maxSections = float(sys.argv[7])
-    minOutThk = float(sys.argv[8])
-    maxOutThk = float(sys.argv[9])
-    minWidthIn = float(sys.argv[10])
-    maxWidthIn = float(sys.argv[11])
-    minOverlap = float(sys.argv[12])
-    maxOverlap = float(sys.argv[13])
-    inThk = calculateInThk(float(sys.argv[14]))
-    inHei = calculateInHei(float(sys.argv[15]))
-    sections = calculateSections(float(sys.argv[16]))
-    outThk = calculateOutThk(float(sys.argv[17]))
-    widthIn = calculateWidthIn(float(sys.argv[18]))
-    overlap = calculateOverlap(float(sys.argv[19]))
-
-def calculateInThk(v):
-  return (maxInThk - minInThk) * v + minInThk
-
-def calculateInHei(v):
-  return (maxInHei - minInHei) * v + minInHei
-
-def calculateSections(v):
-  return (maxSections - minSections) * v + minSections
-
-def calculateWidthIn(v):
-  return (maxWidthIn - minWidthIn) * v + minWidthIn
-
-def calculateOutThk(v):
-  return (maxOutThk - minOutThk) * v + minOutThk
-
-def calculateOverlap(v):
-  return (maxOverlap - minOverlap) * v + minOverlap
+    name = sys.argv[2]
+    minInThk = float(sys.argv[3])
+    maxInThk = float(sys.argv[4])
+    minInHei = float(sys.argv[5])
+    maxInHei = float(sys.argv[6])
+    minSections = float(sys.argv[7])
+    maxSections = float(sys.argv[8])
+    minOutThk = float(sys.argv[9])
+    maxOutThk = float(sys.argv[10])
+    minWidthIn = float(sys.argv[11])
+    maxWidthIn = float(sys.argv[12])
+    inThk = calculateInThk(float(sys.argv[13]))
+    inHei = calculateInHei(float(sys.argv[14]))
+    sections = calculateSections(float(sys.argv[15]))
+    outThk = calculateOutThk(float(sys.argv[16]))
+    widthIn = calculateWidthIn(float(sys.argv[17]))
+    overlap = calculateOverlap(float(sys.argv[18]))
 
 file_write = open(name, 'w')
 file_write.write("thkInPlane = %3.8f;\n" % inThk)

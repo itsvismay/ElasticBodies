@@ -3,7 +3,7 @@ import sys, getopt, os
 initialDirPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
 executablePath = '/usr/bin/python'
 arguments = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genAllTests.py'
-notifyUser = 'zack441@mac.com'
+notifyUser = 'zack.misso@utexas.edu'
 logPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/log/log$(Cluster)'
 outputPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/output/out$(Cluster)'
 errorPath = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/error/err$(Cluster)'

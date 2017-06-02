@@ -34,16 +34,20 @@ void extractComponent(const std::string &s, const Eigen::MatrixX3d &V, const Eig
 		for(int j=0; j<3; j++)
 			cF(i,j) = invmap[F(facets[i], j)];
 	}
+
+  std::cout << "PRINTING: " << s << std::endl;
+
 	igl::writeOFF(s, cV, cF);
 }
 
 int main(int argc, char *argv[])
 {
-	if(argc != 2)
+	if(argc != 3)
 		return -1;
 	Eigen::MatrixX3d V;
 	Eigen::MatrixX3i F;
-	igl::read_triangle_mesh(argv[1], V, F);
+	//std::cout << "WHAT THE FUCK IS THIS" << std::endl;
+  igl::read_triangle_mesh(argv[1], V, F);
 	Eigen::VectorXd C(F.rows());
 	igl::facet_components(F, C);
 	std::map<int, std::vector<int> > components;
@@ -62,7 +66,7 @@ int main(int argc, char *argv[])
 	}	
 	
 	// extract largest component
-	extractComponent("largest.off", V, F, components[largestid]);
+	extractComponent(std::string(argv[2])+"largest.off", V, F, components[largestid]);
 	std::vector<int> rest;
 	for(std::map<int, std::vector<int> >::iterator it = components.begin(); it != components.end(); ++it)
 	{
@@ -71,5 +75,5 @@ int main(int argc, char *argv[])
 		for(int i=0; i<it->second.size(); i++)
 			rest.push_back(it->second[i]);
 	}
-	extractComponent("rest.off", V, F, rest);
+	extractComponent(std::string(argv[2])+"rest.off", V, F, rest);
 }

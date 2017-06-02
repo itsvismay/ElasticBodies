@@ -386,4 +386,4 @@ def optimizationPipeline(runType):
 #--------------------------------------
 # Actual Pipeline
 #--------------------------------------
-optimizationPipeline(runType)
+#optimizationPipeline(runType)

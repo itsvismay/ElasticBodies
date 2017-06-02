@@ -1,0 +1,24 @@
+How to install to condor:
+
+cd scratch/cluster/eid/
+
+Go to CGAL website
+Go to Downloads
+Go to Linux
+Go to Download release as a tarball
+Highlight CGAL-4.9.tar.xz to see its link
+wget the link
+tar -xf the file
+cd CGAL-4.9/
+mkdir build/
+cd build/
+cmake ..
+make
+
+
+
+git clone --recursive https://github.com/CGAL/cgal.git
+git clone --recursive https://github.com/libigl/libigl.git
+
+/scratch/cluster/zmisso/cgal/build
+

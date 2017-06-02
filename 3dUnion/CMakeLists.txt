@@ -6,7 +6,7 @@ option(LIBIGL_VIEWER_WITH_NANOGUI "Enable nanogui " ON)
 
 # We need C++11. Put this directive after CGAL's include.
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -Wall -Wno-reorder -Wno-unknown-pragmas -Wno-deprecated-declarations")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -Wno-reorder -Wno-unknown-pragmas -Wno-deprecated-declarations")
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")

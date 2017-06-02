@@ -1,0 +1,1 @@
+/scratch/cluster/zmisso/ElasticBodies/PipelineTests/Test_1/optimizeTest.txt.scad 0.4 2.8 22.0 28.0 2.0 5.0 9.0 12.0 9.0 12.0 0.21844 0.038076 0.4 0.6 0.6

@@ -1,4 +1,4 @@
-CC=clang++
+CC=g++
 CFLAGS+= -std=c++11
 PROD=simprep
 SRCS= $(shell ls *.cpp)

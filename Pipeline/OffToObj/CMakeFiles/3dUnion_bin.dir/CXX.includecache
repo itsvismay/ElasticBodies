@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/scratch/cluster/zmisso/ElasticBodies/Pipeline/StlToOff/main.cpp
+igl/read_triangle_mesh.h
+-
+igl/copyleft/cgal/CSGTree.h
+-
+igl/viewer/Viewer.h
+-
+igl/jet.h
+-
+Eigen/Core
+-
+vector
+-
+igl/writeOBJ.h
+-
+igl/writeOff.h
+-
+igl/readSTL.h
+-
+tutorial_shared_path.h
+/scratch/cluster/zmisso/ElasticBodies/Pipeline/StlToOff/tutorial_shared_path.h
+

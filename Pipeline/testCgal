@@ -1,0 +1,16 @@
+universe=vanilla
+Initialdir=/scratch/cluster/zmisso/ElasticBodies/Pipeline/
+Executable=/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/build/main
+Arguments=/scratch/cluster/zmisso/ElasticBodies/Pipeline/largest.off /scratch/cluster/zmisso/ElasticBodies/Pipeline/rest.off /scratch/cluster/zmisso/ElasticBodies/Pipeline/
++Group="GRAD"
++Project="INSTRUCTIONAL"
++ProjectDescription="Elastic"
+#+GPUJob=true
+#requirements=(TARGET.GPUSlot)
+Notification=complete
+Notify_user=zack441@mac.com
+should_transfer_files=YES
+Log=/scratch/cluster/zmisso/ElasticBodies/Pipeline/log/log$(Cluster)
+Output=/scratch/cluster/zmisso/ElasticBodies/Pipeline/output/out$(Cluster)
+Error=/scratch/cluster/zmisso/ElasticBodies/Pipeline/error/err$(Cluster)
+Queue 1

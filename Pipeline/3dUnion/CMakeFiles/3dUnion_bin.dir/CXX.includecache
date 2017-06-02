@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/vismay/ElasticBodies/Pipeline/3dUnion/main.cpp
+/scratch/cluster/zmisso/ElasticBodies/Pipeline/3dUnion/main.cpp
 igl/read_triangle_mesh.h
 -
 igl/copyleft/cgal/CSGTree.h
@@ -22,5 +22,5 @@ vector
 igl/writeOBJ.h
 -
 tutorial_shared_path.h
-/home/vismay/ElasticBodies/Pipeline/3dUnion/tutorial_shared_path.h
+/scratch/cluster/zmisso/ElasticBodies/Pipeline/3dUnion/tutorial_shared_path.h
 
