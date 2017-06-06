@@ -23,7 +23,6 @@ from subprocess import call
 pathsFile = 'paths.txt'
 pathToSlic3r = '/scratch/cluster/zmisso/Slic3r/bin/slic3r'
 pathToSlic3rConfig = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/slic3rConfig.ini'
-pathToCgal = "/scratch/cluster/zmisso/cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/build/main"
 pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/PipelineSimprep/simprep"
 pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
 pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
@@ -58,8 +57,8 @@ pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/SimPrep/simprep"
 pathToOpenscad = "/lusr/opt/openscad-2015.03-2/bin/openscad"
 pathToConvertStlOff = "/scratch/cluster/zmisso/libigl/tutorial/build/StlToOff_bin"
 pathToConvertOffObj = "/scratch/cluster/zmisso/libigl/tutorial/build/OffToObj_bin"
-#pathToCgal = "../../../cgal/Polygon_mesh_processing/examples/Polygon_mesh_processing/"
-pathToCleanMesh = "/scratch/cluster/zmisso/meshfix/build/libigl_example"
+pathToCleanMesh = "/scratch/cluster/zmisso/meshfix/build2/libigl_example"
+pathToFixMissingLine = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixMissingLine.py"
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce=", "temp="])
@@ -150,7 +149,14 @@ for i in range(len(initialScadFiles)):
   initialSTLFiles.append(initialScadFiles[i][:-5]+".off")
 
 for i in range(len(initialSTLFiles)):
-  print 'OffToObj', initialSTLFiles[i]
+	print pathToFixMissingLine, initialSTLFiles[i]
+	try:
+		result = subprocess.check_output(['python', pathToFixMissingLine, '--input', initialSTLFiles[i]])
+	except OSError as e:
+		print 'There was a System Error Fix Missing Line:', e, '\n'
+
+for i in range(len(initialSTLFiles)):
+  print pathToConvertOffObj, initialSTLFiles[i]
   try:
     result = subprocess.check_output([pathToConvertOffObj, initialSTLFiles[i], initialSTLFiles[i][:-4] + '.obj'])
   except OSError as e:
@@ -200,16 +206,23 @@ if isOrig == False:
     # add generated file to layerSTLFiles
     layerSTLFiles.append(layerScadFiles[i][:-5] + '.off')
 
-# convert stl layer files to off files
   for i in range(len(layerSTLFiles)):
-    #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
-    print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
+    print pathToFixMissingLine, layerSTLFiles[i]
     try:
-      result = subprocess.check_output([pathToCleanMesh, layerSTLFiles[i], layerSTLFiles[i][:-4]+'.off'])
+      result = subprocess.check_output(['python', pathToFixMissingLine, '--input', layerSTLFiles[i]])
     except OSError as e:
-      print 'There was a System Error: MeshlabServer', e, '\n'
+      print 'There was a System Error Fix Missing Line:', e, '\n'
 
-    layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
+#  # convert stl layer files to off files
+#  for i in range(len(layerSTLFiles)):
+#    #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
+#    print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
+#    try:
+#      result = subprocess.check_output([pathToCleanMesh, layerSTLFiles[i], layerSTLFiles[i][:-4]+'.off'])
+#    except:
+#      print 'There was a System Error: MeshClean', '\n'
+#
+  #  layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
 
   # combine obj files into one file
   for i in range(len(initialGCodeFiles)):
