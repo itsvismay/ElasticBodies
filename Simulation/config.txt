@@ -1,18 +1,19 @@
 .00001
-t
+f
 n
 1000
 0.00
--10
+-0
 1
 9.3
 .35
 pR
 neo
 lbfgsvismay
-didactic_test/curvePrepedRemesh
-
 tensile_beam/rawTensile
+
+analytical/tinker
+didactic_test/curvePrepedRemesh
 test_obj/testObject
 bezier_spring/springFULL
 #1 timestep
