@@ -1,17 +1,19 @@
-.000001
+.00001
 t
 n
-10
-0.0013
+1000
+0.00
 -10
 1
 9.3
 .35
-pRa0.3
+pR
 neo
 lbfgsvismay
-tensile_beam/rawTensile
+didactic_test/curvePrepedRemesh
 
+tensile_beam/rawTensile
+test_obj/testObject
 bezier_spring/springFULL
 #1 timestep
 #2 headless t/f
@@ -30,6 +32,5 @@ bezier_spring/springFULL
 -pqa15000
 -pRq1.18
 low_detail_beam/lowDetailBeam
-test_obj/testObject
 beam/beam
 bezier_spring/spring

@@ -30,7 +30,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 	TV_k = TV;
 	cout<<"TV.rows()"<<endl;
 	cout<<TV.rows()<<endl;
-	// setInitPosition(force, fixVertices, moveVertices);
+	setInitPosition(force, fixVertices, moveVertices);
 
 	// fixVertices.push_back(4);
 	// fixVertices.push_back(3);
@@ -39,14 +39,14 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 
 
 	//BEAM SPRING FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
-	for(int i=0; i<TV.rows(); i++){
-		if(TV.row(i)[0] < 0.1 && TV.row(i)[2]<-3.0){
-			moveVertices.push_back(i);
-		}
-		if(TV.row(i)[0] > 140.1){
-			fixVertices.push_back(i);
-		}
-	}
+	// for(int i=0; i<TV.rows(); i++){
+	// 	if(TV.row(i)[0] < 0.1 && TV.row(i)[2]<-3.0){
+	// 		moveVertices.push_back(i);
+	// 	}
+	// 	if(TV.row(i)[0] > 140.1){
+	// 		fixVertices.push_back(i);
+	// 	}
+	// }
 
 	//FIXING vertices and MOVING VERTICES COMMENTED OUT ^ CAUSE IT DOESN"T WORK
 	// for(int i=0; i<TV.rows(); i++){
@@ -123,14 +123,14 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 			moveVertices = newMoveIndices;
 			this->moveVerticesStore = newMoveIndices;
 			//RECOMMENT
-			ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh");
-			cout<<OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh"<<endl;
-			if(meshFile.good()){
-				igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
-			}else{
-				cout<<"APPLYING STATIC POSITIONS"<<endl;
-				applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
-			}
+			// ifstream meshFile(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh");
+			// cout<<OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh"<<endl;
+			// if(meshFile.good()){
+			// 	igl::readMESH(OUTPUT_SAVED_PATH "TestsResults/Damping/"+objectName+"@"+tetgen_code+".mesh", newTV, newTT, TF);
+			// }else{
+			// 	cout<<"APPLYING STATIC POSITIONS"<<endl;
+			// 	applyStaticPositions(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
+			// }
 			// applyStaticForces(newTV, newTT, B, new_force, newMoveIndices, newfixIndices);
 		}
 
@@ -138,6 +138,7 @@ int Simulation::initializeSimulation(double deltaT, int iterations, char method,
 		this->external_force = new_force;
 		this->external_force.setZero();
 		integrator->fixVertices(newfixIndices);
+		integrator->moveVertices(this->moveVerticesStore);
 
 	}else{
 		igl::barycenter(TV, TT, B);
@@ -172,12 +173,19 @@ void Simulation::headless(){
 	while(integrator->simTime < iters){
 		integrator->render(this->external_force);
 		//RECOMMENT
-		double z_pos =0;
-		// z_pos = integrator->TV.row(1121)[2] + 0.5;//For pRa5
+		// double z_pos =0;
+		// // z_pos = integrator->TV.row(1121)[2] + 0.5;//For pRa5
+		// for(int i=0; i<this->moveVerticesStore.size(); i++){
+		// 	z_pos += integrator->x_old(3*this->moveVerticesStore[i]+2); //avg in the y direction
+		// }
+		// dampingPositionFile<<integrator->simTime<<", "<<z_pos/this->moveVerticesStore.size()<<endl;
+		double z_pos = 0;
 		for(int i=0; i<this->moveVerticesStore.size(); i++){
-			z_pos += integrator->x_old(3*this->moveVerticesStore[i]+2); //avg in the y direction
+			z_pos += integrator->TV.row(this->moveVerticesStore[0])(1);
 		}
-		dampingPositionFile<<integrator->simTime<<", "<<z_pos/this->moveVerticesStore.size()<<endl;
+		z_pos /= this->moveVerticesStore.size();
+
+		dampingPositionFile<<integrator->simTime<<", "<<z_pos<<endl;
 		// double yvel = printOptimizationOutput();
 		// if(yvel>maxYVel)
 		// 	maxYVel = yvel;

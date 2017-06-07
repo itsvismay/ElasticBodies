@@ -123,7 +123,7 @@ double ImplicitNewmark::find_Energy(){
 		gravE += massVector(3*i+1) * (x_k(3*i+1) - x_old(3*i+1)) * gravity * (-1);
 	}
 
-	func += beta*(strainE + gravE  - (rayleighCoeff/h)*(f.dot(x_k) + strainE + gravE + f.dot(x_old)));
+	func += beta*(strainE + gravE  + (rayleighCoeff/h)*(-1*f.dot(x_k - x_old) - strainE - gravE ));
 
 	// cout<<"start ke"<<endl;
 	// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
@@ -142,6 +142,9 @@ void ImplicitNewmark::find_dEnergyBlock(VectorXd& g_block, VectorXd& y_k, int ig
 	{
 		g_block = (RegMass*x_k - RegMass*x_old - h*RegMass*v_old - (h*h/2)*(1-2*beta)*f_old - (h*h*beta)*f).head(3*ignorePastIndex)/convergence_scaling_paramter;
 	}
+	// cout<<"g block"<<endl;
+	// cout<<g_block<<endl;
+	// cout<<g_block.norm()<<endl;
 }
 
 void ImplicitNewmark::find_d_dEnergyBlock(SparseMatrix<double>& grad_g_block, SparseMatrix<double>& forceGradientStaticBlock, SparseMatrix<double>& RegMassBlock)
@@ -208,8 +211,10 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		llt_solver.factorize(grad_g);
 		VectorXd Delta = -1* llt_solver.solve(g_block);
 
-		cout<<find_Energy()<<", "<< g_block.norm()<<", "<<Delta.norm()<<", "<<(y_k).norm() <<endl<<endl;
-
+		// cout<<find_Energy()<<", "<< g_block.norm()<<", "<<Delta.norm()<<", "<<(y_k).norm() <<endl<<endl;
+		// cout<<"yk"<<endl;
+		// cout<<y_k<<endl;
+		// exit(0);
 		//Sparse QR
 		// SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> sqr;
 		// sqr.compute(grad_g);
@@ -283,7 +288,7 @@ void ImplicitNewmark::NewmarkCalculateForces( MatrixXd& TVk, SparseMatrix<double
 		}
 	}
 
-	f += rayleighCoeff*forceGradient*(x_k - x_old)/h;
+	f -= rayleighCoeff*forceGradient*(x_k - x_old)/h;
 	return;
 }
 
