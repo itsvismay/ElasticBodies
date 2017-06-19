@@ -53,13 +53,13 @@ for row in data:
   #row = data[ind]
   print 'Doing for Index', ind
   individualDir = experimentDir + "TwoVarCurveFinalSectionsShort_" + str(ind) + "/"
-  
+
   #subprocess.check_output(['rm', '-rf', individualDir])
-  
+
   mainPipelineCondor = individualDir + 'mainPipelineCondor'
   elasticCondor = individualDir + 'elasticCondor'
   arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
-  
+
   if not os.path.exists(individualDir):
     os.makedirs(individualDir)
     subprocess.check_output(['python', 'genConfigFile.py', individualDir + "config.txt", individualDir + curvePreped + remeshExt])
@@ -67,7 +67,7 @@ for row in data:
     subprocess.check_output(['python', 'genCurveSpringData.py', individualDir, str(row[0]), "0.6", str(row[1]), "0.6", "0.6"])
     subprocess.check_output(['python', 'generateCondorSubmit.py', '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
     subprocess.check_output(['python', 'generateCondorSubmit.py', '--initialDir', individualDir, '--arguements', individualDir, '--file', elasticCondor, '--executable', '/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic'])
-  
+
     #subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateCSpring.py', '--create', individualDir + 'optimizeTest.txt', '--preped', individualDir + curvePreped + remeshExt, '-s -c'])
   ind = ind + 1
 

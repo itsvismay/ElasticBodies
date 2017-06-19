@@ -65,9 +65,9 @@ class DiscreteVariable:
 
     def __init__(self):
         self.value = 0.0
-        minValue = 0.0
-        maxValue = 0.0
-        change = 0.0
+        self.minValue = 0.0
+        self.maxValue = 0.0
+        self.change = 0.0
 
     def __init__(self, val, minVal, maxVal, chg):
         self.value = val
@@ -121,16 +121,18 @@ class Individual:
     continuousVariables = []
     discreteVariables = []
     fitness = 0.0
+    popId = -1
 
     def __init__(self):
         self.fitness = -1.0
         self.continuousVariables = []
         self.discreteVariables = []
 
-    def __init__(self, contVars, discVars):
+    def __init__(self, contVars, discVars, popid):
         self.continuousVariables = contVars
         self.discreteVariables = discVars
         self.fitness = -1.0
+        self.popId = popid
 
     def __repr__(self):
         return "this is an individual"
@@ -178,3 +180,7 @@ class Individual:
         for i in range(0, len(self.discreteVariables)):
             discVars.append(self.discreteVariables[i].copy())
         return Individual(contVars, discVars)
+
+    def getvar(self, index):
+        # TODO
+        return -1

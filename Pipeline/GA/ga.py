@@ -12,6 +12,7 @@ import logmethods
 
 seed = "baseSurrogates/SampleSet_02D.txt"
 experimentDir = "TestDirectory/"
+individualName = "Individual"
 configName = "config.txt"
 individualName = "Individual_"
 numberOfIndividuals = 500
@@ -23,6 +24,26 @@ varsToMutate = 3
 varsToCross = 2
 hallOfFameCount = 10
 runFromConfig = False
+
+###
+# NEEDED PATHS
+###
+
+pathToGenConfigFile = '../genConfigFile.py'
+pathToGenCurveSpringData = '../genCurveSpringData.py'
+pathToGenerateCondorSubmit = '../generateCondorSubmit.py'
+
+###
+# CLEAN THIS UP LATER
+###
+
+bezierPreped = 'bezierPreped'
+bezierMirrorPreped = 'bezierMirrorPreped'
+curvePreped = 'curvePreped'
+curveMirrorPreped = 'curveMirrorPreped'
+ringPreped = 'ringPreped'
+origExt = "Orig"
+remeshExt = "Remesh"
 
 ###
 # INPUT HANDLING
@@ -74,7 +95,7 @@ def generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, sett
 			minVal = settings[3]
 			maxVal = settings[4]
 			contVars.append(gaobjects.ContinuousVariable(val, minVal, maxVal))
-		individuals.append(gaobjects.Individual(contVars, discVars))
+		individuals.append(gaobjects.Individual(contVars, discVars, i))
 	return individuals
 
 def sortByFitness(population):
@@ -92,18 +113,21 @@ def evaluateFitnesses(population):
 			population[i].evaluateFitness()
 		# more stuffs probably
 
-def evaluateFitnessesCondor(population):
-	# TODO
+def evaluateFitnessesCondor(population, directory, indDir, genNumber):
+	for individual in population:
+		individualDir = directory + indDir + "_" + str(genNumber) + "_" + str(individual.popId) + "/"
+		mainPipelineCondor = individualDir + 'mainPipelineCondor'
+		# elasticCondor = individualDir + 'elasticCondor' # TODO == remove this
+		arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
+		os.makedirs(individualDir)
+		subprocess.check_output(['python', pathToGenConfigFile, individualDir + "config.txt", individualDir + curvePreped + remeshExt])
+		# TODO -- find a good way of organizing the different spring types
+		subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		subprocess.check_output(['python', pathToGenerateCondorSubmit, '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
+		#subprocess.check_output(['python', 'generateCondorSubmit.py', '--initialDir', individualDir, '--arguements', individualDir, '--file', elasticCondor, '--executable', '/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic'])
 
-	if dummyMode == True:
-		# print 'TESTLEN:', len(population)
-		for i in range(0, len(population)):
-			#print population[i]
-			population[i].evaluateFitness()
-	else:
-		for i in range(0, len(population)):
-			population[i].evaluateFitness()
-		# more stuffs probably
+		### TODO -- UNCOMMENT THIS FOR FINISHED OPT
+		# print subprocess.check_output(['condor_submit', mainPipelineCondor])
 
 def assignFitnesses(population, directory):
 	# TODO
@@ -169,7 +193,7 @@ if generationNumber == -1:
 	# print settings[2], " :: Min Continuous Value"
 	# print settings[3], " :: Max Continuous Value"
 	population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);
-	evaluateFitnessesCondor(population)
+	evaluateFitnessesCondor(population, experimentDir, individualName, generationNumber+1)
 	updateCurrentGeneration(experimentDir, generationNumber)
 
 elif generationNumber < maxGenerations:
@@ -184,7 +208,7 @@ elif generationNumber < maxGenerations:
 	else:
 		newPopulation = reproduce(population, varsToMutate)
 		updateCurrentGeneration(experimentDir, generationNumber)
-		evaluateFitnessesCondor(newPopulation)
+		evaluateFitnessesCondor(newPopulation, experimentDir, individualName, generationNumber+1)
 else:
 	print 'ALL DONE'
 	# TODO
