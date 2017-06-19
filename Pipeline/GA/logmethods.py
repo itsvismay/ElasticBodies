@@ -20,6 +20,15 @@ def logIndividualFull(individual, individualNumber, experimentDir):
     blah = 5
     # to be implemented
 
+def logHallOfFame(hallOfFame, experimentDir):
+    blah = 3
+    # to be implemented
+
+def logCurrentGeneration(genNumber, experimentDir):
+    genFile = open(experimentDir+'generation.txt', 'w')
+    genFile.write(str(genNumber))
+    genFile.close()
+
 def printFinalResults(population):
     blah = 5
     # to be implemented
