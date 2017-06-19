@@ -20,13 +20,6 @@
 import sys, getopt, os, subprocess, time
 from subprocess import call
 
-pathsFile = 'paths.txt'
-pathToSlic3r = '/scratch/cluster/zmisso/Slic3r/bin/slic3r'
-pathToSlic3rConfig = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/slic3rConfig.ini'
-pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/PipelineSimprep/simprep"
-pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
-pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
-
 isCreate = False
 isCreateBase = False
 isInd = False
@@ -37,7 +30,6 @@ template = ""
 name = ""
 generation = 0
 individual = 0
-#sConfig = "slic3rConfig.ini"
 force = 10000000;
 preped = '../shared/beam'
 prepedMesh = '../shared/beam.off'
@@ -45,8 +37,8 @@ forceData = '../shared/beam.txt'
 resultMeshes = '../PipelineTests/'
 
 currentPath = os.path.dirname(os.path.abspath(__file__))
+pathsFile = 'paths.txt'
 
-# fix mesh (do not change)
 fixedMeshedFile = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixedUnion.off"
 largestOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/largest.off"
 restOff = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/rest.off"
@@ -55,10 +47,14 @@ pathTo3DUnion = "/scratch/cluster/zmisso/libigl/tutorial/build/3dUnion_bin"
 pathToSplit = "/scratch/cluster/zmisso/ElasticBodies/3dUnion/remesh"
 pathToSimPrep = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/SimPrep/simprep"
 pathToOpenscad = "/lusr/opt/openscad-2015.03-2/bin/openscad"
+pathToSlic3r = '/scratch/cluster/zmisso/Slic3r/bin/slic3r'
+pathToSlic3rConfig = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/slic3rConfig.ini'
 pathToConvertStlOff = "/scratch/cluster/zmisso/libigl/tutorial/build/StlToOff_bin"
 pathToConvertOffObj = "/scratch/cluster/zmisso/libigl/tutorial/build/OffToObj_bin"
 pathToCleanMesh = "/scratch/cluster/zmisso/meshfix/build2/libigl_example"
 pathToFixMissingLine = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixMissingLine.py"
+pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
+pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce=", "temp="])
@@ -256,6 +252,8 @@ if isOrig == False:
     print temp
     print 'There was a System Error Remesh', e, '\n'
 
+  fixedMeshedFile = pathToTempFiles + 'fixedMesh.off'
+
   # clean mesh
   try:
     print pathToCleanMesh, 'out.off', fixedMeshedFile
@@ -279,24 +277,6 @@ except OSError as e:
   print 'There was a System Error ', e, '\n'
 
 if skipRun == False:
-  #try:
-  #  print 'cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'
-  #  result = subprocess.check_output(['cp', fixedMeshedFile, resultMeshes+'IndFixed_'+str(individual)+'.off'])
-  #except OSError as e:
-  #  print 'There was a System Error ', e, '\n'
-
-  #try:
-  #  print 'cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'
-  #  result = subprocess.check_output(['cp', meshedFile, resultMeshes+'IndUnion_'+str(individual)+'.off'])
-  #except OSError as e:
-  #  print 'There was a System Error ', e, '\n'
-
-  #try:
-  #  print 'cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'
-  #  result = subprocess.check_output(['cp', forceData, resultMeshes+'IndForce_'+str(individual)+'.txt'])
-  #except OSError as e:
-  #  print 'There was a System Error ', e, '\n'
-
   # call simulation
   try:
     print './elastic', '\n'

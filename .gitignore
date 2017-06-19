@@ -53,4 +53,7 @@ Condor/TestsResults/*
 Pipeline/*.obj
 Pipeline/*.stl
 Pipeline/*.scad
-
+Pipeline/error/
+Pipeline/log/
+Pipeline/output/
+Pipeline/.DS_Store

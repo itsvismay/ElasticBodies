@@ -2,7 +2,7 @@ import sys, os, subprocess
 
 # inputs
 #seed = "baseSurrogates/SampleSet_06D_seed01.txt"
-seed = "SampleSet_02D.txt"
+seed = "baseSurrogates/SampleSet_02D.txt"
 bezierPreped = 'bezierPreped'
 bezierMirrorPreped = 'bezierMirrorPreped'
 curvePreped = 'curvePreped'
