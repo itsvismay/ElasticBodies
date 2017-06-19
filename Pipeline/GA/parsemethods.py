@@ -2,6 +2,8 @@
 # Parse Methods #
 #################
 
+# THIS STUFF IS FOR CONDOR CONFIG PARSING AND DATA PARSING
+
 def dummyParseConfigOne():
     numberOfDiscreteVars = 5
     numberOfContinuousVars = 0
@@ -37,6 +39,8 @@ def parseConfig():
     # return dummyParseConfigFour();
     # to be implemented
 
-def parsePopulation(generationNumber):
+def parsePopulation(experimentDir, generationNumber):
     value = generationNumber
     # to be implemented
+
+def parseHallOfFame(experimentDir)

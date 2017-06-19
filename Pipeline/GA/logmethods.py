@@ -4,7 +4,7 @@
 
 import gaobjects
 
-def logFinalResults(population, experimentDir):
+def logFinalResults(population, hallOfFame, experimentDir):
     blah = 5
     # to be implemented
 

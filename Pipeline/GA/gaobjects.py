@@ -165,7 +165,7 @@ class Individual:
         # fitness = optimizeForDiscreteFloatValues(self)
         # fitness = optimizeForContinuousValues(self)
         # fitness = optimizeForTwoDiscreteThreeContinuous(self)
-        if self.fitness == 0.0:
+        if self.fitness == 0.0: # THIS IS TEST CODE REMOVE LATER --- TODO
             print 'FINISHED'
             sys.exit(0)
         return self.fitness

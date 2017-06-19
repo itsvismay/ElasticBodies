@@ -10,6 +10,7 @@ import logmethods
 # DEFAULT VALUES
 ###
 
+seed = "baseSurrogates/SampleSet_02D.txt"
 experimentDir = "/scratch/cluster/zmisso/PipelineTests/"
 individualName = "Individual_"
 numberOfIndividuals = 500
@@ -62,13 +63,13 @@ def generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, sett
 		contVars = []
 		discVars = []
 		for j in range(0, numberOfDiscreteVars):
-			val = 0.0
+			val = 0.0 # this should be randomly set not set to zero --- TODO
 			minVal = settings[0]
 			maxVal = settings[1]
 			chg = settings[2]
 			discVars.append(gaobjects.DiscreteVariable(val, minVal, maxVal, chg))
 		for j in range(0, numberOfContinuousVars):
-			val = 0.0
+			val = 0.0 # this should be randomly set not set to zero --- TODO
 			minVal = settings[3]
 			maxVal = settings[4]
 			contVars.append(gaobjects.ContinuousVariable(val, minVal, maxVal))
@@ -89,6 +90,22 @@ def evaluateFitnesses(population):
 		for i in range(0, len(population)):
 			population[i].evaluateFitness()
 		# more stuffs probably
+
+def evaluateFitnessesCondor(population): # TODO
+	# TO BE IMPLEMENTED
+	if dummyMode == True:
+		# print 'TESTLEN:', len(population)
+		for i in range(0, len(population)):
+			#print population[i]
+			population[i].evaluateFitness()
+	else:
+		for i in range(0, len(population)):
+			population[i].evaluateFitness()
+		# more stuffs probably
+
+def assignFitnesses(population, directory):
+	# to be implemented
+	blah = 10
 
 def checkShouldMutate():
 	return bool(random.getrandbits(1))
@@ -123,7 +140,7 @@ def updateHallOfFame(hallOfFame, population):
 	return newHallOfFame
 
 ###
-# OFFLINE DUMMY CODEFLOW
+# CONDOR CODEFLOW --- TODO
 ###
 
 numberOfDiscreteVars = -1
@@ -139,53 +156,62 @@ while generationNumber < maxGenerations:
 		numberOfDiscreteVars, numberOfContinuousVars, settings = parsemethods.parseConfig()
 		population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);
 		generationNumber = generationNumber + 1
-		evaluateFitnesses(population)
+		evaluateFitnessesCondor(population)
 
 	else:
+		population = parsePopulation(experimentDir, generationNumber)
+		assignFitnesses(population, experimentDir)
+		population = sortByFitness(population)
+		hallOfFame = parseHallOfFame(experimentDir)
+		hallOfFame = updateHallOfFame(hallOfFame, population)
+
 		if generationNumber == maxGenerations:
-			logmethods.logFinalResults(population)
+			logmethods.logFinalResults(population, hallOfFame, experimentDir)
 		else:
-			# print 'before'
-			# print population[0]
-			population = sortByFitness(population)
-			# print population[0]
-			# print 'after'
 			newPopulation = reproduce(population, varsToMutate)
-			# print 'after repreo duce'
-			# print population[0]
 			generationNumber = generationNumber + 1
 			evaluateFitnesses(newPopulation)
-			population = newPopulation
 
-	population = sortByFitness(population)
-	hallOfFame = updateHallOfFame(hallOfFame, population)
-	for i in range(0, hallOfFameCount):
-		population[i] = hallOfFame[i]
-	logmethods.printPopulationFitnesses(population, generationNumber)
+print 'FINISHED EXECUTING'
 
 ###
-# MAIN CODEFLOW
+# OFFLINE DUMMY CODEFLOW
 ###
 
 # numberOfDiscreteVars = -1
 # numberOfContinuousVars = -1
 #
 # population = []
+# hallOfFame = []
 #
-# if generationNumber == 0:
-# 	numberOfDiscreteVars, numberOfContinuousVars, settings = parsemethods.parseConfig()
-# 	population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);
-# 	evaluateFitnesses(population)
+# while generationNumber < maxGenerations:
+# 	print 'STARTING GENERATION:', generationNumber
 #
-# else:
-# 	if generationNumber == maxGenerations:
-# 		logmethods.logFinalResults(population)
-# 	else:
-# 		population = parsemethods.parsePopulation(generationNumber - 1)
-# 		population = sortByFitness(population)
-# 		newPopulation = reproduce(population)
+# 	if generationNumber == 0:
+# 		numberOfDiscreteVars, numberOfContinuousVars, settings = parsemethods.parseConfig()
+# 		population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);
 # 		generationNumber = generationNumber + 1
-# 		evaluateFitnesses(newPopulation)
-# 		if dummyMode == True:
-# 			runself = 5
-# 			print "IMPLEMENT RUN SELF"
+# 		evaluateFitnesses(population)
+#
+# 	else:
+# 		hallOfFame = parseHallOfFame(experimentDir)
+# 		if generationNumber == maxGenerations:
+# 			logmethods.logFinalResults(population)
+# 		else:
+# 			# print 'before'
+# 			# print population[0]
+# 			population = sortByFitness(population)
+# 			# print population[0]
+# 			# print 'after'
+# 			newPopulation = reproduce(population, varsToMutate)
+# 			# print 'after repreo duce'
+# 			# print population[0]
+# 			generationNumber = generationNumber + 1
+# 			evaluateFitnesses(newPopulation)
+# 			population = newPopulation
+#
+# 	population = sortByFitness(population)
+# 	hallOfFame = updateHallOfFame(hallOfFame, population)
+# 	for i in range(0, hallOfFameCount):
+# 		population[i] = hallOfFame[i]
+# 	logmethods.printPopulationFitnesses(population, generationNumber)
