@@ -117,6 +117,7 @@ layerObjFiles = []
 meshedFile = pathToTempFiles + "unioned.off"
 largestOff = pathToTempFiles + "largest.off"
 restOff = pathToTempFiles + "rest.off"
+fixedMeshedFile = pathToTempFiles + 'fixedMesh.off'
 
 if isCreate == True:
   # generate all of the scad files based on the template
@@ -252,8 +253,6 @@ if isOrig == False:
     print temp
     print 'There was a System Error Remesh', e, '\n'
 
-  fixedMeshedFile = pathToTempFiles + 'fixedMesh.off'
-
   # clean mesh
   try:
     print pathToCleanMesh, 'out.off', fixedMeshedFile
@@ -297,10 +296,17 @@ if skipRun == False:
 # -- forceData
 
 if True:
+  subprocess.check_output(['rm', fixedMeshedFile])
+  subprocess.check_output(['rm', meshedFile])
+  subprocess.check_output(['rm', restOff])
+  subprocess.check_output(['rm', largestOff])
   for i in range(len(initialScadFiles)):
     if isCreate == True:
       print 'rm', initialScadFiles[i]
       result = subprocess.check_output(['rm', initialScadFiles[i]])
+  for i in range(len(initialOBJFiles)):
+    print 'rm', initialOBJFiles[i]
+    result = subprocess.check_output(['rm', initialOBJFiles[i]])
   for i in range(len(initialSTLFiles)):
     print 'rm', initialSTLFiles[i]
     result = subprocess.check_output(['rm', initialSTLFiles[i]])
@@ -313,9 +319,9 @@ if True:
   for i in range(len(layerSTLFiles)):
     print 'rm', layerSTLFiles[i]
     result = subprocess.check_output(['rm', layerSTLFiles[i]])
-  for i in range(len(layerObjFiles)):
-    print 'rm', layerObjFiles[i]
-    result = subprocess.check_output(['rm', layerObjFiles[i]])
+  # for i in range(len(layerObjFiles)):
+  #   print 'rm', layerObjFiles[i]
+  #   result = subprocess.check_output(['rm', layerObjFiles[i]])
   #if isOrig == False:
   #  print 'rm', meshedFile
   #  result = subprocess.check_output(['rm', meshedFile])
