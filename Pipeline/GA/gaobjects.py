@@ -6,8 +6,6 @@ import sys
 # DUMMY FITNESS FUNCTIONS #
 ###########################
 
-import gaobjects
-
 def optimizeForDiscreteValues(individual):
     values = [1, 9, 4, 6, 2]
     discVars = individual.discreteVariables;

@@ -50,6 +50,6 @@ file_write.write(fileName + ".scad "+str(minInThk)+" "+str(maxInThk)+" "+str(min
 file_write.close()
 
 file_write = open(fileName2, 'w')
-file_write.write(str(Data[0])+" "+str(Data[1])+" "+str(Data[2])+" "+str(Data[3])+" "+str(Data[4]))
+file_write.write(str(Data[0])+"\n"+str(Data[1])+"\n"+str(Data[2])+"\n"+str(Data[3])+"\n"+str(Data[4]))
 file_write.close()
 #    subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateCSpring.py', '--create', 'optimizeTest.txt', '--sConfig', 'slic3rConfig.ini', '--preped', baseName + str(i), '-s', '-c'])
