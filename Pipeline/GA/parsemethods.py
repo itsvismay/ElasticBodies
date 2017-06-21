@@ -89,10 +89,53 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
 
     return Individual(contVars, discVars, popid);
 
-def parseSeed(seedPath):
-    value = 4
-    # TODO
+def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont): # TODO -- clean up
+    hallOfFame = []
+    hallOfFameDir = experimentDir + hallDir
+    if os.path.exists(hallOfFameDir):
+        for i in range(0, numHall):
+            individualDir = hallOfFameDir + '_' + str(i) + '/'
+            points = []
+            discVars = []
+            contVars = []
+            print 'IN PARSE METHOD'
+            popid = -1
+            fit = 0.0
+            if os.path.exists(individualDir+'points.txt'):
+                pointsFile = open(individualDir+'points.txt', 'r')
+                for line in pointsFile.readlines():
+                    points.append(float(line))
+                pointsFile.close()
+            else:
+                # print "MAJOR ERROR :: PARSE POPULATION A"
+                return []
+            if os.path.exists(individualDir+"fitness.txt"):
+                idFile = open(individualDir+'fitness.txt', 'r')
+                fit = float(idFile.readlines()[0])
+                idFile.close()
+            else:
+                # print "MAJOR ERROR :: PARSE POPULATION B"
+                return []
+            index = 0
+            for i in range(0, numDisc): # TODO -- fix change
+                discVars.append(DiscreteVariable(points[index], settings[0], settings[1], 1))
+                index = index + 1
+            for i in range(0, numCont):
+                contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
 
-def parseHallOfFame(experimentDir):
+            if len(points) != len(contVars) + len(discVars):
+                print "MAJOR ERROR :: PARSE POPULATION C"
+            print len(contVars), 'Number Of Continuous Variables'
+            print len(discVars), 'Number Of Discrete Variables'
+            hallOfFame.append(Individual(contVars, discVars, i))
+            hallOfFame[i].fitness = fit
+    else:
+        os.makedirs(hallOfFameDir)
+        for i in range(0, numHall):
+            individualDir = hallOfFameDir + '_' + str(i) + '/'
+            os.makedirs(individualDir)
+    return hallOfFame
+
+def parseSeed(seedPath):
     value = 4
     # TODO
