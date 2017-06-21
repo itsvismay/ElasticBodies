@@ -3,7 +3,9 @@
 #################
 
 import os.path
-import gaobjects
+from gaobjects import DiscreteVariable
+from gaobjects import ContinuousVariable
+from gaobjects import Individual
 
 # THIS STUFF IS FOR CONDOR CONFIG PARSING AND DATA PARSING
 
@@ -56,6 +58,7 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
     points = []
     discVars = []
     contVars = []
+    print 'IN PARSE METHOD'
     popid = -1
     if os.path.exists(individualDir+'points.txt'):
         pointsFile = open(individualDir+'points.txt', 'r')
@@ -63,14 +66,14 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
             points.append(float(line))
         pointsFile.close()
     else:
-        print "MAJOR ERROR :: PARSE POPULATION"
+        print "MAJOR ERROR :: PARSE POPULATION A"
         return
     if os.path.exists(individualDir+"id.txt"):
         idFile = open(individualDir+'id.txt', 'r')
         popid = int(idFile.readlines()[0])
         idFile.close()
     else:
-        print "MAJOR ERROR :: PARSE POPULATION"
+        print "MAJOR ERROR :: PARSE POPULATION B"
         return
     index = 0
     for i in range(0, numDisc): # TODO -- fix change
@@ -80,7 +83,9 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
         contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
 
     if len(points) != len(contVars) + len(discVars):
-        print "MAJOR ERROR :: PARSE POPULATION"
+        print "MAJOR ERROR :: PARSE POPULATION C"
+    print len(contVars), 'Number Of Continuous Variables'
+    print len(discVars), 'Number Of Discrete Variables'
 
     return Individual(contVars, discVars, popid);
 

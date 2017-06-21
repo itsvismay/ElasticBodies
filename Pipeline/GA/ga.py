@@ -15,7 +15,8 @@ experimentDir = "TestDirectory/"
 individualName = "Individual"
 configName = "config.txt"
 individualName = "Individual_"
-numberOfIndividuals = 500
+# numberOfIndividuals = 500
+numberOfIndividuals = 10
 generationNumber = 0
 maxGenerations = 100
 config = "config.txt"
@@ -125,8 +126,7 @@ def evaluateFitnessesCondor(population, directory, indDir, genNumber):
 		# TODO -- find a good way of organizing the different spring types
 		subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
 		subprocess.check_output(['python', pathToGenerateCondorSubmit, '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
-		# TODO -- create id file
-		#subprocess.check_output(['python', 'generateCondorSubmit.py', '--initialDir', individualDir, '--arguements', individualDir, '--file', elasticCondor, '--executable', '/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic'])
+		logmethods.logid(genNumber, individual.popId, indDir, directory)
 
 		### TODO -- UNCOMMENT THIS FOR FINISHED OPT
 		# print subprocess.check_output(['condor_submit', mainPipelineCondor])
@@ -134,12 +134,13 @@ def evaluateFitnessesCondor(population, directory, indDir, genNumber):
 def assignFitnesses(population, directory, indDir, genNumber):
 	for individual in population:
 		indNum = individual.popId
-		individual.fitness = parseFitness(directory, indDir, genNumber, indNum)
+		individual.fitness = parsemethods.parseFitness(directory, indDir, genNumber, indNum)
 
 def parsePopulation(directory, indDir, genNumber, popSize, settings, numDisc, numCont):
 	individuals = []
 	for i in range(0, popSize):
 		individuals.append(parsemethods.parseIndividual(directory, indDir, genNumber, i, settings, numDisc, numCont))
+	print len(individuals), 'POPULATION SIZE'
 	return individuals
 
 def checkShouldMutate():
@@ -150,11 +151,11 @@ def reproduce(population, mutationRate):
 	for i in range(0, len(population)):
 		isMutation = checkShouldMutate()
 		if isMutation == True:
-			indexToMutate = random.randint(0, (len(population) / 4) - 1)
-			newPopulation.append(population[indexToMutate].mutate(mutationRate))
+			indexToMutate = random.randint(0, max((len(population) / 4) - 1, 0))
+			newPopulation.append(population[indexToMutate].mutate(mutationRate, i))
 		else:
-			other = population[random.randint(0, (len(population) / 4) - 1)]
-			newPopulation.append(population[i].crossover(other, varsToCross))
+			other = population[random.randint(0, max((len(population) / 4) - 1, 0))]
+			newPopulation.append(population[i].crossover(other, varsToCross, i))
 	return newPopulation
 
 def updateHallOfFame(hallOfFame, population):
@@ -207,17 +208,18 @@ if generationNumber == -1:
 
 elif generationNumber < maxGenerations:
 	population = parsePopulation(experimentDir, individualName, generationNumber, numberOfIndividuals, settings, numberOfDiscreteVars, numberOfContinuousVars)
-	assignFitnesses(population, experimentDir)
+	assignFitnesses(population, experimentDir, individualName, generationNumber)
 	population = sortByFitness(population)
-	hallOfFame = parseHallOfFame(experimentDir) # TODO
-	hallOfFame = updateHallOfFame(hallOfFame, population) # TODO
+	print population[0].fitness # WORKS UP TO HERE
+	# hallOfFame = parseHallOfFame(experimentDir) # TODO
+	# hallOfFame = updateHallOfFame(hallOfFame, population) # TODO
 
 	if generationNumber == maxGenerations:
 		logmethods.logFinalResults(population, hallOfFame, experimentDir) # TODO
 	else:
 		newPopulation = reproduce(population, varsToMutate)
 		updateCurrentGeneration(experimentDir, generationNumber)
-		evaluateFitnessesCondor(newPopulation, experimentDir, individualName, generationNumber+1) # TODO
+		evaluateFitnessesCondor(newPopulation, experimentDir, individualName, generationNumber+1)
 
 else:
 	print 'ALL DONE'

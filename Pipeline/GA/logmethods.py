@@ -29,6 +29,12 @@ def logCurrentGeneration(genNumber, experimentDir):
     genFile.write(str(genNumber))
     genFile.close()
 
+def logid(genNumber, indNumber, indDir, experimentDir):
+    individualDir = experimentDir + indDir + "_" + str(genNumber) + "_" + str(indNumber) + "/"
+    idFile = open(individualDir+'id.txt', 'w')
+    idFile.write(str(indNumber))
+    idFile.close()
+
 def printFinalResults(population):
     blah = 5
     # to be implemented

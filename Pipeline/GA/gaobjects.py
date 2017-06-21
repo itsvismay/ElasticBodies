@@ -74,6 +74,7 @@ class DiscreteVariable:
         self.change = chg
 
     def mutate(self):
+        print self.change, 'CHANGE'
         if bool(random.getrandbits(1)) == True:
             self.value = self.value + self.change
         else:
@@ -135,9 +136,9 @@ class Individual:
     def __repr__(self):
         return "this is an individual"
 
-    def mutate(self, mutationRate):
+    def mutate(self, mutationRate, popid):
         x = 0
-        newIndividual = self.copy()
+        newIndividual = self.copy(popid)
         totalVars = len(newIndividual.continuousVariables) + len(newIndividual.discreteVariables)
         for i in range(0, mutationRate):
             varToMutate = random.randint(0, totalVars-1)
@@ -147,8 +148,8 @@ class Individual:
                 newIndividual.continuousVariables[varToMutate].mutate()
         return newIndividual
 
-    def crossover(self, other, crossoverRate):
-        newIndividual = self.copy()
+    def crossover(self, other, crossoverRate, popid):
+        newIndividual = self.copy(popid)
         totalVars = len(newIndividual.continuousVariables) + len(newIndividual.discreteVariables)
         pointToCrossover = random.randint(0, totalVars-1)
         if pointToCrossover >= len(newIndividual.continuousVariables):
@@ -170,15 +171,17 @@ class Individual:
             sys.exit(0)
         return self.fitness
 
-    def copy(self):
+    def copy(self, popid):
         contVars = []
         discVars = []
         for i in range(0, len(self.continuousVariables)):
             contVars.append(self.continuousVariables[i].copy())
         for i in range(0, len(self.discreteVariables)):
             discVars.append(self.discreteVariables[i].copy())
-        return Individual(contVars, discVars)
+        return Individual(contVars, discVars, popid)
 
     def getvar(self, index):
-        # TODO
-        return -1
+        if index < len(self.continuousVariables):
+            return self.continuousVariables[index].value
+        else:
+            return self.discreteVariables[index - len(self.continuousVariables)].value
