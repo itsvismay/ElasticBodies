@@ -74,7 +74,7 @@ class DiscreteVariable:
         self.change = chg
 
     def mutate(self):
-        print self.change, 'CHANGE'
+        # print self.change, 'CHANGE'
         if bool(random.getrandbits(1)) == True:
             self.value = self.value + self.change
         else:
@@ -178,7 +178,9 @@ class Individual:
             contVars.append(self.continuousVariables[i].copy())
         for i in range(0, len(self.discreteVariables)):
             discVars.append(self.discreteVariables[i].copy())
-        return Individual(contVars, discVars, popid)
+        newIndividual = Individual(contVars, discVars, popid)
+        newIndividual.fitness = self.fitness
+        return newIndividual
 
     def getvar(self, index):
         if index < len(self.continuousVariables):

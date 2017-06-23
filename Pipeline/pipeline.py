@@ -17,8 +17,7 @@
 # name, ind, gen are completely optional
 # ind just defines the index of the first individual
 
-import sys, getopt, os, subprocess, time
-from subprocess import call
+import sys, getopt, os, subprocess
 
 isCreate = False
 isCreateBase = False

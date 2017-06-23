@@ -17,17 +17,18 @@ def parseConfig(experimentDir, configName):
     # [1] - maxVal for discrete
     # [2] - minVal for continuous
     # [3] - maxVal for continuous
+    # [4] - change for discrete
     #
     config = open(experimentDir+configName, 'r')
     configLines = config.readlines()
     numberOfDiscreteVars = int(configLines[0])
     numberOfContinuousVars = int(configLines[1])
     settings = []
-    # TODO -- incorporate change value for discrete vars
     settings.append(float(configLines[2])) # min discrete value
     settings.append(float(configLines[3])) # max discrete value
     settings.append(float(configLines[4])) # min continuous value
     settings.append(float(configLines[5])) # max continuous value
+    settings.append(float(configLines[6])) # change for discrete
     config.close()
 
     return numberOfDiscreteVars, numberOfContinuousVars, settings
@@ -76,8 +77,8 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
         print "MAJOR ERROR :: PARSE POPULATION B"
         return
     index = 0
-    for i in range(0, numDisc): # TODO -- fix change
-        discVars.append(DiscreteVariable(points[index], settings[0], settings[1], 1))
+    for i in range(0, numDisc):
+        discVars.append(DiscreteVariable(points[index], settings[0], settings[1], settings[4]))
         index = index + 1
     for i in range(0, numCont):
         contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
@@ -117,10 +118,10 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
                 # print "MAJOR ERROR :: PARSE POPULATION B"
                 return []
             index = 0
-            for i in range(0, numDisc): # TODO -- fix change
+            for j in range(0, numDisc): # TODO -- fix change
                 discVars.append(DiscreteVariable(points[index], settings[0], settings[1], 1))
                 index = index + 1
-            for i in range(0, numCont):
+            for j in range(0, numCont):
                 contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
 
             if len(points) != len(contVars) + len(discVars):
@@ -128,6 +129,7 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
             print len(contVars), 'Number Of Continuous Variables'
             print len(discVars), 'Number Of Discrete Variables'
             hallOfFame.append(Individual(contVars, discVars, i))
+            # print i
             hallOfFame[i].fitness = fit
     else:
         os.makedirs(hallOfFameDir)
