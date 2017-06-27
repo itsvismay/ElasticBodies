@@ -64,27 +64,27 @@ for opt, arg in opts:
   if opt == "--file":
     isBatch = False
     isFile = True
-    name = arg
+    name = arg.strip(' \t\n\r')
   if opt == "--create":
     isCreate = True
     isCreateBase = False
     isFile = False
-    name = arg
+    name = arg.strip(' \t\n\r')
   if opt == "--createBase":
     isCreate = True
     isCreateBase = True
-    name = arg
+    name = arg.strip(' \t\n\r')
     isFile = False
   if opt == "--createBaseOrig":
     isCreate = True
     isCreateBase = True
-    name = arg
+    name = arg.strip(' \t\n\r')
     isOrig = True
     isFile = False
   if opt == "--template":
-    template = arg
+    template = arg.strip(' \t\n\r')
   if opt == "--name":
-    name = arg
+    name = arg.strip(' \t\n\r')
   if opt == "--gen":
     generation = int(float(arg))
   if opt == "--ind":
@@ -92,9 +92,9 @@ for opt, arg in opts:
   if opt == "--force":
     force = float(arg)
   if opt == "--preped":
-    preped = arg
-    prepedMesh = arg + '.off'
-    forceData = arg + '.txt'
+    preped = arg.strip(' \t\n\r')
+    prepedMesh = arg.strip(' \t\n\r') + '.off'
+    forceData = arg.strip(' \t\n\r') + '.txt'
   if opt == "-c":
     cleanAll = True
   if opt == "-s":
@@ -102,7 +102,7 @@ for opt, arg in opts:
   if opt == "--sConfig":
     sConfig = arg
   if opt == "--temp":
-    pathToTempFiles = arg
+    pathToTempFiles = arg.strip(' \t\n\r')
 
 initialScadFiles = []
 initialSTLFiles = []
@@ -294,31 +294,31 @@ if skipRun == False:
 # -- prepedMesh
 # -- forceData
 
-# CLEAN UP
+# TODO -- CLEAN UP
 
 subprocess.check_output(['rm', fixedMeshedFile])
 subprocess.check_output(['rm', meshedFile])
 subprocess.check_output(['rm', restOff])
 subprocess.check_output(['rm', largestOff])
 for i in range(len(initialScadFiles)):
-if isCreate == True:
+  # if isCreate == True:
   print 'rm', initialScadFiles[i]
   result = subprocess.check_output(['rm', initialScadFiles[i]])
 for i in range(len(initialOBJFiles)):
-print 'rm', initialOBJFiles[i]
-result = subprocess.check_output(['rm', initialOBJFiles[i]])
+  print 'rm', initialOBJFiles[i]
+  result = subprocess.check_output(['rm', initialOBJFiles[i]])
 for i in range(len(initialSTLFiles)):
-print 'rm', initialSTLFiles[i]
-result = subprocess.check_output(['rm', initialSTLFiles[i]])
+  print 'rm', initialSTLFiles[i]
+  result = subprocess.check_output(['rm', initialSTLFiles[i]])
 for i in range(len(initialGCodeFiles)):
-print 'rm', initialGCodeFiles[i]
-result = subprocess.check_output(['rm', initialGCodeFiles[i]])
+  print 'rm', initialGCodeFiles[i]
+  result = subprocess.check_output(['rm', initialGCodeFiles[i]])
 for i in range(len(layerScadFiles)):
-print 'rm', layerScadFiles[i]
-result = subprocess.check_output(['rm', layerScadFiles[i]])
+  print 'rm', layerScadFiles[i]
+  result = subprocess.check_output(['rm', layerScadFiles[i]])
 for i in range(len(layerSTLFiles)):
-print 'rm', layerSTLFiles[i]
-result = subprocess.check_output(['rm', layerSTLFiles[i]])
+  print 'rm', layerSTLFiles[i]
+  result = subprocess.check_output(['rm', layerSTLFiles[i]])
   # for i in range(len(layerObjFiles)):
   #   print 'rm', layerObjFiles[i]
   #   result = subprocess.check_output(['rm', layerObjFiles[i]])

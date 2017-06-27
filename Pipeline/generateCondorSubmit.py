@@ -17,21 +17,21 @@ except getopt.GetoptError:
 
 for opt, arg in opts:
 	if opt == '--initialDir':
-		initialDirPath = arg
+		initialDirPath = arg.strip(' \t\n\r')
 	if opt == '--executable':
-		executablePath = arg
+		executablePath = arg.strip(' \t\n\r')
 	if opt == '--arguements':
-		arguments = arg
+		arguments = arg.strip(' \t\n\r')
 	if opt == '--user':
-		notifyUser = arg
+		notifyUser = arg.strip(' \t\n\r')
 	if opt == '--log':
-		logPath = arg
+		logPath = arg.strip(' \t\n\r')
 	if opt == '--output':
-		outputPath = arg
+		outputPath = arg.strip(' \t\n\r')
 	if opt == '--error':
-		errorPath = arg
+		errorPath = arg.strip(' \t\n\r')
 	if opt == '--file':
-		filePath = arg
+		filePath = arg.strip(' \t\n\r')
 
 condorScript = open(filePath, 'w')
 condorScript.write("universe=vanilla\n")
