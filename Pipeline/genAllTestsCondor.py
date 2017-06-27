@@ -71,9 +71,9 @@ for row in data:
     #subprocess.check_output(['python', 'pipeline.py', '--template', 'Templates/templateCSpring.py', '--create', individualDir + 'optimizeTest.txt', '--preped', individualDir + curvePreped + remeshExt, '-s -c'])
   ind = ind + 1
 
-  #print subprocess.check_output(['condor_submit', mainPipelineCondor])
+  print subprocess.check_output(['condor_submit', mainPipelineCondor])
   print str(ind)
-  print subprocess.check_output(['condor_submit', elasticCondor])
+  #print subprocess.check_output(['condor_submit', elasticCondor])
 
 
 
