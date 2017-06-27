@@ -1,6 +1,7 @@
 import dummyfitness
 import random
 import sys
+import numpy
 
 ###########################
 # DUMMY FITNESS FUNCTIONS #
@@ -105,9 +106,9 @@ class ContinuousVariable:
 
     def mutate(self):
         if bool(random.getrandbits(1)) == True:
-            self.value = self.value + random.random() * (self.maxValue - self.minValue)
+            self.value = self.value + random.random() * (self.maxValue - self.minValue) * numpy.random.normal(0.0, 0.1, None)
         else:
-            self.value = self.value - random.random() * (self.maxValue - self.minValue)
+            self.value = self.value - random.random() * (self.maxValue - self.minValue) * numpy.random.normal(0.0, 0.1, None)
 
     def copy(self):
         newVar = ContinuousVariable(self.value, self.minValue, self.maxValue)
