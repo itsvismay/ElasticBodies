@@ -17,14 +17,14 @@ individualName = "Individual"
 configName = "config.txt"
 individualName = "Individual_"
 # numberOfIndividuals = 500
-numberOfIndividuals = 10
+numberOfIndividuals = 50
 generationNumber = 0
 maxGenerations = 100
 config = "config.txt"
 dummyMode = True
 varsToMutate = 3
 varsToCross = 2
-hallOfFameCount = 10
+hallOfFameCount = 4
 runFromConfig = False
 
 ###
@@ -93,7 +93,7 @@ def generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, sett
 			chg = settings[2]
 			discVars.append(gaobjects.DiscreteVariable(val, minVal, maxVal, chg))
 		for j in range(0, numberOfContinuousVars):
-			val = 0.0 # this should be randomly set not set to zero --- TODO
+			val = random.random()
 			minVal = settings[3]
 			maxVal = settings[4]
 			contVars.append(gaobjects.ContinuousVariable(val, minVal, maxVal))
@@ -147,6 +147,7 @@ def logHallOfFame(hall):
 		arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
 		subprocess.check_output(['python', pathToGenConfigFile, individualDir + "config.txt", individualDir + curvePreped + remeshExt])
 		# TODO -- find a good way of organizing the different spring types
+		# print 'BeFORE POINTS'
 		subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
 		subprocess.check_output(['python', pathToGenerateCondorSubmit, '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
 		logmethods.logfitness(individualDir, individual.fitness)
@@ -161,7 +162,7 @@ def parsePopulation(genNumber, popSize, settings, numDisc, numCont):
 	individuals = []
 	for i in range(0, popSize):
 		individuals.append(parsemethods.parseIndividual(experimentDir, individualName, genNumber, i, settings, numDisc, numCont))
-	print len(individuals), 'POPULATION SIZE'
+	# print len(individuals), 'POPULATION SIZE'
 	return individuals
 
 def checkShouldMutate():
@@ -183,8 +184,9 @@ def updateHallOfFame(hallOfFame, population):
 	newHallOfFame = []
 	indexOfFame = 0
 	indexOfPop = 0
-	print len(hallOfFame), 'Length Of Initial Fame'
+	# print len(hallOfFame), 'Length Of Initial Fame'
 	while indexOfFame < len(hallOfFame) and indexOfPop < len(population) and len(newHallOfFame) < hallOfFameCount:
+		# print 'HERE'
 		if (hallOfFame[indexOfFame].fitness < population[indexOfPop].fitness):
 			newHallOfFame.append(hallOfFame[indexOfFame].copy(indexOfFame + indexOfPop))
 			indexOfFame = indexOfFame + 1
@@ -192,10 +194,15 @@ def updateHallOfFame(hallOfFame, population):
 			newHallOfFame.append(population[indexOfPop].copy(indexOfFame + indexOfPop))
 			indexOfPop = indexOfPop + 1
 	while len(newHallOfFame) < hallOfFameCount:
-		print len(newHallOfFame), 'Length Of Fame'
+		# print len(newHallOfFame), 'Length Of Fame'
+		# print indexOfPop, 'INDEX OF POP'
+		# print population[indexOfPop].continuousVariables[0].value
+		# print population[indexOfPop].continuousVariables[1].value
+		# print population[indexOfPop].continuousVariables[2].value
+		# print population[indexOfPop].continuousVariables[3].value
+		# print population[indexOfPop].continuousVariables[4].value
 		newHallOfFame.append(population[indexOfPop].copy(indexOfFame + indexOfPop))
 		indexOfPop = indexOfPop + 1
-	# logHallOfFame(newHallOfFame)
 	return newHallOfFame
 
 def updateCurrentGeneration(genNumber):

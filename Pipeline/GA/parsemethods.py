@@ -59,7 +59,7 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
     points = []
     discVars = []
     contVars = []
-    print 'IN PARSE METHOD'
+    # print 'IN PARSE METHOD'
     popid = -1
     if os.path.exists(individualDir+'points.txt'):
         pointsFile = open(individualDir+'points.txt', 'r')
@@ -82,11 +82,12 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
         index = index + 1
     for i in range(0, numCont):
         contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
+        index = index + 1
 
     if len(points) != len(contVars) + len(discVars):
         print "MAJOR ERROR :: PARSE POPULATION C"
-    print len(contVars), 'Number Of Continuous Variables'
-    print len(discVars), 'Number Of Discrete Variables'
+    # print len(contVars), 'Number Of Continuous Variables'
+    # print len(discVars), 'Number Of Discrete Variables'
 
     return Individual(contVars, discVars, popid);
 
@@ -99,7 +100,7 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
             points = []
             discVars = []
             contVars = []
-            print 'IN PARSE METHOD'
+            # print 'IN PARSE METHOD'
             popid = -1
             fit = 0.0
             if os.path.exists(individualDir+'points.txt'):
@@ -123,11 +124,12 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
                 index = index + 1
             for j in range(0, numCont):
                 contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
+                index = index + 1
 
             if len(points) != len(contVars) + len(discVars):
                 print "MAJOR ERROR :: PARSE POPULATION C"
-            print len(contVars), 'Number Of Continuous Variables'
-            print len(discVars), 'Number Of Discrete Variables'
+            # print len(contVars), 'Number Of Continuous Variables'
+            # print len(discVars), 'Number Of Discrete Variables'
             hallOfFame.append(Individual(contVars, discVars, i))
             # print i
             hallOfFame[i].fitness = fit

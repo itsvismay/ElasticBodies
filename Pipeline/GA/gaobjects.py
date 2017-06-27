@@ -94,9 +94,9 @@ class ContinuousVariable:
     maxValue = 0.0
 
     def __init__(self):
-        value = 0.0
-        minVal = 0.0
-        maxVal = 1.0
+        self.value = 0.0
+        self.minVal = 0.0
+        self.maxVal = 1.0
 
     def __init__(self, val, minVal, maxVal):
         self.value = val
@@ -105,9 +105,9 @@ class ContinuousVariable:
 
     def mutate(self):
         if bool(random.getrandbits(1)) == True:
-            value = value + random.random() * (maxValue - minValue)
+            self.value = self.value + random.random() * (self.maxValue - self.minValue)
         else:
-            value = value - random.random() * (maxValue - minValue)
+            self.value = self.value - random.random() * (self.maxValue - self.minValue)
 
     def copy(self):
         newVar = ContinuousVariable(self.value, self.minValue, self.maxValue)
@@ -161,10 +161,11 @@ class Individual:
 
     def evaluateFitness(self):
         # print 'before fitness eval'
-        self.fitness = optimizeForDiscreteValues(self)
+        # self.fitness = optimizeForDiscreteValues(self)
         # print 'after fitness eval'
         # fitness = optimizeForDiscreteFloatValues(self)
-        # fitness = optimizeForContinuousValues(self)
+        self.fitness = optimizeForContinuousValues(self)
+        # print self.fitness, 'FITNESS'
         # fitness = optimizeForTwoDiscreteThreeContinuous(self)
         # if self.fitness == 0.0: # THIS IS TEST CODE REMOVE LATER --- TODO
         #     print 'FINISHED'
@@ -174,8 +175,10 @@ class Individual:
     def copy(self, popid):
         contVars = []
         discVars = []
+        # print 'BEFORE COPY'
         for i in range(0, len(self.continuousVariables)):
             contVars.append(self.continuousVariables[i].copy())
+            # print self.continuousVariables[i].value
         for i in range(0, len(self.discreteVariables)):
             discVars.append(self.discreteVariables[i].copy())
         newIndividual = Individual(contVars, discVars, popid)
@@ -184,6 +187,8 @@ class Individual:
 
     def getvar(self, index):
         if index < len(self.continuousVariables):
+            # print self.continuousVariables[index].value
+            # print index
             return self.continuousVariables[index].value
         else:
             return self.discreteVariables[index - len(self.continuousVariables)].value

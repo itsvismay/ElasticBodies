@@ -269,10 +269,20 @@ if skipRun == False:
   except OSError as e:
     print 'There was a System Error Elastic', e, '\n'
 
+print 'rm', fixedMeshedFile
 subprocess.check_output(['rm', fixedMeshedFile])
+print 'rm', meshedFile
 subprocess.check_output(['rm', meshedFile])
+print 'rm', restOff
 subprocess.check_output(['rm', restOff])
+print 'rm', largestOff
 subprocess.check_output(['rm', largestOff])
+print 'rm', prepedMesh
+subprocess.check_output(['rm', prepedMesh])
+print 'rm', forceData
+subprocess.check_output(['rm', forceData])
+print 'rm', pathToTempFiles + 'out.off'
+subprocess.check_output(['rm', pathToTempFiles + 'out.off'])
 for i in range(len(initialScadFiles)):
   print 'rm', initialScadFiles[i]
   result = subprocess.check_output(['rm', initialScadFiles[i]])
