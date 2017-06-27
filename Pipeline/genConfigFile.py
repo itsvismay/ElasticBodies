@@ -7,7 +7,7 @@ file_write = open(pathToConfig, 'w')
 file_write.write('.00001\n')
 file_write.write('t\n')
 file_write.write('n\n')
-file_write.write('10\n')
+file_write.write('1\n') # iterations
 file_write.write('0.000150\n')
 file_write.write('-10\n')
 file_write.write('1\n')
@@ -19,4 +19,3 @@ file_write.write('newton\n')
 file_write.write(sys.argv[2]+'\n')
 
 file_write.close()
-

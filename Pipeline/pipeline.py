@@ -54,6 +54,7 @@ pathToCleanMesh = "/scratch/cluster/zmisso/meshfix/build2/libigl_example"
 pathToFixMissingLine = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixMissingLine.py"
 pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
 pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
+pathToElastic = '/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic'
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce=", "temp="])
@@ -209,17 +210,6 @@ if isOrig == False:
     except OSError as e:
       print 'There was a System Error Fix Missing Line:', e, '\n'
 
-#  # convert stl layer files to off files
-#  for i in range(len(layerSTLFiles)):
-#    #run meshlabserver -i layerSTLFiles[i] -o layerSTLFiles[i][:-4]+'.obj'
-#    print 'meshlabserver -i', layerSTLFiles[i], '-o', layerSTLFiles[i][:-4]+'.off'
-#    try:
-#      result = subprocess.check_output([pathToCleanMesh, layerSTLFiles[i], layerSTLFiles[i][:-4]+'.off'])
-#    except:
-#      print 'There was a System Error: MeshClean', '\n'
-#
-  #  layerObjFiles.append(layerSTLFiles[i][:-4]+'.off')
-
   # combine obj files into one file
   for i in range(len(initialGCodeFiles)):
     # run ./3dUnion_bin initialGCodeFiles[i][:-6] initialLayerSizes[i]
@@ -233,9 +223,6 @@ if isOrig == False:
   try:
     print pathToSplit, meshedFile, pathToTempFiles
     result = subprocess.check_output([pathToSplit, meshedFile, pathToTempFiles])
-    #time.sleep(300)
-		#print result
-    #result.communicate()
     print 'Finished Split'
   except OSError as e:
     print 'There was a System Error Split', e, '\n'
@@ -278,30 +265,15 @@ if skipRun == False:
   # call simulation
   try:
     print './elastic', '\n'
-    result = subprocess.check_output([pathToElastic])
+    result = subprocess.check_output([pathToElastic, pathToTempFiles])
   except OSError as e:
     print 'There was a System Error Elastic', e, '\n'
-
-# lists to clean
-# -- initialScadFiles
-# -- initialSTLFiles
-# -- initialGCodeFiles
-# -- layerScadFiles
-# -- layerSTLFiles
-# -- layerObjFiles
-# -- meshedFile
-# -- fixedMeshedFile
-# -- prepedMesh
-# -- forceData
-
-# TODO -- CLEAN UP
 
 subprocess.check_output(['rm', fixedMeshedFile])
 subprocess.check_output(['rm', meshedFile])
 subprocess.check_output(['rm', restOff])
 subprocess.check_output(['rm', largestOff])
 for i in range(len(initialScadFiles)):
-  # if isCreate == True:
   print 'rm', initialScadFiles[i]
   result = subprocess.check_output(['rm', initialScadFiles[i]])
 for i in range(len(initialOBJFiles)):
@@ -319,15 +291,3 @@ for i in range(len(layerScadFiles)):
 for i in range(len(layerSTLFiles)):
   print 'rm', layerSTLFiles[i]
   result = subprocess.check_output(['rm', layerSTLFiles[i]])
-  # for i in range(len(layerObjFiles)):
-  #   print 'rm', layerObjFiles[i]
-  #   result = subprocess.check_output(['rm', layerObjFiles[i]])
-  #if isOrig == False:
-  #  print 'rm', meshedFile
-  #  result = subprocess.check_output(['rm', meshedFile])
-  #print 'rm', fixedMeshedFile
-  #result = subprocess.check_output(['rm', fixedMeshedFile])
-  #print 'rm', prepedMesh
-  #result = subprocess.check_output(['rm', prepedMesh])
-  #print 'rm', forceData
-  #result = subprocess.check_output(['rm', forceData])

@@ -58,7 +58,7 @@ for row in data:
 
   mainPipelineCondor = individualDir + 'mainPipelineCondor'
   elasticCondor = individualDir + 'elasticCondor'
-  arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
+  arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir # + ' -s'
 
   if not os.path.exists(individualDir):
     os.makedirs(individualDir)

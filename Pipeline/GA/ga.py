@@ -60,13 +60,13 @@ for opt, arg in opts:
 	if opt == "--gen":
 		generationNumber = int(arg)
 	elif opt == "--indName":
-		individualName = arg
+		individualName = arg.strip(' \t\n\r')
 	elif opt == "--numInd":
 		numberOfIndividuals = int(arg)
 	elif opt == "--expDir":
-		experimentDir = arg
+		experimentDir = arg.strip(' \t\n\r')
 	elif opt == "--config":
-		config = arg
+		config = arg.strip(' \t\n\r')
 		runFromConfig = True
 	elif opt == "--maxGen":
 		maxGenerations = int(arg)
@@ -219,12 +219,6 @@ print 'STARTING GENERATION:', generationNumber
 print ''
 
 if generationNumber == -1:
-	# print numberOfDiscreteVars, ":: NUM DiscreteVars"
-	# print numberOfContinuousVars, ":: NUM ContinuousVars"
-	# print settings[0], " :: Min Discrete Value"
-	# print settings[1], " :: Max Discrete Value"
-	# print settings[2], " :: Min Continuous Value"
-	# print settings[3], " :: Max Continuous Value"
 	population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);
 	evaluateFitnessesCondor(population, generationNumber+1)
 	updateCurrentGeneration(generationNumber)
@@ -233,7 +227,6 @@ elif generationNumber < maxGenerations:
 	population = parsePopulation(generationNumber, numberOfIndividuals, settings, numberOfDiscreteVars, numberOfContinuousVars)
 	assignFitnesses(population, generationNumber)
 	population = sortByFitness(population)
-	# print population[0].fitness # WORKS UP TO HERE
 	hallOfFame = parsemethods.parseHallOfFame(experimentDir, hallOfFameDir, hallOfFameCount, settings, numberOfDiscreteVars, numberOfContinuousVars)
 	hallOfFame = updateHallOfFame(hallOfFame, population)
 	logHallOfFame(hallOfFame)
