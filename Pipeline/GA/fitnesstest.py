@@ -8,7 +8,6 @@ except getopt.GetoptError:
 for opt, arg in opts:
 	if opt == "--experimentDir":
 		experimentDir = arg
-	elif opt == "--indName":
 
 fitFile = open(experimentDir+'fitness.txt', 'w')
 fitFile.write(str(10))
