@@ -55,6 +55,7 @@ pathToFixMissingLine = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/fixMissin
 pathToTempFiles = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/'
 pathToGcode2Layers = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gcode2layers.py'
 pathToElastic = '/scratch/cluster/zmisso/ElasticBodies/Simulation/build/elastic'
+pathToEvaluateFitness = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/fitnesstest.py'
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'cs', ["file=","create=","createBase=","createBaseOrig=","template=","name=","ind=","gen=", "sConfig=", "preped=", "dorce=", "temp="])
@@ -265,9 +266,15 @@ if skipRun == False:
   # call simulation
   try:
     print './elastic', '\n'
-    result = subprocess.check_output([pathToElastic, pathToTempFiles])
+    #result = subprocess.check_output([pathToElastic, pathToTempFiles])
   except OSError as e:
     print 'There was a System Error Elastic', e, '\n'
+
+  try:
+    print './evaluateFitness', '\n'
+    result = subprocess.check_output(['python', pathToEvaluateFitness, '--experimentDir', pathToTempFiles])
+  except OSError as e:
+    print 'There was a System Error Evaluate Fitness', e, '\n'
 
 print 'rm', fixedMeshedFile
 subprocess.check_output(['rm', fixedMeshedFile])
