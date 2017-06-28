@@ -170,7 +170,7 @@ def evaluateFitnessesCondor(population, genNumber):
 	###
 	# Create a Dag Config File for the Condor Batch Job
 	###
-	subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', genNumber, '--numIndividuals', numberOfIndividuals])
+	subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', str(genNumber), '--numIndividuals', str(numberOfIndividuals)])
 	subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
 
 	###
