@@ -1,4 +1,3 @@
-import dummyfitness
 import random
 import sys
 import numpy
