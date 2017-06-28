@@ -25,15 +25,41 @@ dummyMode = True
 varsToMutate = 3
 varsToCross = 2
 hallOfFameCount = 4
+templateType = 2
 runFromConfig = False
+
+###
+# Template Type Discriptors
+###
+
+# 0  -  bezierSpring
+# 1  -  bezierMirrorSpring
+# 2  -  curveSpring
+# 3  -  curveMirrorSpring
+# 4  -  ringSpring
+# 5  -  torsionSpring
 
 ###
 # NEEDED PATHS
 ###
 
 pathToGenConfigFile = '../genConfigFile.py'
-pathToGenCurveSpringData = '../genCurveSpringData.py'
 pathToGenerateCondorSubmit = '../generateCondorSubmit.py'
+pathToGenCurveSpringData = '../genCurveSpringData.py'
+pathToGenCurveMirrorSprintData = 'TODO'
+pathToGenBezierSpringData = 'TODO'
+pathToGenBezierMirrorSpringData = 'TODO'
+pathToGenTorsionSpringData = 'TODO'
+pathToGenRingSpringData = 'TODO'
+
+# Parameter Boundary Conditions Paths
+
+pathToBoundaryCurveSpringData = 'TODO'
+pathToBoundaryCurveSpringMirrorData = 'TODO'
+pathToBoundaryBezierSpringData = 'TODO'
+pathToBoundaryBezierSpringMirrorData = 'TODO'
+pathToBoundaryTorsionSpringData = 'TODO'
+pathToBoundaryRingSpringData = 'TODO'
 
 ###
 # CLEAN THIS UP LATER
@@ -52,7 +78,7 @@ remeshExt = "Remesh"
 ###
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], 'r', ["gen=", "expDir=", "numInd=", "indName=", "config=", "maxGen=", "mutRate=", "crosRate="])
+	opts, args = getopt.getopt(sys.argv[1:], 'r', ["gen=", "expDir=", "numInd=", "indName=", "config=", "maxGen=", "mutRate=", "crosRate=", "tempType="])
 except getopt.GetoptError:
 	print 'Error Bad Input'
 	sys.exit(-2)
@@ -76,6 +102,8 @@ for opt, arg in opts:
 		varsToCross = float(arg)
 	elif opt == "-r":
 		runFromConfig = True
+	elif opt == "--tempType":
+		templateType = int(arg)
 
 ###
 # GA LOGIC
@@ -87,10 +115,10 @@ def generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, sett
 		contVars = []
 		discVars = []
 		for j in range(0, numberOfDiscreteVars):
-			val = 0.0 # this should be randomly set not set to zero --- TODO
 			minVal = settings[0]
 			maxVal = settings[1]
 			chg = settings[2]
+			val = random.randint(0, (maxVal - minVal) / chg) * chg + minVal
 			discVars.append(gaobjects.DiscreteVariable(val, minVal, maxVal, chg))
 		for j in range(0, numberOfContinuousVars):
 			val = random.random()
@@ -101,19 +129,7 @@ def generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, sett
 	return individuals
 
 def sortByFitness(population):
-	# print 'length:', len(population)
 	return sorted(population, key=lambda x: x.fitness, reverse=False)
-
-def evaluateFitnesses(population):
-	if dummyMode == True:
-		# print 'TESTLEN:', len(population)
-		for i in range(0, len(population)):
-			#print population[i]
-			population[i].evaluateFitness()
-	else:
-		for i in range(0, len(population)):
-			population[i].evaluateFitness()
-		# more stuffs probably
 
 def evaluateFitnessesCondor(population, genNumber):
 	# TODO -- Move this to log... maybe
@@ -124,7 +140,20 @@ def evaluateFitnessesCondor(population, genNumber):
 		arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
 		os.makedirs(individualDir)
 		subprocess.check_output(['python', pathToGenConfigFile, individualDir + "config.txt", individualDir + curvePreped + remeshExt])
-		# TODO -- find a good way of organizing the different spring types
+		# TODO -- fill in the correct scripts
+		if templateType == 0:
+			subprocess.check_output(['python', pathToGenBezierSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		elif templateType == 1:
+			subprocess.check_output(['python', pathToGenBezierMirrorSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		elif templateType == 2:
+			subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		elif templateType == 3:
+			subprocess.check_output(['python', pathToGenCurveMirrorSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		elif templateType == 4:
+			subprocess.check_output(['python', pathToGenRingSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+		elif templateType == 5:
+			subprocess.check_output(['python', pathToGenTorsionSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
+
 		subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
 		subprocess.check_output(['python', pathToGenerateCondorSubmit, '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
 		logmethods.logid(genNumber, individual.popId, individualName, experimentDir)
@@ -158,7 +187,6 @@ def logHallOfFame(hall):
 		arguements = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/pipeline.py --template /scratch/cluster/zmisso/ElasticBodies/Pipeline/Templates/templateCSpring.py --create ' + individualDir + "optimizeTest.txt --preped " + individualDir + curvePreped + remeshExt + ' --temp ' + individualDir + ' -s'
 		subprocess.check_output(['python', pathToGenConfigFile, individualDir + "config.txt", individualDir + curvePreped + remeshExt])
 		# TODO -- find a good way of organizing the different spring types
-		# print 'BeFORE POINTS'
 		subprocess.check_output(['python', pathToGenCurveSpringData, individualDir, str(individual.getvar(0)), str(individual.getvar(1)), str(individual.getvar(2)), str(individual.getvar(3)), str(individual.getvar(4))])
 		subprocess.check_output(['python', pathToGenerateCondorSubmit, '--initialDir', individualDir, '--arguements', arguements, '--file', mainPipelineCondor])
 		logmethods.logfitness(individualDir, individual.fitness)
@@ -173,7 +201,6 @@ def parsePopulation(genNumber, popSize, settings, numDisc, numCont):
 	individuals = []
 	for i in range(0, popSize):
 		individuals.append(parsemethods.parseIndividual(experimentDir, individualName, genNumber, i, settings, numDisc, numCont))
-	# print len(individuals), 'POPULATION SIZE'
 	return individuals
 
 def checkShouldMutate():
@@ -195,9 +222,7 @@ def updateHallOfFame(hallOfFame, population):
 	newHallOfFame = []
 	indexOfFame = 0
 	indexOfPop = 0
-	# print len(hallOfFame), 'Length Of Initial Fame'
 	while indexOfFame < len(hallOfFame) and indexOfPop < len(population) and len(newHallOfFame) < hallOfFameCount:
-		# print 'HERE'
 		if (hallOfFame[indexOfFame].fitness < population[indexOfPop].fitness):
 			newHallOfFame.append(hallOfFame[indexOfFame].copy(indexOfFame + indexOfPop))
 			indexOfFame = indexOfFame + 1
