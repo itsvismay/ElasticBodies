@@ -2,7 +2,7 @@ import sys, getopt, os
 
 experimentDir = '/scratch/cluster/zmisso/ElasticBodies/PipelineTests'
 individualName = 'Individual_'
-gaScript = '/scratch/cluster/zmisso/ElasticBodies/PipelineTests/gaScript'
+gaScript = '/scratch/cluster/zmisso/ElasticBodies/Pipeline/gaScript'
 genNumber = -1
 numberOfIndividuals = -1
 

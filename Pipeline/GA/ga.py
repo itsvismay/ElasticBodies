@@ -132,11 +132,22 @@ def evaluateFitnessesCondor(population, genNumber):
 		###
 		# TEST CODE
 		###
-		individual.evaluateFitness()
-		logmethods.logfitness(individualDir, individual.fitness)
+		# individual.evaluateFitness()
+		# logmethods.logfitness(individualDir, individual.fitness)
 
-		### TODO -- UNCOMMENT THIS FOR FINISHED OPT
-		# print subprocess.check_output(['condor_submit', mainPipelineCondor])
+	# Create the condor file to rerun this method -- TODO -- replace test code
+	subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genGAFile.py']) # TODO -- Fix Params
+
+	###
+	# Create a Dag Config File for the Condor Batch Job
+	###
+	subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', genNumber, '--numIndividuals', numberOfIndividuals])
+	subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
+
+	###
+	# Run the Dag Script on Condor
+	###
+	subprocess.check_output(['condor_submit', experimentDir + 'dagscript.dag.condor.sub'])
 
 def logHallOfFame(hall):
 	# TODO -- Move this to log... maybe
