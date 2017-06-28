@@ -280,9 +280,6 @@ elif generationNumber < maxGenerations:
 
 else:
 	print 'ALL DONE'
-	# TODO
-	# clean up
-	# TODO delete generation.txt
 
 print ''
 print 'FINISHED EXECUTING'

@@ -1,5 +1,9 @@
 import sys, getopt, os
 
+# Sometimes .off files are saved with an empty line in the header
+# which causes fixmesh to fail. So this script removes that empty
+# line.
+
 fileToFix = 'blah.off'
 
 try:

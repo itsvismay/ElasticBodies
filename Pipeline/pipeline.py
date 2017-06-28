@@ -216,7 +216,6 @@ if isOrig == False:
     # run ./3dUnion_bin initialGCodeFiles[i][:-6] initialLayerSizes[i]
     print './3dUnion_bin', initialGCodeFiles[i][:-6], initialLayerSizes[i], pathToTempFiles
     try:
-      temp = 0
       result = subprocess.check_output([pathTo3DUnion, str(initialGCodeFiles[i][:-6]), str(initialLayerSizes[i]), meshedFile])
     except OSError as e:
       print 'There was a System Error: 3DUnion', e, '\n'
@@ -224,20 +223,13 @@ if isOrig == False:
   try:
     print pathToSplit, meshedFile, pathToTempFiles
     result = subprocess.check_output([pathToSplit, meshedFile, pathToTempFiles])
-    print 'Finished Split'
   except OSError as e:
     print 'There was a System Error Split', e, '\n'
 
-  temp = ''
-
   try:
     print pathToCgal, largestOff, restOff, pathToTempFiles
-    print os.listdir(pathToTempFiles)
-    temp = subprocess.check_output([pathToCgal, largestOff, restOff, pathToTempFiles])
-    print temp
-    print 'Finished Remesh'
+    subprocess.check_output([pathToCgal, largestOff, restOff, pathToTempFiles])
   except OSError as e:
-    print temp
     print 'There was a System Error Remesh', e, '\n'
 
   # clean mesh
@@ -254,7 +246,6 @@ else:
     except OSError as e:
       print 'There was a System Error: WHAT', e, '\n'
     fixedMeshedFile = initialSTLFiles[i][:-4]+'.off'
-    print 'FIXED :: ', fixedMeshedFile
 
 try:
   print './simprep --inputMeshOff', fixedMeshedFile, '--outputM', prepedMesh, 'outputF', forceData, '--forceYAxis', '-1', '--maxForce', force, ''
@@ -275,6 +266,8 @@ if skipRun == False:
     result = subprocess.check_output(['python', pathToEvaluateFitness, '--experimentDir', pathToTempFiles])
   except OSError as e:
     print 'There was a System Error Evaluate Fitness', e, '\n'
+
+# Clean Up all unneeded files for the optimization pipeline
 
 print 'rm', fixedMeshedFile
 subprocess.check_output(['rm', fixedMeshedFile])

@@ -1,5 +1,7 @@
 import sys, os, subprocess
 
+# Small utility for mass removing of condor jobs
+
 val = int(sys.argv[1])
 val2 = int(sys.argv[2])
 

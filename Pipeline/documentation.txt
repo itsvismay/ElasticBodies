@@ -1,1 +1,48 @@
 Elastic Bodies Pipeline Documentation
+
+For any questions: contact Zack Misso (zack441@mac.com)
+
+This file contains the documentation for every script and folder within the
+Pipeline directory of the project. This file is broken into three sections. The
+first section briefly describes the contents of every folder. The second section
+describes the Geometry Generation portion of the pipeline and walks through every
+script involved in that process. Lastly, the third section goes over the current
+optimization methodology utilized by our pipeline and how it works / what is yet
+to be done
+
+SECTION 1 :: Directory Structure
+
+The Pipeline Directory is organized as follows:
+
+3dUnion Folder
+    Contains the ... TODO
+
+BaseSurrogates Folder
+    TODO
+
+GA Folder
+    TODO
+
+OffToObj Folder
+    TODO
+
+Optimizations Folder
+    TODO
+
+Remeshing Folder
+    TODO
+
+SimPrep Folder
+    TODO
+
+StlToOff Folder
+    TODO
+
+Templates Folder
+    TODO
+
+SECTION 2 :: Geometry Generation
+    TODO
+
+SECTION 3 :: Optimization
+    TODO

@@ -24,10 +24,6 @@ def logfitness(directory, fit):
     fitFile.write(str(fit))
     fitFile.close()
 
-def printFinalResults(population):
-    blah = 5
-    # TODO
-
 def printPopulationFitnesses(population, generationNumber):
     for i in range(0, len(population)):
         print population[i].fitness

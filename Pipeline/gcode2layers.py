@@ -11,7 +11,7 @@ layerHeight = 0.4
 try:
   opts, args = getopt.getopt(sys.argv[1:], 'f', ["name="])
 except getopt.GetoptError:
-  #print 'Error Bad Input'
+  print 'Error Bad Input'
   sys.exit(-2)
 for opt, arg in opts:
   if opt == "--name":
@@ -39,16 +39,12 @@ class Extrusion:
     self.endY = eY
     self.endE = eE
     self.endF = eF
-    #print str(self.startE), ' :2: ', str(self.endE)
     self.layer = lay
     self.startW = self.calculateWidth(sX, sY, sF, sE, eE)
     self.endW = self.calculateWidth(eX, eY, eF, sE, eE)
 
   def calculateWidth(self, x, y, f, e, pE):
-    #return 0.5
     deltaE = self.startE - self.endE
-    #if deltaE < -1.0:
-    #  print 'ERROR ' + str(deltaE) + '\n'
     deltaD = np.sqrt((self.endX - self.startX)**2.0 + (self.endY - self.startY)**2)
     if deltaD == 0.0:
       return 0.0
@@ -121,10 +117,8 @@ def cleanData(rawData, numLines):
 
   return newData, extrusions, count, layer
 
-#print vName
-Data_old, numLines_old = loadData(vName); #print numLines_old
+Data_old, numLines_old = loadData(vName);
 Data, extrusions, numLines, numLayers = cleanData(Data_old, numLines_old)
-#print numLines, numLayers
 
 #-------------------------------------------------
 # Code for writing the layer files into scad
@@ -178,7 +172,6 @@ for layer in runLayers:
   file_write.write("];\n")
   file_write.write("\n")
   z += layerThk
-  #file_write.write("translate([0.0, 0.0, %6.3f]) {\n" % (z - (layerThk * .005)))
   file_write.write("translate([0.0, 0.0, %6.8f]) {\n" % z)
   if layer == 0:
     file_write.write("\tlinear_extrude(height = %6.8f, center = false, convexity = 10, twist = 0) {\n" % (layerThk))
@@ -198,12 +191,4 @@ for layer in runLayers:
   file_write.write("}\n")
   file_write.close()
 
-#filename = "CCgcode_for_loop.scad"
-#file_write = open(filename, "w")
-#for layer in runLayers:
-#  file_write.write("include <"+vName[:-6]+"_layer_%d.scad>;\n" % (layer))
-#file_write.close()
-
 print numLayers
-
-#sys.exit(numLayers)

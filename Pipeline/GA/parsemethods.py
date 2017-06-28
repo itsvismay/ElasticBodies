@@ -52,6 +52,7 @@ def parseFitness(experimentDir, indDir, genNumber, indNumber):
         fitFile.close()
         return fitness
     else:
+        print 'ERROR PARSING FITNESS'
         return 1000000.0
 
 def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDisc, numCont):
@@ -59,7 +60,6 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
     points = []
     discVars = []
     contVars = []
-    # print 'IN PARSE METHOD'
     popid = -1
     if os.path.exists(individualDir+'points.txt'):
         pointsFile = open(individualDir+'points.txt', 'r')
@@ -86,8 +86,6 @@ def parseIndividual(experimentDir, indDir, genNumber, indNumber, settings, numDi
 
     if len(points) != len(contVars) + len(discVars):
         print "MAJOR ERROR :: PARSE POPULATION C"
-    # print len(contVars), 'Number Of Continuous Variables'
-    # print len(discVars), 'Number Of Discrete Variables'
 
     return Individual(contVars, discVars, popid);
 
@@ -100,7 +98,6 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
             points = []
             discVars = []
             contVars = []
-            # print 'IN PARSE METHOD'
             popid = -1
             fit = 0.0
             if os.path.exists(individualDir+'points.txt'):
@@ -109,18 +106,18 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
                     points.append(float(line))
                 pointsFile.close()
             else:
-                # print "MAJOR ERROR :: PARSE POPULATION A"
+                print "MAJOR ERROR :: PARSE POPULATION A"
                 return []
             if os.path.exists(individualDir+"fitness.txt"):
                 idFile = open(individualDir+'fitness.txt', 'r')
                 fit = float(idFile.readlines()[0])
                 idFile.close()
             else:
-                # print "MAJOR ERROR :: PARSE POPULATION B"
+                print "MAJOR ERROR :: PARSE POPULATION B"
                 return []
             index = 0
-            for j in range(0, numDisc): # TODO -- fix change
-                discVars.append(DiscreteVariable(points[index], settings[0], settings[1], 1))
+            for j in range(0, numDisc):
+                discVars.append(DiscreteVariable(points[index], settings[0], settings[1], settings[4]))
                 index = index + 1
             for j in range(0, numCont):
                 contVars.append(ContinuousVariable(points[index], settings[2], settings[3]))
@@ -128,11 +125,10 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
 
             if len(points) != len(contVars) + len(discVars):
                 print "MAJOR ERROR :: PARSE POPULATION C"
-            # print len(contVars), 'Number Of Continuous Variables'
-            # print len(discVars), 'Number Of Discrete Variables'
+
             hallOfFame.append(Individual(contVars, discVars, i))
-            # print i
             hallOfFame[i].fitness = fit
+
     else:
         os.makedirs(hallOfFameDir)
         for i in range(0, numHall):
@@ -142,4 +138,4 @@ def parseHallOfFame(experimentDir, hallDir, numHall, settings, numDisc, numCont)
 
 def parseSeed(seedPath):
     value = 4
-    # TODO
+    # TODO maybe
