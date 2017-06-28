@@ -205,13 +205,6 @@ def updateHallOfFame(hallOfFame, population):
 			newHallOfFame.append(population[indexOfPop].copy(indexOfFame + indexOfPop))
 			indexOfPop = indexOfPop + 1
 	while len(newHallOfFame) < hallOfFameCount:
-		# print len(newHallOfFame), 'Length Of Fame'
-		# print indexOfPop, 'INDEX OF POP'
-		# print population[indexOfPop].continuousVariables[0].value
-		# print population[indexOfPop].continuousVariables[1].value
-		# print population[indexOfPop].continuousVariables[2].value
-		# print population[indexOfPop].continuousVariables[3].value
-		# print population[indexOfPop].continuousVariables[4].value
 		newHallOfFame.append(population[indexOfPop].copy(indexOfFame + indexOfPop))
 		indexOfPop = indexOfPop + 1
 	return newHallOfFame
@@ -235,6 +228,10 @@ numberOfDiscreteVars, numberOfContinuousVars, settings = parsemethods.parseConfi
 
 print 'STARTING GENERATION:', generationNumber
 print ''
+
+###
+# Iterative Genetic Algorithm Implementation
+###
 
 if generationNumber == -1:
 	population = generateInitialPopulation(numberOfDiscreteVars, numberOfContinuousVars, settings);

@@ -80,14 +80,13 @@ class DiscreteVariable:
             self.value = self.value + self.change
         else:
             self.value = self.value - self.change
+        if self.value < self.minVal:
+            self.value = self.minVal
+        if self.value > self.maxVal:
+            self.value = self.maxVal
 
     def copy(self):
-        newVar = DiscreteVariable(self.value, self.minValue, self.maxValue, self.change)
-        # newVar.value = self.value
-        # newVar.minValue = self.minValue
-        # newVar.maxValue = self.maxValue
-        # newVar.change = self.change
-        return newVar
+        return DiscreteVariable(self.value, self.minValue, self.maxValue, self.change)
 
 class ContinuousVariable:
     value = 0.0
@@ -109,13 +108,13 @@ class ContinuousVariable:
             self.value = self.value + random.random() * (self.maxValue - self.minValue) * numpy.random.normal(0.0, 0.1, None)
         else:
             self.value = self.value - random.random() * (self.maxValue - self.minValue) * numpy.random.normal(0.0, 0.1, None)
+        if self.value < self.minVal:
+            self.value = self.minVal
+        if self.value > self.maxVal:
+            self.value = self.maxVal
 
     def copy(self):
-        newVar = ContinuousVariable(self.value, self.minValue, self.maxValue)
-        # newVar.value = self.value
-        # newVar.minValue = self.minValue
-        # newVar.maxValue = self.maxValue
-        return newVar
+        return ContinuousVariable(self.value, self.minValue, self.maxValue)
 
 class Individual:
     continuousVariables = []
@@ -134,8 +133,8 @@ class Individual:
         self.fitness = -1.0
         self.popId = popid
 
-    def __repr__(self):
-        return "this is an individual"
+    # def __repr__(self):
+    #     return "this is an individual"
 
     def mutate(self, mutationRate, popid):
         x = 0
@@ -176,10 +175,8 @@ class Individual:
     def copy(self, popid):
         contVars = []
         discVars = []
-        # print 'BEFORE COPY'
         for i in range(0, len(self.continuousVariables)):
             contVars.append(self.continuousVariables[i].copy())
-            # print self.continuousVariables[i].value
         for i in range(0, len(self.discreteVariables)):
             discVars.append(self.discreteVariables[i].copy())
         newIndividual = Individual(contVars, discVars, popid)
@@ -188,8 +185,6 @@ class Individual:
 
     def getvar(self, index):
         if index < len(self.continuousVariables):
-            # print self.continuousVariables[index].value
-            # print index
             return self.continuousVariables[index].value
         else:
             return self.discreteVariables[index - len(self.continuousVariables)].value
