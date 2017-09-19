@@ -129,7 +129,7 @@ double ImplicitNewmark::find_Energy(){
 	// cout<<"K E: "<<kineticE/convergence_scaling_paramter<<endl;
 	// cout<<"S E: "<<strainE/convergence_scaling_paramter<<endl;
 	// cout<<"G E: "<<gravE/convergence_scaling_paramter<<endl;
-	// cout<<"Energy: "<<func/convergence_scaling_paramter<<endl;
+	cout<<"Energy: "<<func<<endl;
 	return func/convergence_scaling_paramter;
 }
 
@@ -191,6 +191,20 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		NewmarkXtoTV(x_k, TVk);//TVk value changed in function
 		NewmarkCalculateElasticForceGradient(TVk, forceGradient);
 		NewmarkCalculateForces(TVk, forceGradient, x_k, f);
+
+		cout<<"Force for Analytical Soln"<<endl;
+		double forcex = 0.0;
+		double forcey = 0.0;
+		double forcez = 0.0;
+		for(int afi =ignorePastIndex; afi < (f.rows()/3); afi++){
+			forcex += f(3*afi+0);
+			forcey += f(3*afi+1);
+			forcez += f(3*afi+2);
+		}
+		cout<<forcex<<", "<<forcey<<", "<<forcez<<endl;
+		cout<<"deflection"<<endl;
+		cout<<TVk.row(ignorePastIndex)(2) - TVk.row(ignorePastIndex -1)(2)<<endl;
+
 		for(int k=0; k<f.rows(); k++){
 			if(fabs(ext_force(k))>0.0001){
 				f(k) += ext_force(k);
@@ -202,7 +216,8 @@ void ImplicitNewmark::renderNewtonsMethod(VectorXd& ext_force){
 		VectorXd g_block;
 		find_dEnergyBlock(g_block, y_k, ignorePastIndex);
 		find_d_dEnergyBlock(grad_g, forceGradientStaticBlock, RegMassBlock);
-
+		find_Energy();
+		// exit(0);
 		// Sparse Cholesky LL^T
 		if(llt_solver.info() == Eigen::NumericalIssue){
 			cout<<"Possibly using a non- pos def matrix in the LLT method"<<endl;

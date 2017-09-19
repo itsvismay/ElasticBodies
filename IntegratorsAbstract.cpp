@@ -121,6 +121,9 @@ void IntegratorAbstract::initVectors(){
 }
 
 void IntegratorAbstract::analyzeCholeskySetup(){
+	if(solver.compare("newton") != 0)
+		return; //only do cholesky solve on NM
+
 	CholeskyAnalyze.setZero();
 	int ignorePastIndex = TV.rows() - fixedVerts.size();
 	cout<<"Ignore past"<<endl;
@@ -241,13 +244,13 @@ void IntegratorAbstract::fixVertices(vector<int> fixMe){
 }
 
 void IntegratorAbstract::moveVertices(vector<int> moveMe){
-	double hard_coded_mass = 44000; //mass in grams
+	double hard_coded_mass = 0000; //mass in grams
 	double factor = hard_coded_mass/(3*moveMe.size());
 	double totalMovingMass = 0;
 	for(int i=0; i<moveMe.size(); i++){
-		massVector(3*moveMe[i]) = factor;
-		massVector(3*moveMe[i]+1) = factor;
-		massVector(3*moveMe[i]+2) = factor;
+		// massVector(3*moveMe[i]) = factor;
+		// massVector(3*moveMe[i]+1) = factor;
+		// massVector(3*moveMe[i]+2) = factor;
 
 		InvMass.coeffRef(3*moveMe[i], 3*moveMe[i]) = 0;
 		InvMass.coeffRef(3*moveMe[i] + 1, 3*moveMe[i] + 1) = 0;
