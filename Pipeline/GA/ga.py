@@ -11,7 +11,7 @@ import logmethods
 ###
 
 seed = "baseSurrogates/SampleSet_02D.txt"
-experimentDir = "TestDirectory/"
+experimentDir = "/scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/TestDirectory/"
 hallOfFameDir = "HallOfFame/"
 individualName = "Individual"
 configName = "config.txt"
@@ -170,13 +170,13 @@ def evaluateFitnessesCondor(population, genNumber):
 	###
 	# Create a Dag Config File for the Condor Batch Job
 	###
-	subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', str(genNumber), '--numIndividuals', str(numberOfIndividuals)])
-	subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
+	print subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', str(genNumber), '--numIndividuals', str(numberOfIndividuals)])
+	print subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
 
 	###
 	# Run the Dag Script on Condor
 	###
-	subprocess.check_output(['condor_submit', experimentDir + 'dagscript.dag.condor.sub'])
+	print subprocess.check_output(['condor_submit', experimentDir + 'dagscript.dag.condor.sub'])
 
 def logHallOfFame(hall):
 	# TODO -- Move this to log... maybe
