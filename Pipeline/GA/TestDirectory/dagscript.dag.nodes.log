@@ -1,0 +1,21 @@
+000 (540135.000.000) 09/19 21:58:02 Job submitted from host: <128.83.130.153:9618?addrs=128.83.130.153-9618+[--1]-9618&noUDP&sock=13107_e3e9_3>
+    DAG Node: 0_0
+...
+001 (540135.000.000) 09/19 21:58:32 Job executing on host: <128.83.144.42:9618?addrs=128.83.144.42-9618+[--1]-9618&noUDP&sock=43022_1791_3>
+...
+005 (540135.000.000) 09/19 21:58:33 Job terminated.
+	(1) Normal termination (return value 1)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	1486  -  Run Bytes Sent By Job
+	3546104  -  Run Bytes Received By Job
+	1486  -  Total Bytes Sent By Job
+	3546104  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated
+	   Cpus                 :                 1         1
+	   Disk (KB)            :     3500     3500   8607371
+	   Gpus                 :                           0
+	   Memory (MB)          :        1        4      4027
+...

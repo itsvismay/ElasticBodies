@@ -1,0 +1,3 @@
+JOB 0_0 /scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/TestDirectory/Individual__0_0/mainPipelineCondor
+JOB GA /scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/TestDirectory/testCondor
+PARENT 0_0 CHILD GA

@@ -1,0 +1,13 @@
+.00001
+t
+n
+1
+0.000150
+-10
+1
+8300000000
+.35
+pR
+neo
+newton
+/scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/TestDirectory/HallOfFame/_0/curvePrepedRemesh

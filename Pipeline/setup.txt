@@ -1,0 +1,22 @@
+This document outlines how to build the repo
+
+# first make your root folder where everything will exist
+mkdir ROOT <- will refer to root directory as ROOT
+
+# first you need to clone cgal
+git clone --recursive https://github.com/CGAL/cgal.git
+
+# next you need to clone ElasticBodies
+git clone https://github.com/itsvismay/ElasticBodies.git
+
+# next you need to clone libigl
+git clone --recursive https://github.com/libigl/libigl.git
+
+# next you need to download CGAL4-9 (note this location may change)
+wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.9/CGAL-4.9.tar.xz
+
+# next you need to download a bin of slic3r. It is currently located in the
+ElasticBodies google drive. If you do not have access email Zack Misso at
+zack441@mac.com
+
+# next you need to 

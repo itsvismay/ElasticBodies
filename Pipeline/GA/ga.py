@@ -17,9 +17,9 @@ individualName = "Individual"
 configName = "config.txt"
 individualName = "Individual_"
 # numberOfIndividuals = 500
-numberOfIndividuals = 50
+numberOfIndividuals = 1
 generationNumber = 0
-maxGenerations = 100
+maxGenerations = 1
 config = "config.txt"
 dummyMode = True
 varsToMutate = 3
@@ -171,7 +171,7 @@ def evaluateFitnessesCondor(population, genNumber):
 	# Create a Dag Config File for the Condor Batch Job
 	###
 	print subprocess.check_output(['python', '/scratch/cluster/zmisso/ElasticBodies/Pipeline/genDagFile.py', '--experimentDir', experimentDir, '--individualName', individualName, '--genNumber', str(genNumber), '--numIndividuals', str(numberOfIndividuals)])
-	print subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
+	#print subprocess.check_output(['condor_submit_dag', experimentDir + 'dagscript.dag'])
 
 	###
 	# Run the Dag Script on Condor

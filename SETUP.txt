@@ -1,0 +1,6 @@
+This document contains step by step instructions on how to setup this
+project on UT's CONDOR computing cluster.
+
+First create your root directory for the project.
+Within that directory clone this project ElasticBodies
+clone 

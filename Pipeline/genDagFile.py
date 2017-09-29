@@ -1,6 +1,6 @@
 import sys, getopt, os
 
-experimentDir = '/scratch/cluster/zmisso/ElasticBodies/PipelineTests'
+experimentDir = '/scratch/cluster/zmisso/ElasticBodies/PipelineTests/'
 individualName = 'Individual_'
 gaScript = 'testCondor'
 genNumber = -1
@@ -23,6 +23,7 @@ for opt, arg in opts:
         numberOfIndividuals = int(arg)
 
 filePath = experimentDir + 'dagscript.dag'
+print filePath
 
 dagScript = open(filePath, 'w')
 for i in range(0, numberOfIndividuals):

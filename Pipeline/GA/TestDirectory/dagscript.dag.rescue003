@@ -1,0 +1,10 @@
+# Rescue DAG file, created after running
+#   the /scratch/cluster/zmisso/ElasticBodies/Pipeline/GA/TestDirectory/dagscript.dag DAG file
+# Created 9/20/2017 02:47:22 UTC
+# Rescue DAG version: 2.0.1 (partial)
+#
+# Total number of Nodes: 2
+# Nodes premarked DONE: 0
+# Nodes that failed: 1
+#   0_0,<ENDLIST>
+
