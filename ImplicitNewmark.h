@@ -2,7 +2,7 @@
 #define implicit_newmark_h
 
 #include "IntegratorsAbstract.h"
-#include "../alglib-cpp/src/optimization.h"
+#include "../../alglib-cpp/src/optimization.h"
 
 using namespace alglib;
 

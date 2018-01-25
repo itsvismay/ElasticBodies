@@ -262,7 +262,6 @@ int main(int argc, char *argv[])
 
 		getline(configFile, line);
 		gravity = stod(line.c_str());
-		gravity *= 1000; //going from m/s^2 to mms^2
 		cout<<gravity<<endl;
 
 		getline(configFile, line);

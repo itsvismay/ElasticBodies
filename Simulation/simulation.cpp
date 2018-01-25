@@ -184,7 +184,7 @@ void Simulation::applyExternalForces(){
 void Simulation::headless(){
 	int printcount =0;
 	ofstream dampingPositionFile;
-//	cout<<OUTPUT_SAVED_PATH"TestsResults/Damping/"<<endl;
+	//	cout<<OUTPUT_SAVED_PATH"TestsResults/Damping/"<<endl;
 	dampingPositionFile.open(OUTPUT_SAVED_PATH"TestsResults/Damping/"+solver+"_Y:"+to_string(youngs)+"@R:"+to_string(rayleighCoeff)+"@step"+to_string(integrator->h)+"@"+to_string(integrator->TT.rows())+"tets@"+tetgen_code+"@"+"position.txt");
 
 	integrator->v_old.setZero();
